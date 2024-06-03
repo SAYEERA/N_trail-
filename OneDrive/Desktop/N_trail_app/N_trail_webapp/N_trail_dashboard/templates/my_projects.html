@@ -1,0 +1,169 @@
+
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<h1>My Projects</h1>
+
+<!-- Display Project Table -->
+<table border="1">
+  <tr>
+    <th>Project ID</th>
+    <th>User ID</th>
+    <th>Start Year</th>
+    <th>Interactions Count</th>
+    <th>Interactions_1</th>
+    <th>Interactions_2</th>
+    <th>Interactions_3</th>
+    <th>Crop</th>
+    <th>Number of Years</th>
+    <th>Role</th>
+    <th>Funding Source</th>
+    <th>Metadata</th>
+    <th>experiments</th> 
+  </tr>
+  {% for project in projects %}
+  <tr>
+    <td>{{ project.Project_ID }}</td>
+    <td>{{ project.User_ID }}</td>
+    <td>{{ project.Start_year }}</td>
+    <td>{{ project.Interactions_count }}</td>
+    <td>{{ project.Interaction_1 }}</td>
+    <td>{{ project.Interaction_2 }}</td>
+    <td>{{ project.Interaction_3 }}</td>
+    <td>{{ project.Crop }}</td>
+    <td>{{ project.No_of_Year }}</td>
+    <td>{{ project.Role }}</td>
+    <td>{{ project.Funding_Source }}</td>
+    <td>{{ project.MetaData }}</td>
+    <td><a href="{% url 'show_experiments' project_id=project.Project_ID %}">Show</a></td> <!-- Button to view experiments -->
+  </tr>
+  {% endfor %}
+</table>
+
+<!-- Add Project Button -->
+<button id="add-project-button">Add Project</button>
+ <!-- Link to CSS -->
+ <!-- <link rel="stylesheet" type="text/css" href="{% static 'N_trail_dashboard/styles.css' %}">  -->
+
+<!-- Add Project Form -->
+<div id="add-project-form" style="display: none;">
+  <h2>Add Project Details</h2>
+  <form method="post" id="project-form">
+
+
+    {% csrf_token %}
+    <label for="Project_ID">Project ID:</label>
+    <input type="text" id="Project_ID" name="Project_ID" required><br>
+
+
+    <label for="Start_year">Start Year:</label>
+    <input type="number" id="Start_year" name="Start_year" required><br>
+
+    <label for="Interactions_count">Interactions Count:</label>
+    <input type="number" id="Interactions_count" name="Interactions_count" required><br>
+
+    <div id="interaction-fields">
+      <!-- Interaction fields will be added here dynamically -->
+    </div>
+
+   <!-- Crop dropdown -->
+<label for="Crop">Crop:</label>
+<select id="Crop" name="Crop">
+  {% for choice in crop_choices %}
+    <option value="{{ choice.0 }}">{{ choice.1 }}</option>
+  {% endfor %}
+</select>
+
+  </select><br>
+    <label for="No_of_Year">Number of Years:</label>
+    <input type="number" id="No_of_Year" name="No_of_Year" required><br>
+
+    <label for="Role">Role:</label>
+    <select id="Role" name="Role">
+    {% for choice in project_role_choices %}
+    <option value="{{ choice.0 }}">{{ choice.1 }}</option>
+     {% endfor %}
+    </select>
+
+    <label for="Funding_Source">Funding Source:</label>
+    <input type="text" id="Funding_Source" name="Funding_Source"><br>
+
+    <label for="MetaData">Metadata:</label>
+    <textarea id="MetaData" name="MetaData" rows="4" cols="50"></textarea><br>
+
+    <button type="submit">Submit</button>
+    <span id="success-message" style="color: green; display: none;">project added successfully!</span>
+  </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const interactionChoices = [
+        'Select','Timing', 'Inhibitor', 'N_rate', 'Landscape', 'Biological',
+        'Cover_Crop', 'Crop_Rotation', 'Fall_N_Rate', 'Previous_N_Rate',
+        'Grazing', 'Spring_N_Rate', 'NA'
+    ];
+
+    // Show the add experiment form when the button is clicked
+    document.querySelector('#add-project-button').addEventListener('click', function() {
+        document.querySelector('#add-project-form').style.display = 'block';
+    });
+
+    // Handle form submission via AJAX
+    document.querySelector('#project-form').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        const formData = new FormData(this);
+//sends a POST request to the server-side URL
+        fetch('{% url "add_project" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.querySelector('#success-message').style.display = 'inline';
+                // Optionally, refresh the project list or append the new project to the table
+            } else {
+                alert('Failed to add project: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to add project. Please try again.');
+        });
+    });
+
+    // Update interaction fields dynamically based on Interactions Count
+    document.querySelector('#Interactions_count').addEventListener('change', function() {
+        const count = parseInt(this.value);
+        const interactionFieldsContainer = document.querySelector('#interaction-fields');
+        interactionFieldsContainer.innerHTML = ''; // Clear existing fields
+
+        for (let i = 1; i <= count; i++) {
+            const label = document.createElement('label');
+            label.setAttribute('for', `Interaction_${i}`);
+            label.textContent = `Interaction ${i}:`;
+            interactionFieldsContainer.appendChild(label);
+
+            const select = document.createElement('select');
+            select.setAttribute('id', `Interaction_${i}`);
+            select.setAttribute('name', `Interaction_${i}`);
+            interactionChoices.forEach(choice => {
+                const option = document.createElement('option');
+                option.value = choice;
+                option.textContent = choice;
+                select.appendChild(option);
+            });
+            interactionFieldsContainer.appendChild(select);
+
+            interactionFieldsContainer.appendChild(document.createElement('br'));
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,149 @@
+{% block content %}
+<h1>Treatments for Experiment: {{ experiment.Experiment_ID }}</h1>
+
+<form id="treatments-form">
+  {% csrf_token %}
+  <table border="1">
+    <thead>
+      <tr>
+        <th>Treatment ID</th>
+        <th>Experiment ID</th>
+        <th>Interaction 1 Value</th>
+        <th>Interaction 2 Value</th>
+        <th>Interaction 3 Value</th>
+        <th>No of Replications</th>
+        <th>Metadata</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="random-treatments">
+      {% for treatment in treatments %}
+      <tr id="treatment-row-{{ treatment.Treatment_ID }}">
+        <td>{{ treatment.Treatment_ID }}</td>
+        <td>{{ experiment.Experiment_ID }}</td>
+        <td>
+          <input type="text" name="interaction_1_value_{{ treatment.Treatment_ID }}" value="{{ treatment.Interaction_1_Value }}" disabled>
+        </td>
+        <td>
+          <input type="text" name="interaction_2_value_{{ treatment.Treatment_ID }}" value="{{ treatment.Interaction_2_Value }}" disabled>
+        </td>
+        <td>
+          <input type="text" name="interaction_3_value_{{ treatment.Treatment_ID }}" value="{{ treatment.Interaction_3_Value }}" disabled>
+        </td>
+        <td>
+          <input type="text" name="no_of_replication_{{ treatment.Treatment_ID }}" value="{{ treatment.No_of_Replication }}" disabled>
+        </td>
+        <td>
+          <input type="text" name="metadata_{{ treatment.Treatment_ID }}" value="{{ treatment.MetaData }}" disabled>
+        </td>
+        <td>
+          <button type="button" onclick="enableEditing('{{ treatment.Treatment_ID }}')">Modify</button>
+          <button type="button" onclick="addTreatment('{{ treatment.Treatment_ID }}')">Add</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <h2>New Treatments</h2>
+  <table border="1">
+    <thead>
+      <tr>
+        <th>Treatment ID</th>
+        <th>Experiment ID</th>
+        <th>Interaction 1 Value</th>
+        <th>Interaction 2 Value</th>
+        <th>Interaction 3 Value</th>
+        <th>No of Replications</th>
+        <th>Metadata</th>
+      </tr>
+    </thead>
+    <tbody id="new-treatments">
+    </tbody>
+  </table>
+  <button type="button" onclick="submitTreatments()">Submit All</button>
+</form>
+
+<div id="success-message" style="color: green; display: none;">
+  Treatments added successfully!
+</div>
+
+<script>
+  function enableEditing(treatmentId) {
+    document.querySelector(`[name="interaction_1_value_${treatmentId}"]`).disabled = false;
+    document.querySelector(`[name="interaction_2_value_${treatmentId}"]`).disabled = false;
+    document.querySelector(`[name="interaction_3_value_${treatmentId}"]`).disabled = false;
+    document.querySelector(`[name="no_of_replication_${treatmentId}"]`).disabled = false;
+    document.querySelector(`[name="metadata_${treatmentId}"]`).disabled = false;
+  }
+
+  function addTreatment(treatmentId) {
+    const row = document.getElementById(`treatment-row-${treatmentId}`);
+    const newRow = document.createElement('tr');
+    const newTreatmentId = `new_${Math.random().toString(36).substr(2, 9)}`;
+
+    const interaction1Value = document.querySelector(`[name="interaction_1_value_${treatmentId}"]`).value;
+    const interaction2Value = document.querySelector(`[name="interaction_2_value_${treatmentId}"]`).value;
+    const interaction3Value = document.querySelector(`[name="interaction_3_value_${treatmentId}"]`).value;
+    const noOfReplication = document.querySelector(`[name="no_of_replication_${treatmentId}"]`).value;
+    const metadata = document.querySelector(`[name="metadata_${treatmentId}"]`).value;
+
+    newRow.innerHTML = `
+      <td>${newTreatmentId}</td>
+      <td>{{ experiment.Experiment_ID }}</td>
+      <td><input type="text" name="interaction_1_value_${newTreatmentId}" value="${interaction1Value}" readonly></td>
+      <td><input type="text" name="interaction_2_value_${newTreatmentId}" value="${interaction2Value}" readonly></td>
+      <td><input type="text" name="interaction_3_value_${newTreatmentId}" value="${interaction3Value}" readonly></td>
+      <td><input type="text" name="no_of_replication_${newTreatmentId}" value="${noOfReplication}" readonly></td>
+      <td><input type="text" name="metadata_${newTreatmentId}" value="${metadata}" readonly></td>
+    `;
+
+    document.getElementById('new-treatments').appendChild(newRow);
+    row.style.display = 'none';
+  }
+
+  function submitTreatments() {
+    const formData = new FormData(document.getElementById('treatments-form'));
+    const treatmentsData = [];
+
+    document.querySelectorAll('#new-treatments tr').forEach(row => {
+      const newTreatmentId = row.querySelector('td:first-child').innerText;
+      treatmentsData.push({
+        interaction_1_value: formData.get(`interaction_1_value_${newTreatmentId}`),
+        interaction_2_value: formData.get(`interaction_2_value_${newTreatmentId}`),
+        interaction_3_value: formData.get(`interaction_3_value_${newTreatmentId}`),
+        no_of_replication: formData.get(`no_of_replication_${newTreatmentId}`),
+        metadata: formData.get(`metadata_${newTreatmentId}`)
+      });
+    });
+
+    fetch('{% url "show_treatments" experiment.Experiment_ID %}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+      },
+      body: JSON.stringify({
+        action: 'submit_all',
+        treatments: treatmentsData
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById('success-message').style.display = 'block';
+        setTimeout(() => {
+          document.getElementById('success-message').style.display = 'none';
+          window.location.reload(); // Reload the page to reflect changes
+        }, 3000); // Hide the message after 3 seconds
+      } else {
+        alert('Error submitting treatments: ' + data.error);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Error submitting treatments. Please try again.');
+    });
+  }
+</script>
+
+{% endblock %}

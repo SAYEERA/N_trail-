@@ -1,0 +1,29 @@
+<!-- N_trail_dashboard/templates/home.html -->
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Data Analysis</h5>
+                    <p class="card-text">Explore various data analyses.</p>
+                    <a href="{% url 'data_analysis' %}" class="btn btn-primary">Go to Data Analysis</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">My Projects</h5>
+                    <p class="card-text">View and manage your projects.</p>
+                    <a href="{% url 'my_projects' %}" class="btn btn-primary">Go to My Projects</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
