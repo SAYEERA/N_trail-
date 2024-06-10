@@ -30,12 +30,6 @@ class Project(models.Model):
         ('Fescue', 'Fescue'),
     )
 
-    PROJECT_ROLE_CHOICES = (
-        ('Select', 'select'),
-        ('Researcher', 'Researcher'),
-        ('Manager', 'Manager'),
-        ('Administrator', 'Administrator'),
-    )
 
     Project_ID = models.CharField(max_length=120, primary_key=True)
     User_ID = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -46,7 +40,7 @@ class Project(models.Model):
     Interaction_3 = models.CharField(max_length=120, blank=True, null=True)
     Crop = models.CharField(max_length=50, choices=CROP_CHOICES, default='NA')
     No_of_Year = models.IntegerField(default=1)
-    Role = models.CharField(max_length=100, choices=PROJECT_ROLE_CHOICES, default='Researcher')
+    Project_Editors = models.CharField(max_length=100,  default='NA')
     Funding_Source = models.CharField(max_length=100, default='Unknown')
     MetaData = models.TextField(default='No metadata available')
 
@@ -66,10 +60,10 @@ class Location(models.Model):
     def __str__(self):
         return self.Location_ID
 
-class Experiment(models.Model):   
+class Experiment(models.Model):
     LOCATION_CHOICES = (
         ('Select', 'select'),
-        ('NA', 'Not Available'),
+        ('other', 'other'),
         ('GRC', 'GRC'),
         ('BRC', 'BRC'),
         ('FDRC', 'FDRC'),
@@ -79,29 +73,28 @@ class Experiment(models.Model):
     Project_ID              = models.ForeignKey(Project, on_delete=models.CASCADE)
     Location_ID             = models.ForeignKey(Location, on_delete=models.CASCADE) 
     Year                    = models.CharField('Year', max_length=120, blank=False, null=False)
-    Interaction_1_count     = models.IntegerField('Interaction_1_count', blank=True, null=True, default=0)
-    Interaction_1_count_1   = models.CharField('Interaction_1_count_1', max_length=120, default='NA')
-    Interaction_1_count_2   = models.CharField('Interaction_1_count_2', max_length=120, default='NA')
-    Interaction_1_count_3   = models.CharField('Interaction_1_count_3', max_length=120, default='NA')
-    Interaction_1_count_4   = models.CharField('Interaction_1_count_4', max_length=120, default='NA')
-    Interaction_1_count_5   = models.CharField('Interaction_1_count_5', max_length=120, default='NA')
-    Interaction_2_count     = models.IntegerField('Interaction_2_count', blank=True, null=True, default=0)
-    Interaction_2_count_1   = models.CharField('Interaction_2_count_1', max_length=120, default='NA')
-    Interaction_2_count_2   = models.CharField('Interaction_2_count_2', max_length=120, default='NA')
-    Interaction_2_count_3   = models.CharField('Interaction_2_count_3', max_length=120, default='NA')
-    Interaction_2_count_4   = models.CharField('Interaction_2_count_4', max_length=120, default='NA')
-    Interaction_2_count_5   = models.CharField('Interaction_2_count_5', max_length=120, default='NA')
-    Interaction_3_count     = models.IntegerField('Interaction_3_count', blank=True, null=True, default=0)
-    Interaction_3_count_1   = models.CharField('Interaction_3_count_1', max_length=120, default='NA')
-    Interaction_3_count_2   = models.CharField('Interaction_3_count_2', max_length=120, default='NA')
-    Interaction_3_count_3   = models.CharField('Interaction_3_count_3', max_length=120, default='NA')
-    Interaction_3_count_4   = models.CharField('Interaction_3_count_4', max_length=120, default='NA')
-    Interaction_3_count_5   = models.CharField('Interaction_3_count_5', max_length=120, default='NA')
-    MetaData                = models.TextField('MetaData', max_length=120,blank=False, null=False)
+    Interaction_1_count = models.IntegerField(default=0)
+    Interaction_1_value = models.TextField(default="")
+    Interaction_2_count = models.IntegerField(default=0)
+    Interaction_2_value = models.TextField(default="")
+    Interaction_3_count = models.IntegerField(default=0)
+    Interaction_3_value = models.TextField(default="")
+    Yield_Map               = models.TextField('Yield_Map', blank=True, null=True)
+    Soil_Sample             = models.TextField('Soil_Sample', blank=True, null=True)
+    Sonic_sensor            = models.TextField('Sonic_sensor', blank=True, null=True)
+    GCP                     = models.TextField('GCP', blank=True, null=True)
+    RAWUAV                  = models.TextField('RAWUAV', blank=True, null=True)
+    Orthomosic_UAV          = models.TextField('Orthomosic_UAV', blank=True, null=True)
+    DSM_UAV                 = models.TextField('DSM_UAV', blank=True, null=True)
+    Orthomosic_SAT          = models.TextField('Orthomosic_SAT', blank=True, null=True)
+    DSM_SAT                 = models.TextField('DSM_SAT', blank=True, null=True)
+    VI_1                    = models.TextField('VI_1', blank=True, null=True)
+    VI_2                    = models.TextField('VI_2', blank=True, null=True)
+    VI_3                    = models.TextField('VI_3', blank=True, null=True)
+    MetaData                = models.TextField('MetaData', max_length=120, blank=False, null=False)
     
     def __str__(self):
         return self.Experiment_ID
-    
 class Treatment(models.Model):
     Treatment_ID            = models.IntegerField(primary_key=True)
     Experiment_ID           = models.ForeignKey(Experiment, on_delete=models.CASCADE)

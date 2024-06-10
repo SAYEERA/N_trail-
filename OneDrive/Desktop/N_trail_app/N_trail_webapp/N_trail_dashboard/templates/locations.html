@@ -1,34 +1,53 @@
-<!-- N_trail_dashboard/templates/locations.html -->
 {% extends 'base.html' %}
 
 {% block content %}
 <h1>All Locations</h1>
 
 <!-- Display Locations Table -->
-<table border="1">
-  <tr>
-    <th>Location ID</th>
-    <th>State</th>
-    <th>County</th>
-    <th>Owner</th>
-    <th>Latitude</th>
-    <th>Longitude</th>
-    <th>Contact</th>
-    <th>Metadata</th>
-    
-  </tr>
-  {% for location in location %}
-  <tr>
-    <td>{{ location.Location_ID }}</td>
-    <td>{{ location.State }}</td>
-    <td>{{ location.County }}</td>
-    <td>{{ location.Owner }}</td>
-    <td>{{ location.Latitude}}</td>
-    <td>{{ location.Longitude}}</td>
-    <td>{{ location.Contact }}</td>
-    <td>{{ location.MetaData }}</td>
-   
-  </tr>
-  {% endfor %}
+<table border="1" id="locations-table">
+  <thead>
+    <tr>
+      <th>Location ID</th>
+      <th>State</th>
+      <th>County</th>
+      <th>Owner</th>
+      <th>Latitude</th>
+      <th>Longitude</th>
+      <th>Contact</th>
+      <th>Metadata</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for location in locations %}
+    <tr>
+      <td>{{ location.Location_ID }}</td>
+      <td>{{ location.State }}</td>
+      <td>{{ location.County }}</td>
+      <td>{{ location.Owner }}</td>
+      <td>{{ location.Latitude }}</td>
+      <td>{{ location.Longitude }}</td>
+      <td>{{ location.Contact }}</td>
+      <td>{{ location.MetaData }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>
+
+<!-- Add Location Button -->
+<button id="add-location-button" onclick="document.getElementById('add-location-form').style.display='block';">Add Location</button>
+
+<!-- Add Location Form -->
+<div id="add-location-form" style="display: none;">
+  <h2>Add Location Details</h2>
+  <form method="post" id="location-form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Submit</button>
+  </form>
+  {% if messages %}
+    {% for message in messages %}
+    <span style="color: green;">{{ message }}</span>
+    {% endfor %}
+  {% endif %}
+</div>
 {% endblock %}

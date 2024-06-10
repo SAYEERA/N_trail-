@@ -1,4 +1,3 @@
-
 {% extends 'base.html' %}
 {% load static %}
 {% block content %}
@@ -17,10 +16,10 @@
     <th>Interactions_3</th>
     <th>Crop</th>
     <th>Number of Years</th>
-    <th>Role</th>
+    <th>Project Editors</th>
     <th>Funding Source</th>
     <th>Metadata</th>
-    <th>experiments</th> 
+    <th>experiments</th>
   </tr>
   {% for project in projects %}
   <tr>
@@ -33,7 +32,7 @@
     <td>{{ project.Interaction_3 }}</td>
     <td>{{ project.Crop }}</td>
     <td>{{ project.No_of_Year }}</td>
-    <td>{{ project.Role }}</td>
+    <td>{{ project.Project_Editors }}</td>
     <td>{{ project.Funding_Source }}</td>
     <td>{{ project.MetaData }}</td>
     <td><a href="{% url 'show_experiments' project_id=project.Project_ID %}">Show</a></td> <!-- Button to view experiments -->
@@ -42,20 +41,17 @@
 </table>
 
 <!-- Add Project Button -->
+{% if user.is_superuser %}
 <button id="add-project-button">Add Project</button>
- <!-- Link to CSS -->
- <!-- <link rel="stylesheet" type="text/css" href="{% static 'N_trail_dashboard/styles.css' %}">  -->
+{% endif %}
 
 <!-- Add Project Form -->
 <div id="add-project-form" style="display: none;">
   <h2>Add Project Details</h2>
   <form method="post" id="project-form">
-
-
     {% csrf_token %}
     <label for="Project_ID">Project ID:</label>
     <input type="text" id="Project_ID" name="Project_ID" required><br>
-
 
     <label for="Start_year">Start Year:</label>
     <input type="number" id="Start_year" name="Start_year" required><br>
@@ -67,43 +63,57 @@
       <!-- Interaction fields will be added here dynamically -->
     </div>
 
-   <!-- Crop dropdown -->
-<label for="Crop">Crop:</label>
-<select id="Crop" name="Crop">
-  {% for choice in crop_choices %}
-    <option value="{{ choice.0 }}">{{ choice.1 }}</option>
-  {% endfor %}
-</select>
+    <!-- Crop dropdown -->
+    <label for="Crop">Crop:</label>
+    <select id="Crop" name="Crop">
+      {% for choice in crop_choices %}
+        <option value="{{ choice.0 }}">{{ choice.1 }}</option>
+      {% endfor %}
+    </select><br>
 
-  </select><br>
     <label for="No_of_Year">Number of Years:</label>
-    <input type="number" id="No_of_Year" name="No_of_Year" required><br>
+    <input type="number" id="No_of_Year" name="No_of_Year" required readonly><br>
 
-    <label for="Role">Role:</label>
-    <select id="Role" name="Role">
-    {% for choice in project_role_choices %}
-    <option value="{{ choice.0 }}">{{ choice.1 }}</option>
-     {% endfor %}
-    </select>
+    {% if user.is_superuser %}
+    <label for="Project_Editors">Project Editors:</label>
+    <div id="project-editors-container">
+      <select id="Project_Editors_Select">
+        {% for user in users %}
+          <option value="{{ user.email }}">{{ user.email }}</option>
+        {% endfor %}
+      </select>
+      <button type="button" id="add-project-editor">Add</button>
+      <ul id="project-editors-list"></ul>
+      <input type="hidden" id="Project_Editors" name="Project_Editors"><br>
+    </div>
+    {% endif %}
 
     <label for="Funding_Source">Funding Source:</label>
-    <input type="text" id="Funding_Source" name="Funding_Source"><br>
+    <div id="funding-source-container">
+      <input type="text" id="Funding_Source_Input">
+      <button type="button" id="add-funding-source">Add</button>
+    </div>
+    <ul id="funding-source-list"></ul>
+    <input type="hidden" id="Funding_Source" name="Funding_Source"><br>
 
     <label for="MetaData">Metadata:</label>
     <textarea id="MetaData" name="MetaData" rows="4" cols="50"></textarea><br>
 
     <button type="submit">Submit</button>
-    <span id="success-message" style="color: green; display: none;">project added successfully!</span>
+    <span id="success-message" style="color: green; display: none;">Project added successfully!</span>
   </form>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const interactionChoices = [
-        'Select','Timing', 'Inhibitor', 'N_rate', 'Landscape', 'Biological',
+        'Select', 'Timing', 'Inhibitor', 'N_rate', 'Landscape', 'Biological',
         'Cover_Crop', 'Crop_Rotation', 'Fall_N_Rate', 'Previous_N_Rate',
-        'Grazing', 'Spring_N_Rate', 'NA'
+        'Grazing', 'Spring_N_Rate', 'other'
     ];
+
+    const fundingSources = [];
+    const projectEditors = [];
 
     // Show the add experiment form when the button is clicked
     document.querySelector('#add-project-button').addEventListener('click', function() {
@@ -114,8 +124,14 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelector('#project-form').addEventListener('submit', function(event) {
         event.preventDefault(); // Prevent the default form submission
 
+        // Set the hidden input with concatenated funding sources
+        document.querySelector('#Funding_Source').value = fundingSources.join(',');
+
+        // Set the hidden input with concatenated project editors
+        document.querySelector('#Project_Editors').value = projectEditors.join(',');
+
         const formData = new FormData(this);
-//sends a POST request to the server-side URL
+        // Send a POST request to the server-side URL
         fetch('{% url "add_project" %}', {
             method: 'POST',
             headers: {
@@ -161,9 +177,72 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             interactionFieldsContainer.appendChild(select);
 
+            // Create an input field for entering details when "other" is selected
+            const otherInput = document.createElement('input');
+            otherInput.setAttribute('type', 'text');
+            otherInput.setAttribute('id', `Interaction_${i}_other`);
+            otherInput.setAttribute('name', `Interaction_${i}_other`);
+            otherInput.setAttribute('style', 'display:none;');
+            interactionFieldsContainer.appendChild(otherInput);
+
+            // Event listener to show/hide the other input field
+            select.addEventListener('change', function() {
+                if (this.value === 'other') {
+                    otherInput.style.display = 'block';
+                } else {
+                    otherInput.style.display = 'none';
+                }
+            });
+
             interactionFieldsContainer.appendChild(document.createElement('br'));
         }
     });
+
+    // Update number of years based on start year
+    document.querySelector('#Start_year').addEventListener('input', function() {
+        const startYear = parseInt(this.value);
+        const currentYear = new Date().getFullYear();
+        const numberOfYears = currentYear - startYear + 1; // Calculate number of years
+        document.querySelector('#No_of_Year').value = numberOfYears > 0 ? numberOfYears : 0;
+    });
+
+    // Add funding source
+    document.querySelector('#add-funding-source').addEventListener('click', function() {
+        const fundingSourceInput = document.querySelector('#Funding_Source_Input');
+        const fundingSource = fundingSourceInput.value.trim();
+        if (fundingSource) {
+            fundingSources.push(fundingSource);
+            const listItem = document.createElement('li');
+            listItem.textContent = fundingSource;
+            document.querySelector('#funding-source-list').appendChild(listItem);
+            fundingSourceInput.value = ''; // Clear the input field
+        }
+    });
+
+    {% if user.is_superuser %}
+    // Add project editor
+    document.querySelector('#add-project-editor').addEventListener('click', function() {
+        const projectEditorSelect = document.querySelector('#Project_Editors_Select');
+        const projectEditor = projectEditorSelect.value.trim();
+        if (projectEditor && !projectEditors.includes(projectEditor)) {
+            projectEditors.push(projectEditor);
+            const listItem = document.createElement('li');
+            listItem.textContent = projectEditor;
+            const removeButton = document.createElement('button');
+            removeButton.textContent = 'Remove';
+            removeButton.type = 'button';
+            removeButton.addEventListener('click', function() {
+                const index = projectEditors.indexOf(projectEditor);
+                if (index > -1) {
+                    projectEditors.splice(index, 1);
+                }
+                listItem.remove();
+            });
+            listItem.appendChild(removeButton);
+            document.querySelector('#project-editors-list').appendChild(listItem);
+        }
+    });
+    {% endif %}
 });
 </script>
 {% endblock %}

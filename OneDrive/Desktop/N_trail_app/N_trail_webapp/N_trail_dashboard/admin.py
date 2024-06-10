@@ -13,19 +13,25 @@ admin.site.site_header = 'N_trail Admin_Dashboard_'
 @admin.register(Project)
 class project_admin(admin.ModelAdmin):
     list_display=('Project_ID','User_ID', 'Start_year','Interactions_count','Interaction_1',
-                  'Interaction_2','Interaction_3','Crop','No_of_Year','Role','Funding_Source','MetaData')
+                  'Interaction_2','Interaction_3','Crop','No_of_Year','Project_Editors','Funding_Source','MetaData')
 
 @admin.register(Location)
 class location_admin(admin.ModelAdmin):
     list_display = ('Location_ID','State','County', 'Owner', 'Latitude', 'Longitude', 'Contact', 'MetaData')
 
 @admin.register(Experiment)
-class experement_admin(admin.ModelAdmin):
-    list_display = ('Experiment_ID','Project_ID','Location_ID','Year',
-                    'Interaction_1_count','Interaction_1_count_1','Interaction_1_count_2','Interaction_1_count_3','Interaction_1_count_4','Interaction_1_count_5',
-                    'Interaction_2_count','Interaction_2_count_1','Interaction_2_count_2','Interaction_2_count_3','Interaction_2_count_4','Interaction_2_count_5',
-                    'Interaction_3_count','Interaction_3_count_1','Interaction_3_count_2','Interaction_3_count_3','Interaction_3_count_4','Interaction_3_count_5',
-                    'MetaData',)
+class ExperimentAdmin(admin.ModelAdmin):
+    list_display = (
+        'Experiment_ID', 'Project_ID', 'Location_ID', 'Year',
+        'Interaction_1_count', 'Interaction_1_value',
+        'Interaction_2_count', 'Interaction_2_value',
+        'Interaction_3_count', 'Interaction_3_value',
+        'Yield_Map', 'Soil_Sample', 'Sonic_sensor', 'GCP', 'RAWUAV',
+        'Orthomosic_UAV', 'DSM_UAV', 'Orthomosic_SAT', 'DSM_SAT', 
+        'VI_1', 'VI_2', 'VI_3', 'MetaData'
+    )
+
+    
                         
 @admin.register(Treatment)
 class treatment_admin(admin.ModelAdmin):

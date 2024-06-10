@@ -1,5 +1,3 @@
-
-
 {% extends 'base.html' %}
 
 {% block content %}
@@ -13,25 +11,25 @@
     <th>Location ID</th>
     <th>Year</th>
     <th>Interaction 1 Count</th>
-    <th>Interaction 1 Count 1</th>
-    <th>Interaction 1 Count 2</th>
-    <th>Interaction 1 Count 3</th>
-    <th>Interaction 1 Count 4</th>
-    <th>Interaction 1 Count 5</th>
+    <th>Interaction 1 Value</th>
     <th>Interaction 2 Count</th>
-    <th>Interaction 2 Count 1</th>
-    <th>Interaction 2 Count 2</th>
-    <th>Interaction 2 Count 3</th>
-    <th>Interaction 2 Count 4</th>
-    <th>Interaction 2 Count 5</th>
+    <th>Interaction 2 Value</th>
     <th>Interaction 3 Count</th>
-    <th>Interaction 3 Count 1</th>
-    <th>Interaction 3 Count 2</th>
-    <th>Interaction 3 Count 3</th>
-    <th>Interaction 3 Count 4</th>
-    <th>Interaction 3 Count 5</th>
+    <th>Interaction 3 Value</th>
+    <th>Yield Map</th>
+    <th>Soil Sample</th>
+    <th>Sonic Sensor</th>
+    <th>GCP</th>
+    <th>RAW UAV</th>
+    <th>Orthomosic UAV</th>
+    <th>DSM UAV</th>
+    <th>Orthomosic SAT</th>
+    <th>DSM SAT</th>
+    <th>VI 1</th>
+    <th>VI 2</th>
+    <th>VI 3</th>
     <th>Metadata</th>
-    <th>Treatments</th> 
+    <th>Treatments</th>
   </tr>
   {% for experiment in experiments %}
   <tr>
@@ -39,24 +37,24 @@
     <td>{{ experiment.Project_ID }}</td>
     <td>{{ experiment.Location_ID }}</td>
     <td>{{ experiment.Year }}</td>
-    <td>{{ experiment.Interaction_1_count}}</td>
-    <td>{{ experiment.Interaction_1_count_1}}</td>
-    <td>{{ experiment.Interaction_1_count_2}}</td>
-    <td>{{ experiment.Interaction_1_count_3}}</td>
-    <td>{{ experiment.Interaction_1_count_4}}</td>
-    <td>{{ experiment.Interaction_1_count_5}}</td>
-    <td>{{ experiment.Interaction_2_count}}</td>
-    <td>{{ experiment.Interaction_2_count_1}}</td>
-    <td>{{ experiment.Interaction_2_count_2}}</td>
-    <td>{{ experiment.Interaction_2_count_3}}</td>
-    <td>{{ experiment.Interaction_2_count_4}}</td>
-    <td>{{ experiment.Interaction_2_count_5}}</td>
-    <td>{{ experiment.Interaction_3_count}}</td>
-    <td>{{ experiment.Interaction_3_count_1}}</td>
-    <td>{{ experiment.Interaction_3_count_2}}</td>
-    <td>{{ experiment.Interaction_3_count_3}}</td>
-    <td>{{ experiment.Interaction_3_count_4}}</td>
-    <td>{{ experiment.Interaction_3_count_5}}</td>
+    <td>{{ experiment.Interaction_1_count }}</td>
+    <td>{{ experiment.Interaction_1_value }}</td>
+    <td>{{ experiment.Interaction_2_count }}</td>
+    <td>{{ experiment.Interaction_2_value }}</td>
+    <td>{{ experiment.Interaction_3_count }}</td>
+    <td>{{ experiment.Interaction_3_value }}</td>
+    <td>{{ experiment.Yield_Map }}</td>
+    <td>{{ experiment.Soil_Sample }}</td>
+    <td>{{ experiment.Sonic_sensor }}</td>
+    <td>{{ experiment.GCP }}</td>
+    <td>{{ experiment.RAWUAV }}</td>
+    <td>{{ experiment.Orthomosic_UAV }}</td>
+    <td>{{ experiment.DSM_UAV }}</td>
+    <td>{{ experiment.Orthomosic_SAT }}</td>
+    <td>{{ experiment.DSM_SAT }}</td>
+    <td>{{ experiment.VI_1 }}</td>
+    <td>{{ experiment.VI_2 }}</td>
+    <td>{{ experiment.VI_3 }}</td>
     <td>{{ experiment.MetaData }}</td>
     <td><a href="{% url 'show_treatments' experiment_id=experiment.Experiment_ID %}">Show</a></td>
   </tr>
@@ -76,7 +74,7 @@
 <!-- Add Experiment Form -->
 <div id="add-experiment-form" style="display: none;">
   <h2>Add Experiment Details</h2>
-  <form method="post" id="experiment-form" class="experiment-form">
+  <form method="post" id="experiment-form" action="{% url 'add_experiment' %}">
     {% csrf_token %}
 
     <label for="Project_ID">Project ID:</label>
@@ -87,13 +85,41 @@
     <label for="Year">Year:</label>
     <input type="text" id="Year" name="Year" required><br>
 
-    <!-- Location dropdown -->
     <label for="Location_ID">Location ID:</label>
     <select id="Location_ID" name="Location_ID">
       {% for choice in location_choices %}
       <option value="{{ choice.0 }}">{{ choice.1 }}</option>
       {% endfor %}
+      <option value="other">Other</option>
     </select><br>
+
+    <!-- New Location Fields -->
+    <div id="new-location-fields" style="display: none;">
+      <h3>Add New Location</h3>
+      <label for="New_Location_ID">New Location ID:</label>
+      <input type="text" id="New_Location_ID" name="New_Location_ID"><br>
+
+      <label for="New_State">State:</label>
+      <input type="text" id="New_State" name="New_State"><br>
+
+      <label for="New_County">County:</label>
+      <input type="text" id="New_County" name="New_County"><br>
+
+      <label for="New_Owner">Owner:</label>
+      <input type="text" id="New_Owner" name="New_Owner"><br>
+
+      <label for="New_Latitude">Latitude:</label>
+      <input type="text" id="New_Latitude" name="New_Latitude"><br>
+
+      <label for="New_Longitude">Longitude:</label>
+      <input type="text" id="New_Longitude" name="New_Longitude"><br>
+
+      <label for="New_Contact">Contact:</label>
+      <input type="text" id="New_Contact" name="New_Contact"><br>
+
+      <label for="New_MetaData">Metadata:</label>
+      <textarea id="New_MetaData" name="New_MetaData" rows="4" cols="50"></textarea><br>
+    </div>
 
     {% if project.Interaction_1 %}
     <label for="Interaction_1_count">Interaction 1 Count ({{ project.Interaction_1 }}):</label>
@@ -131,6 +157,42 @@
     <div id="interaction_3-fields"></div>
     {% endif %}
 
+    <label for="Yield_Map">Yield Map:</label>
+    <textarea id="Yield_Map" name="Yield_Map" rows="4" cols="50"></textarea><br>
+
+    <label for="Soil_Sample">Soil Sample:</label>
+    <textarea id="Soil_Sample" name="Soil_Sample" rows="4" cols="50"></textarea><br>
+
+    <label for="Sonic_sensor">Sonic Sensor:</label>
+    <textarea id="Sonic_sensor" name="Sonic_sensor" rows="4" cols="50"></textarea><br>
+
+    <label for="GCP">GCP:</label>
+    <textarea id="GCP" name="GCP" rows="4" cols="50"></textarea><br>
+
+    <label for="RAWUAV">RAW UAV:</label>
+    <textarea id="RAWUAV" name="RAWUAV" rows="4" cols="50"></textarea><br>
+
+    <label for="Orthomosic_UAV">Orthomosic UAV:</label>
+    <textarea id="Orthomosic_UAV" name="Orthomosic_UAV" rows="4" cols="50"></textarea><br>
+
+    <label for="DSM_UAV">DSM UAV:</label>
+    <textarea id="DSM_UAV" name="DSM_UAV" rows="4" cols="50"></textarea><br>
+
+    <label for="Orthomosic_SAT">Orthomosic SAT:</label>
+    <textarea id="Orthomosic_SAT" name="Orthomosic_SAT" rows="4" cols="50"></textarea><br>
+
+    <label for="DSM_SAT">DSM SAT:</label>
+    <textarea id="DSM_SAT" name="DSM_SAT" rows="4" cols="50"></textarea><br>
+
+    <label for="VI_1">VI 1:</label>
+    <textarea id="VI_1" name="VI_1" rows="4" cols="50"></textarea><br>
+
+    <label for="VI_2">VI 2:</label>
+    <textarea id="VI_2" name="VI_2" rows="4" cols="50"></textarea><br>
+
+    <label for="VI_3">VI 3:</label>
+    <textarea id="VI_3" name="VI_3" rows="4" cols="50"></textarea><br>
+
     <label for="MetaData">Metadata:</label>
     <textarea id="MetaData" name="MetaData" rows="4" cols="50"></textarea><br>
 
@@ -142,79 +204,59 @@
   </form>
 </div>
 
+<!-- Import Experiment Form -->
+<div id="import-experiment-form" style="display: none;">
+  <h2>Import Experiments</h2>
+  <form method="post" id="import-form" enctype="multipart/form-data">
+    {% csrf_token %}
+    <label for="csv_file">Upload CSV file:</label>
+    <input type="file" id="csv_file" name="csv_file" accept=".csv" required><br>
+    <button type="submit">Import</button>
+  </form>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // Interaction mapping
-  const interactionMapping = {
-    'Timing': ['fall', 'spring'],
-    'Inhibitor': ['V6', 'centuro', 'nitrapyrin'],
-    'N_rate': ['high', 'low', 'medium'],
-    'Landscape': ['flat', 'tilt'],
-    'Biological': ['provenN', 'utrishaN', 'NA'],
-    'Cover_Crop': ['withcrop', 'withoutcrop', 'corncrop'],
-    'Crop_Rotation': ['peanut', 'cotton'],
-    'Fall_N_Rate': ['10', '20', '30'],
-    'Previous_N_Rate': ['11', '12', '13'],
-    'Grazing': ['yes', 'no', 'na'],
-    'Spring_N_Rate': ['4', '6', '5'],
-    'NA': ['NA'],
-    'Select': ['Select']
-  };
+  const unitOptions = ['u1', 'u2', 'u3', 'na'];
 
-  const unitOptions = ['u1', 'u2', 'u3','na'];
-
-  // Function to update interaction fields dynamically
-  function updateInteractionFields(countId, fieldsContainerId, fieldPrefix, interactionType, fieldType) {
+  function updateInteractionFields(countId, fieldsContainerId, fieldPrefix, fieldType) {
     const countValue = parseInt(document.getElementById(countId).value);
     const fieldsContainer = document.getElementById(fieldsContainerId);
     fieldsContainer.innerHTML = ''; // Clear existing fields
+
+    if (fieldType === 'continuous') {
+      const unitSelect = document.createElement('select');
+      unitSelect.name = `${fieldPrefix}_unit`;
+      unitSelect.id = `${fieldPrefix}_unit`;
+      unitOptions.forEach(option => {
+        const optionElement = document.createElement('option');
+        optionElement.value = option;
+        optionElement.textContent = option;
+        unitSelect.appendChild(optionElement);
+      });
+      fieldsContainer.appendChild(unitSelect);
+      fieldsContainer.appendChild(document.createElement('br'));
+    }
 
     for (let i = 1; i <= countValue; i++) {
       const label = document.createElement('label');
       label.textContent = `${fieldPrefix.replace('_', ' ')} ${i}: `;
       fieldsContainer.appendChild(label);
 
-      if (fieldType === 'continuous') {
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.name = `${fieldPrefix}_${i}`;
-        input.id = `${fieldPrefix}_${i}`;
-        fieldsContainer.appendChild(input);
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.name = `${fieldPrefix}_${i}`;
+      input.id = `${fieldPrefix}_${i}`;
+      fieldsContainer.appendChild(input);
 
-        const unitSelect = document.createElement('select');
-        unitSelect.name = `${fieldPrefix}_${i}_unit`;
-        unitSelect.id = `${fieldPrefix}_${i}_unit`;
-        unitOptions.forEach(option => {
-          const optionElement = document.createElement('option');
-          optionElement.value = option;
-          optionElement.textContent = option;
-          unitSelect.appendChild(optionElement);
-        });
-        fieldsContainer.appendChild(unitSelect);
-      } else if (fieldType === 'class') {
-        const select = document.createElement('select');
-        const fieldName = `${fieldPrefix}_${i}`;
-        select.name = fieldName;
-        select.id = fieldName;
-        const options = interactionMapping[interactionType] || [];
-        options.forEach(option => {
-          const optionElement = document.createElement('option');
-          optionElement.value = option;
-          optionElement.textContent = option;
-          select.appendChild(optionElement);
-        });
-        fieldsContainer.appendChild(select);
-      }
       fieldsContainer.appendChild(document.createElement('br'));
     }
   }
 
-  // Show the add experiment form when the button is clicked
   document.querySelector('#add-experiment-button').addEventListener('click', function() {
     document.querySelector('#experiment-actions').style.display = 'block';
   });
 
-  // Handle dropdown selection
   document.querySelector('#experiment-action-select').addEventListener('change', function() {
     const action = this.value;
     if (action === 'add') {
@@ -222,14 +264,43 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
       document.querySelector('#add-experiment-form').style.display = 'none';
     }
+
+    if (action === 'import') {
+      document.querySelector('#import-experiment-form').style.display = 'block';
+    } else {
+      document.querySelector('#import-experiment-form').style.display = 'none';
+    }
   });
 
-  // Handle form submission
   document.querySelector('#experiment-form').addEventListener('submit', function(event) {
     event.preventDefault(); // Prevent the default form submission
 
     const formData = new FormData(this);
-    // Sends a POST request to the server-side URL
+
+    const interaction1Values = [];
+    const interaction1Units = document.getElementById('Interaction_1_unit')?.value;
+    if (interaction1Units) formData.set('Interaction_1_unit', interaction1Units);
+    document.querySelectorAll('#interaction_1-fields input').forEach(input => {
+      interaction1Values.push(input.value);
+    });
+    formData.set('Interaction_1_value', interaction1Values.join(','));
+
+    const interaction2Values = [];
+    const interaction2Units = document.getElementById('Interaction_2_unit')?.value;
+    if (interaction2Units) formData.set('Interaction_2_unit', interaction2Units);
+    document.querySelectorAll('#interaction_2-fields input').forEach(input => {
+      interaction2Values.push(input.value);
+    });
+    formData.set('Interaction_2_value', interaction2Values.join(','));
+
+    const interaction3Values = [];
+    const interaction3Units = document.getElementById('Interaction_3_unit')?.value;
+    if (interaction3Units) formData.set('Interaction_3_unit', interaction3Units);
+    document.querySelectorAll('#interaction_3-fields input').forEach(input => {
+      interaction3Values.push(input.value);
+    });
+    formData.set('Interaction_3_value', interaction3Values.join(','));
+
     fetch('{% url "add_experiment" %}', {
       method: 'POST',
       headers: {
@@ -241,7 +312,6 @@ document.addEventListener('DOMContentLoaded', function() {
     .then(data => {
       if (data.success) {
         const experimentID = formData.get('Experiment_ID');
-        // Redirect to the show_treatments page
         window.location.href = `{% url 'show_treatments' experiment_id='EXPERIMENT_ID_PLACEHOLDER' %}`.replace('EXPERIMENT_ID_PLACEHOLDER', experimentID);
       } else {
         alert('Failed to add experiment: ' + data.error);
@@ -253,44 +323,74 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // Event listeners for interaction count fields and type selection
+  document.getElementById('import-form').addEventListener('submit', function(event) {
+    event.preventDefault(); // Prevent the default form submission
+
+    const formData = new FormData(this);
+    fetch('{% url "import_experiment" %}', {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+      },
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert('Experiments imported successfully!');
+        window.location.reload(); // Reload the page to reflect changes
+      } else {
+        alert('Failed to import experiments: ' + data.error);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Failed to import experiments. Please try again.');
+    });
+  });
+
+  document.getElementById('Location_ID').addEventListener('change', function() {
+    const newLocationFields = document.getElementById('new-location-fields');
+    if (this.value === 'other') {
+      newLocationFields.style.display = 'block';
+    } else {
+      newLocationFields.style.display = 'none';
+    }
+  });
+
   document.getElementById('Interaction_1_count')?.addEventListener('change', function() {
-    const interactionType = "{{ project.Interaction_1 }}";
     const fieldType = document.querySelector('input[name="interaction_1_type"]:checked')?.value;
     if (fieldType) {
-      updateInteractionFields('Interaction_1_count', 'interaction_1-fields', 'Interaction_1_count', interactionType, fieldType);
+      updateInteractionFields('Interaction_1_count', 'interaction_1-fields', 'Interaction_1', fieldType);
     }
   });
 
   document.querySelectorAll('input[name="interaction_1_type"]').forEach(element => {
     element.addEventListener('change', function() {
-      const interactionType = "{{ project.Interaction_1 }}";
       const fieldType = this.value;
       const countValue = parseInt(document.getElementById('Interaction_1_count').value);
       if (countValue) {
-        updateInteractionFields('Interaction_1_count', 'interaction_1-fields', 'Interaction_1_count', interactionType, fieldType);
+        updateInteractionFields('Interaction_1_count', 'interaction_1-fields', 'Interaction_1', fieldType);
       }
     });
   });
 
   document.querySelectorAll('input[name="interaction_2_type"]').forEach(element => {
     element.addEventListener('change', function() {
-      const interactionType = "{{ project.Interaction_2 }}";
       const fieldType = this.value;
       const countValue = parseInt(document.getElementById('Interaction_2_count').value);
       if (countValue) {
-        updateInteractionFields('Interaction_2_count', 'interaction_2-fields', 'Interaction_2_count', interactionType, fieldType);
+        updateInteractionFields('Interaction_2_count', 'interaction_2-fields', 'Interaction_2', fieldType);
       }
     });
   });
 
   document.querySelectorAll('input[name="interaction_3_type"]').forEach(element => {
     element.addEventListener('change', function() {
-      const interactionType = "{{ project.Interaction_3 }}";
       const fieldType = this.value;
       const countValue = parseInt(document.getElementById('Interaction_3_count').value);
       if (countValue) {
-        updateInteractionFields('Interaction_3_count', 'interaction_3-fields', 'Interaction_3_count', interactionType, fieldType);
+        updateInteractionFields('Interaction_3_count', 'interaction_3-fields', 'Interaction_3', fieldType);
       }
     });
   });
@@ -298,6 +398,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-
-  
 {% endblock %}
