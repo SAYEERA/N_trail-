@@ -470,6 +470,7 @@ def add_experiment(request):
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
+
 @login_required
 @csrf_exempt
 def show_treatments(request, experiment_id):
@@ -496,17 +497,17 @@ def show_treatments(request, experiment_id):
                     # Update or create treatments
                     for treatment in treatments_data:
                         treatment_id = treatment.get('treatment_id')
-                        interaction_1_value = treatment.get('interaction_1_value', '').strip() if treatment.get('interaction_1_value') else ''
-                        interaction_2_value = treatment.get('interaction_2_value', '').strip() if treatment.get('interaction_2_value') else ''
-                        interaction_3_value = treatment.get('interaction_3_value', '').strip() if treatment.get('interaction_3_value') else ''
-                        no_of_replication = treatment.get('no_of_replication', '').strip() if treatment.get('no_of_replication') else ''
-                        metadata = treatment.get('metadata', '').strip() if treatment.get('metadata') else ''
+                        interaction_1_value = treatment.get('interaction_1_value', '').strip()
+                        interaction_2_value = treatment.get('interaction_2_value', '').strip()
+                        interaction_3_value = treatment.get('interaction_3_value', '').strip()
+                        no_of_replication = treatment.get('no_of_replication', '').strip()
+                        metadata = treatment.get('metadata', '').strip()
 
-                        # Ensure none of the required fields are empty
-                        if not interaction_1_value:
-                            raise ValueError(f"Interaction_1_Value for treatment {treatment_id} cannot be empty")
-                        if not interaction_2_value:
-                            raise ValueError(f"Interaction_2_Value for treatment {treatment_id} cannot be empty")
+                        # Ensure at least one interaction value is provided
+                        if not interaction_1_value and not interaction_2_value and not interaction_3_value:
+                            raise ValueError(f"At least one interaction value must be provided for treatment {treatment_id}")
+
+                        # Ensure no_of_replication is provided
                         if not no_of_replication:
                             raise ValueError(f"No_of_Replication for treatment {treatment_id} cannot be empty")
 

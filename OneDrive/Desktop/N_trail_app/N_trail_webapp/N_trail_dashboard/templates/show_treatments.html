@@ -54,6 +54,7 @@
 
 <script>
   let deletedTreatments = [];
+  let maxTreatmentId = Math.max(...Array.from(document.querySelectorAll('#treatments-table tr')).map(row => parseInt(row.querySelector('td:first-child').innerText, 10)));
 
   function enableEditing(treatmentId) {
     document.querySelector(`[name="interaction_1_value_${treatmentId}"]`).disabled = false;
@@ -70,7 +71,9 @@
   }
 
   function addNewRow() {
-    const newTreatmentId = `new_${Math.random().toString(36).substr(2, 9)}`;
+    const newTreatmentId = maxTreatmentId + 1; // Increment the maximum existing Treatment ID by 1
+    maxTreatmentId = newTreatmentId; // Update the maxTreatmentId for subsequent new rows
+
     const newRow = document.createElement('tr');
     newRow.id = `treatment-row-${newTreatmentId}`;
 
@@ -122,12 +125,9 @@
       console.log(`No of Replication: ${no_of_replication}`);
       console.log(`Metadata: ${metadata}`);
 
-      if (!interaction_1_value || !interaction_2_value || !no_of_replication) {
+      if (!interaction_1_value && !interaction_2_value && !interaction_3_value) {
         hasEmptyFields = true;
-        emptyFieldDetails += `Treatment ID ${treatmentId}: `;
-        if (!interaction_1_value) emptyFieldDetails += 'Interaction 1 Value is empty. ';
-        if (!interaction_2_value) emptyFieldDetails += 'Interaction 2 Value is empty. ';
-        if (!no_of_replication) emptyFieldDetails += 'No of Replication is empty. ';
+        emptyFieldDetails += `Treatment ID ${treatmentId}: At least one interaction value must be filled. `;
         return; // Skip adding this treatment to the list
       }
 
