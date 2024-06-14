@@ -53,6 +53,8 @@
 </div>
 
 <script>
+  let deletedTreatments = [];
+
   function enableEditing(treatmentId) {
     document.querySelector(`[name="interaction_1_value_${treatmentId}"]`).disabled = false;
     document.querySelector(`[name="interaction_2_value_${treatmentId}"]`).disabled = false;
@@ -64,6 +66,7 @@
   function deleteTreatment(treatmentId) {
     const row = document.getElementById(`treatment-row-${treatmentId}`);
     row.parentNode.removeChild(row);
+    deletedTreatments.push(treatmentId);
   }
 
   function addNewRow() {
@@ -88,22 +91,60 @@
     document.getElementById('treatments-table').appendChild(newRow);
   }
 
+  function enableAllInputs() {
+    document.querySelectorAll('#treatments-table input').forEach(input => {
+      input.disabled = false;
+    });
+  }
+
   function submitTreatments() {
+    enableAllInputs();  // Ensure inputs are enabled
     const formData = new FormData(document.getElementById('treatments-form'));
     const treatmentsData = [];
     const csrfToken = formData.get('csrfmiddlewaretoken');
 
+    let hasEmptyFields = false;
+    let emptyFieldDetails = ''; // To capture which fields are empty
+
     document.querySelectorAll('#treatments-table tr').forEach(row => {
       const treatmentId = row.querySelector('td:first-child').innerText;
+      const interaction_1_value = formData.get(`interaction_1_value_${treatmentId}`)?.trim() || '';
+      const interaction_2_value = formData.get(`interaction_2_value_${treatmentId}`)?.trim() || '';
+      const interaction_3_value = formData.get(`interaction_3_value_${treatmentId}`)?.trim() || '';
+      const no_of_replication = formData.get(`no_of_replication_${treatmentId}`)?.trim() || '';
+      const metadata = formData.get(`metadata_${treatmentId}`)?.trim() || '';
+
+      // Debug statements to inspect values
+      console.log(`Treatment ID: ${treatmentId}`);
+      console.log(`Interaction 1 Value: ${interaction_1_value}`);
+      console.log(`Interaction 2 Value: ${interaction_2_value}`);
+      console.log(`Interaction 3 Value: ${interaction_3_value}`);
+      console.log(`No of Replication: ${no_of_replication}`);
+      console.log(`Metadata: ${metadata}`);
+
+      if (!interaction_1_value || !interaction_2_value || !no_of_replication) {
+        hasEmptyFields = true;
+        emptyFieldDetails += `Treatment ID ${treatmentId}: `;
+        if (!interaction_1_value) emptyFieldDetails += 'Interaction 1 Value is empty. ';
+        if (!interaction_2_value) emptyFieldDetails += 'Interaction 2 Value is empty. ';
+        if (!no_of_replication) emptyFieldDetails += 'No of Replication is empty. ';
+        return; // Skip adding this treatment to the list
+      }
+
       treatmentsData.push({
         treatment_id: treatmentId,
-        interaction_1_value: formData.get(`interaction_1_value_${treatmentId}`),
-        interaction_2_value: formData.get(`interaction_2_value_${treatmentId}`),
-        interaction_3_value: formData.get(`interaction_3_value_${treatmentId}`),
-        no_of_replication: formData.get(`no_of_replication_${treatmentId}`),
-        metadata: formData.get(`metadata_${treatmentId}`)
+        interaction_1_value: interaction_1_value,
+        interaction_2_value: interaction_2_value,
+        interaction_3_value: interaction_3_value,
+        no_of_replication: no_of_replication,
+        metadata: metadata
       });
     });
+
+    if (hasEmptyFields) {
+      alert(`Fields cannot be empty:\n${emptyFieldDetails}`);
+      return;
+    }
 
     fetch('{% url "show_treatments" experiment.Experiment_ID %}', {
       method: 'POST',
@@ -113,7 +154,8 @@
       },
       body: JSON.stringify({
         action: 'submit_all',
-        treatments: treatmentsData
+        treatments: treatmentsData,
+        deleted_treatments: deletedTreatments // Send deleted treatments as well
       })
     })
     .then(response => response.json())

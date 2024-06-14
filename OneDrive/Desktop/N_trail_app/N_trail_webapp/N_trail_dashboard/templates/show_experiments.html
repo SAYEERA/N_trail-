@@ -30,9 +30,10 @@
     <th>VI 3</th>
     <th>Metadata</th>
     <th>Treatments</th>
+    <th>Actions</th>
   </tr>
   {% for experiment in experiments %}
-  <tr>
+  <tr id="experiment-row-{{ experiment.Experiment_ID }}">
     <td>{{ experiment.Experiment_ID }}</td>
     <td>{{ experiment.Project_ID }}</td>
     <td>{{ experiment.Location_ID }}</td>
@@ -57,6 +58,9 @@
     <td>{{ experiment.VI_3 }}</td>
     <td>{{ experiment.MetaData }}</td>
     <td><a href="{% url 'show_treatments' experiment_id=experiment.Experiment_ID %}">Show</a></td>
+    <td>
+      <button type="button" onclick="duplicateExperiment('{{ experiment.Experiment_ID }}')">Duplicate</button>
+    </td>
   </tr>
   {% endfor %}
 </table>
@@ -76,9 +80,10 @@
   <h2>Add Experiment Details</h2>
   <form method="post" id="experiment-form" action="{% url 'add_experiment' %}">
     {% csrf_token %}
-
-    <label for="Project_ID">Project ID:</label>
-    <input type="text" id="Project_ID" name="Project_ID" value="{{ project.Project_ID }}" required><br>
+    <div style="display: none;">
+      <label for="Project_ID">Project ID:</label>
+      <input type="hidden" id="Project_ID" name="Project_ID" value="{{ project.Project_ID }}" required>
+    </div><br>
     <label for="Experiment_ID">Experiment ID:</label>
     <input type="text" id="Experiment_ID" name="Experiment_ID" required><br>
 
@@ -93,32 +98,40 @@
       <option value="other">Other</option>
     </select><br>
 
-    <!-- New Location Fields -->
-    <div id="new-location-fields" style="display: none;">
-      <h3>Add New Location</h3>
-      <label for="New_Location_ID">New Location ID:</label>
-      <input type="text" id="New_Location_ID" name="New_Location_ID"><br>
+    <label for="No_of_Replicates">No of Replicates:</label>
+    <input type="number" id="No_of_Replicates" name="No_of_Replicates" required><br>
 
-      <label for="New_State">State:</label>
-      <input type="text" id="New_State" name="New_State"><br>
+    <!-- New Location Modal -->
+    <div id="new-location-modal" class="modal">
+      <div class="modal-content small-modal">
+        <span class="close-button">&times;</span>
+        <h3>Add New Location</h3>
+        <label for="New_Location_ID">New Location ID:</label>
+        <input type="text" id="New_Location_ID" name="New_Location_ID"><br>
 
-      <label for="New_County">County:</label>
-      <input type="text" id="New_County" name="New_County"><br>
+        <label for="New_State">State:</label>
+        <input type="text" id="New_State" name="New_State"><br>
 
-      <label for="New_Owner">Owner:</label>
-      <input type="text" id="New_Owner" name="New_Owner"><br>
+        <label for="New_County">County:</label>
+        <input type="text" id="New_County" name="New_County"><br>
 
-      <label for="New_Latitude">Latitude:</label>
-      <input type="text" id="New_Latitude" name="New_Latitude"><br>
+        <label for="New_Owner">Owner:</label>
+        <input type="text" id="New_Owner" name="New_Owner"><br>
 
-      <label for="New_Longitude">Longitude:</label>
-      <input type="text" id="New_Longitude" name="New_Longitude"><br>
+        <label for="New_Latitude">Latitude:</label>
+        <input type="text" id="New_Latitude" name="New_Latitude"><br>
 
-      <label for="New_Contact">Contact:</label>
-      <input type="text" id="New_Contact" name="New_Contact"><br>
+        <label for="New_Longitude">Longitude:</label>
+        <input type="text" id="New_Longitude" name="New_Longitude"><br>
 
-      <label for="New_MetaData">Metadata:</label>
-      <textarea id="New_MetaData" name="New_MetaData" rows="4" cols="50"></textarea><br>
+        <label for="New_Contact">Contact:</label>
+        <input type="text" id="New_Contact" name="New_Contact"><br>
+
+        <label for="New_MetaData">Metadata:</label>
+        <textarea id="New_MetaData" name="New_MetaData" rows="4" cols="50"></textarea><br>
+
+        <button type="button" id="save-location-button">Save Location</button>
+      </div>
     </div>
 
     {% if project.Interaction_1 %}
@@ -199,7 +212,7 @@
     <label for="ManualSubmit">Manual Submit</label>
     <input type="checkbox" id="ManualSubmit">
 
-    <button type="submit">Generate Treatments</button>
+    <button type="submit" id="submit-button">Generate Treatments</button>
     <span id="success-message" style="color: green; display: none;">Experiment added successfully!</span>
   </form>
 </div>
@@ -215,11 +228,54 @@
   </form>
 </div>
 
+<style>
+/* Modal styling */
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0, 0, 0); /* Fallback color */
+  background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 15% auto; /* 15% from the top and centered */
+  padding: 20px;
+  border: 1px solid #888;
+  width: 50%; /* Smaller width */
+  max-width: 600px; /* Ensure it doesn't get too large */
+}
+
+.small-modal {
+  width: 30%;
+}
+
+.close-button {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close-button:hover,
+.close-button:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const unitOptions = ['u1', 'u2', 'u3', 'na'];
 
-  function updateInteractionFields(countId, fieldsContainerId, fieldPrefix, fieldType) {
+  function updateInteractionFields(countId, fieldsContainerId, fieldPrefix, fieldType, values) {
     const countValue = parseInt(document.getElementById(countId).value);
     const fieldsContainer = document.getElementById(fieldsContainerId);
     fieldsContainer.innerHTML = ''; // Clear existing fields
@@ -247,6 +303,7 @@ document.addEventListener('DOMContentLoaded', function() {
       input.type = 'text';
       input.name = `${fieldPrefix}_${i}`;
       input.id = `${fieldPrefix}_${i}`;
+      input.value = values ? values[i - 1] : '';
       fieldsContainer.appendChild(input);
 
       fieldsContainer.appendChild(document.createElement('br'));
@@ -301,6 +358,29 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     formData.set('Interaction_3_value', interaction3Values.join(','));
 
+    // Check if 'other' is selected and validate new location fields
+    if (document.getElementById('Location_ID').value === 'other') {
+      // Add required attribute to new location fields
+      document.getElementById('New_Location_ID').setAttribute('required', true);
+      document.getElementById('New_State').setAttribute('required', true);
+      document.getElementById('New_County').setAttribute('required', true);
+      document.getElementById('New_Owner').setAttribute('required', true);
+      document.getElementById('New_Latitude').setAttribute('required', true);
+      document.getElementById('New_Longitude').setAttribute('required', true);
+      document.getElementById('New_Contact').setAttribute('required', true);
+      document.getElementById('New_MetaData').setAttribute('required', true);
+    } else {
+      // Remove required attribute from new location fields
+      document.getElementById('New_Location_ID').removeAttribute('required');
+      document.getElementById('New_State').removeAttribute('required');
+      document.getElementById('New_County').removeAttribute('required');
+      document.getElementById('New_Owner').removeAttribute('required');
+      document.getElementById('New_Latitude').removeAttribute('required');
+      document.getElementById('New_Longitude').removeAttribute('required');
+      document.getElementById('New_Contact').removeAttribute('required');
+      document.getElementById('New_MetaData').removeAttribute('required');
+    }
+
     fetch('{% url "add_experiment" %}', {
       method: 'POST',
       headers: {
@@ -312,7 +392,8 @@ document.addEventListener('DOMContentLoaded', function() {
     .then(data => {
       if (data.success) {
         const experimentID = formData.get('Experiment_ID');
-        window.location.href = `{% url 'show_treatments' experiment_id='EXPERIMENT_ID_PLACEHOLDER' %}`.replace('EXPERIMENT_ID_PLACEHOLDER', experimentID);
+        const noOfReplicates = formData.get('No_of_Replicates');
+        window.location.href = `{% url 'show_treatments' experiment_id='EXPERIMENT_ID_PLACEHOLDER' %}?no_of_replicates=${noOfReplicates}`.replace('EXPERIMENT_ID_PLACEHOLDER', experimentID);
       } else {
         alert('Failed to add experiment: ' + data.error);
       }
@@ -349,20 +430,71 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  document.getElementById('Location_ID').addEventListener('change', function() {
-    const newLocationFields = document.getElementById('new-location-fields');
+  // Get the modal
+  const modal = document.getElementById('new-location-modal');
+
+  // Get the button that opens the modal
+  const locationSelect = document.getElementById('Location_ID');
+
+  // Get the <span> element that closes the modal
+  const span = document.getElementsByClassName('close-button')[0];
+
+  // When the user selects 'other', open the modal
+  locationSelect.addEventListener('change', function() {
     if (this.value === 'other') {
-      newLocationFields.style.display = 'block';
-    } else {
-      newLocationFields.style.display = 'none';
+      modal.style.display = 'block';
     }
   });
 
-  document.getElementById('Interaction_1_count')?.addEventListener('change', function() {
-    const fieldType = document.querySelector('input[name="interaction_1_type"]:checked')?.value;
-    if (fieldType) {
-      updateInteractionFields('Interaction_1_count', 'interaction_1-fields', 'Interaction_1', fieldType);
+  // When the user clicks on <span> (x), close the modal
+  span.addEventListener('click', function() {
+    modal.style.display = 'none';
+  });
+
+  // When the user clicks anywhere outside of the modal, close it
+  window.addEventListener('click', function(event) {
+    if (event.target == modal) {
+      modal.style.display = 'none';
     }
+  });
+
+  document.getElementById('save-location-button').addEventListener('click', function() {
+    const newLocationFormData = new FormData();
+    newLocationFormData.append('Location_ID', document.getElementById('New_Location_ID').value);
+    newLocationFormData.append('State', document.getElementById('New_State').value);
+    newLocationFormData.append('County', document.getElementById('New_County').value);
+    newLocationFormData.append('Owner', document.getElementById('New_Owner').value);
+    newLocationFormData.append('Latitude', document.getElementById('New_Latitude').value);
+    newLocationFormData.append('Longitude', document.getElementById('New_Longitude').value);
+    newLocationFormData.append('Contact', document.getElementById('New_Contact').value);
+    newLocationFormData.append('MetaData', document.getElementById('New_MetaData').value);
+
+    fetch('{% url "add_location" %}', {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': newLocationFormData.get('csrfmiddlewaretoken')
+      },
+      body: newLocationFormData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        const newLocationID = document.getElementById('New_Location_ID').value;
+        const locationSelect = document.getElementById('Location_ID');
+        const newOption = document.createElement('option');
+        newOption.value = newLocationID;
+        newOption.textContent = newLocationID;
+        locationSelect.appendChild(newOption);
+        locationSelect.value = newLocationID;
+        modal.style.display = 'none';
+      } else {
+        alert('Failed to add location: ' + data.error);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Failed to add location. Please try again.');
+    });
   });
 
   document.querySelectorAll('input[name="interaction_1_type"]').forEach(element => {
@@ -395,6 +527,50 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
+  window.duplicateExperiment = function(experimentId) {
+    const row = document.getElementById(`experiment-row-${experimentId}`);
+    const newRow = row.cloneNode(true);
+
+    // Duplicate the existing Experiment ID
+    const experimentIdField = newRow.querySelector('td:first-child');
+    experimentIdField.textContent = `${experimentId}_copy`;
+    newRow.id = `experiment-row-${experimentId}_copy`;
+
+    // Add the new row to the table
+    row.parentNode.insertBefore(newRow, row.nextSibling);
+
+    // Show the add experiment form with existing row details
+    document.querySelector('#add-experiment-form').style.display = 'block';
+    document.querySelector('#Experiment_ID').value = `${experimentId}_copy`;
+    document.querySelector('#Year').value = row.querySelector('td:nth-child(4)').textContent;
+    document.querySelector('#Location_ID').value = row.querySelector('td:nth-child(3)').textContent;
+    document.querySelector('#No_of_Replicates').value = row.querySelector('td:nth-child(6)').textContent;
+    document.querySelector('#Interaction_1_count').value = row.querySelector('td:nth-child(5)').textContent;
+    document.querySelector('#Interaction_2_count').value = row.querySelector('td:nth-child(7)').textContent;
+    document.querySelector('#Interaction_3_count').value = row.querySelector('td:nth-child(9)').textContent;
+    document.querySelector('#Yield_Map').value = row.querySelector('td:nth-child(11)').textContent;
+    document.querySelector('#Soil_Sample').value = row.querySelector('td:nth-child(12)').textContent;
+    document.querySelector('#Sonic_sensor').value = row.querySelector('td:nth-child(13)').textContent;
+    document.querySelector('#GCP').value = row.querySelector('td:nth-child(14)').textContent;
+    document.querySelector('#RAWUAV').value = row.querySelector('td:nth-child(15)').textContent;
+    document.querySelector('#Orthomosic_UAV').value = row.querySelector('td:nth-child(16)').textContent;
+    document.querySelector('#DSM_UAV').value = row.querySelector('td:nth-child(17)').textContent;
+    document.querySelector('#Orthomosic_SAT').value = row.querySelector('td:nth-child(18)').textContent;
+    document.querySelector('#DSM_SAT').value = row.querySelector('td:nth-child(19)').textContent;
+    document.querySelector('#VI_1').value = row.querySelector('td:nth-child(20)').textContent;
+    document.querySelector('#VI_2').value = row.querySelector('td:nth-child(21)').textContent;
+    document.querySelector('#VI_3').value = row.querySelector('td:nth-child(22)').textContent;
+    document.querySelector('#MetaData').value = row.querySelector('td:nth-child(23)').textContent;
+
+    // Populate interaction values in the form
+    const interaction1Values = row.querySelector('td:nth-child(6)').textContent.split(',');
+    const interaction2Values = row.querySelector('td:nth-child(8)').textContent.split(',');
+    const interaction3Values = row.querySelector('td:nth-child(10)').textContent.split(',');
+
+    updateInteractionFields('Interaction_1_count', 'interaction_1-fields', 'Interaction_1', 'class', interaction1Values);
+    updateInteractionFields('Interaction_2_count', 'interaction_2-fields', 'Interaction_2', 'class', interaction2Values);
+    updateInteractionFields('Interaction_3_count', 'interaction_3-fields', 'Interaction_3', 'class', interaction3Values);
+  };
 });
 </script>
 

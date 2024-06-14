@@ -29,6 +29,11 @@ class Project(models.Model):
         ('Rice', 'Rice'),
         ('Fescue', 'Fescue'),
     )
+    
+    VIEW_TYPE_CHOICES = (
+        ('private', 'Private'),
+        ('protected', 'Protected'),
+    )
 
 
     Project_ID = models.CharField(max_length=120, primary_key=True)
@@ -43,6 +48,7 @@ class Project(models.Model):
     Project_Editors = models.CharField(max_length=100,  default='NA')
     Funding_Source = models.CharField(max_length=100, default='Unknown')
     MetaData = models.TextField(default='No metadata available')
+    View_Type = models.CharField(max_length=10, choices=VIEW_TYPE_CHOICES, default='private')
 
     def __str__(self):
         return self.Project_ID
