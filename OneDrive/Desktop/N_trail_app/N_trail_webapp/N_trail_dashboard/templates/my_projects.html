@@ -19,8 +19,8 @@
     <th>Project Editors</th>
     <th>Funding Source</th>
     <th>Metadata</th>
-    <th>View Type</th> <!-- New column for View Type -->
-    <th>experiments</th>
+    <th>View Type</th>
+    <th>Experiments</th>
   </tr>
   {% for project in projects %}
   <tr>
@@ -36,7 +36,7 @@
     <td>{{ project.Project_Editors }}</td>
     <td>{{ project.Funding_Source }}</td>
     <td>{{ project.MetaData }}</td>
-    <td>{{ project.View_Type }}</td> <!-- Display View Type -->
+    <td>{{ project.View_Type }}</td>
     <td><a href="{% url 'show_experiments' project_id=project.Project_ID %}">Show</a></td>
   </tr>
   {% endfor %}
@@ -138,11 +138,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Client-side validation: Ensure all required fields are filled
         const requiredFields = document.querySelectorAll('#project-form [required]');
-        console.log(requiredFields)
         let allFieldsFilled = true;
 
         requiredFields.forEach(field => {
-            console.log(field.name + ': ' + field.value); // Log field value for debugging
             if (!field.value.trim()) {
                 allFieldsFilled = false;
                 field.style.border = '2px solid red';
@@ -150,11 +148,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 field.style.border = '';
             }
         });
-        console.log('wejhrej')
-        console.log(projectEditors)
-        console.log(fundingSources)
-        if(0 == projectEditors.length || 0==fundingSources.length){
-          alert('Please fill list values required fields.');
+
+        if (projectEditors.length === 0 || fundingSources.length === 0) {
+            alert('Please fill Project editor/ funding source fields.');
             return;
         }
 
@@ -165,14 +161,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Update hidden fields with concatenated values
         const projectEditorsField = document.querySelector('#Project_Editors');
-        console.log('projectEditorsField - value - ' + projectEditorsField.value)
         projectEditorsField.value = projectEditors.join(',');
         const fundingSourceField = document.querySelector('#Funding_Source');
         fundingSourceField.value = fundingSources.join(',');
-
-        // Log hidden field values for debugging
-        console.log('Project_Editors (hidden field): ' + projectEditorsField.value);
-        console.log('Funding_Source (hidden field): ' + fundingSourceField.value);
 
         const formData = new FormData(this);
         // Send a POST request to the server-side URL
@@ -187,7 +178,6 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success) {
                 document.querySelector('#success-message').style.display = 'inline';
-                appendNewProjectToTable(formData);
                 document.querySelector('#project-form').reset(); // Reset the form fields
                 document.querySelector('#add-project-form').style.display = 'none'; // Hide the form
 
@@ -196,6 +186,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 projectEditors = [];
                 document.querySelector('#funding-source-list').innerHTML = '';
                 document.querySelector('#project-editors-list').innerHTML = '';
+
+                // Refresh the page
+                window.location.reload();
             } else {
                 alert('Failed to add project: ' + data.error);
             }
@@ -206,60 +199,36 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    function appendNewProjectToTable(formData) {
-        const projectTable = document.querySelector('#project-table');
-        const newRow = document.createElement('tr');
-
-        newRow.innerHTML = `
-            <td>${formData.get('Project_ID')}</td>
-            <td>${formData.get('User_ID')}</td>
-            <td>${formData.get('Start_year')}</td>
-            <td>${formData.get('Interactions_count')}</td>
-            <td>${formData.get('Interaction_1')}</td>
-            <td>${formData.get('Interaction_2')}</td>
-            <td>${formData.get('Interaction_3')}</td>
-            <td>${formData.get('Crop')}</td>
-            <td>${formData.get('No_of_Year')}</td>
-            <td>${formData.get('Project_Editors')}</td>
-            <td>${formData.get('Funding_Source')}</td>
-            <td>${formData.get('MetaData')}</td>
-            <td>${formData.get('View_Type')}</td> <!-- Display View Type -->
-            <td><a href="{% url 'show_experiments' project_id=''}${formData.get('Project_ID')}">Show</a></td>
-        `;
-
-        projectTable.appendChild(newRow);
-    }
-
     // Update interaction fields dynamically based on Interactions Count
-document.querySelector('#Interactions_count').addEventListener('change', function() {
-    const count = parseInt(this.value);
-    const interactionFieldsContainer = document.querySelector('#interaction-fields');
-    interactionFieldsContainer.innerHTML = ''; // Clear existing fields
+    document.querySelector('#Interactions_count').addEventListener('change', function() {
+        const count = parseInt(this.value);
+        const interactionFieldsContainer = document.querySelector('#interaction-fields');
+        interactionFieldsContainer.innerHTML = ''; // Clear existing fields
 
-    for (let i = 1; i <= count; i++) {
-        const label = document.createElement('label');
-        label.setAttribute('for', `Interaction_${i}`);
-        label.textContent = `Interaction ${i}:`;
-        interactionFieldsContainer.appendChild(label);
+        for (let i = 1; i <= count; i++) {
+            const label = document.createElement('label');
+            label.setAttribute('for', `Interaction_${i}`);
+            label.textContent = `Interaction ${i}:`;
+            interactionFieldsContainer.appendChild(label);
 
-        const select = document.createElement('select');
-        select.setAttribute('id', `Interaction_${i}`);
-        select.setAttribute('name', `Interaction_${i}`);
-        select.required = true;
+            const select = document.createElement('select');
+            select.setAttribute('id', `Interaction_${i}`);
+            select.setAttribute('name', `Interaction_${i}`);
+            select.required = true;
 
-        // Add the default empty option
-        const defaultOption = document.createElement('option');
-        defaultOption.value = '';
-        defaultOption.textContent = 'Select an option';
-        select.appendChild(defaultOption);
+            // Add the default empty option
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Select an option';
+            select.appendChild(defaultOption);
 
-        interactionChoices.forEach(choice => {
-            const option = document.createElement('option');
-            option.value = choice;
-            option.textContent = choice;
-            select.appendChild(option);
-        });
-        interactionFieldsContainer.appendChild(select);
+            interactionChoices.forEach(choice => {
+                const option = document.createElement('option');
+                option.value = choice;
+                option.textContent = choice;
+                select.appendChild(option);
+            });
+            interactionFieldsContainer.appendChild(select);
 
             // Create an input field for entering details when "other" is selected
             const otherInput = document.createElement('input');

@@ -339,8 +339,10 @@ def add_project(request):
     if request.method == 'POST':
         try:
             project_id = request.POST.get('Project_ID')
-            if not project_id:
-                raise ValueError("Project_ID is required")
+            
+            # Check if the project ID already exists
+            if Project.objects.filter(Project_ID=project_id).exists():
+                return JsonResponse({'success': False, 'error': 'Project ID already exists.'})
             start_year = request.POST.get('Start_year')
             interactions_count = request.POST.get('Interactions_count')
             interaction_1 = request.POST.get('Interaction_1', '')
