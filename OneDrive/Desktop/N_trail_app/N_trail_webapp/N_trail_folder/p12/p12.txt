@@ -1,0 +1,12 @@
+Project ID: p12
+User ID: None
+Start Year: 2022
+Interactions Count: 1
+Interaction 1: Timing
+Interaction 2: 
+Interaction 3: 
+Crop: Cotton
+Number of Years: 3
+Project Editors: sayeera@gmail.com
+Funding Source: k
+Metadata: naa

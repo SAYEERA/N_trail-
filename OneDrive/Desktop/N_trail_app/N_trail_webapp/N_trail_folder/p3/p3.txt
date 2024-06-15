@@ -1,0 +1,13 @@
+Project ID: p3
+User ID: 5
+Start Year: 2022
+Interactions Count: 1
+Interaction 1: Inhibitor
+Interaction 2: None
+Interaction 3: None
+Crop: Corn
+Number of Years: 3
+Project Editors: sayeera@gmail.com
+Funding Source: AS
+Metadata: NA
+View Type: private

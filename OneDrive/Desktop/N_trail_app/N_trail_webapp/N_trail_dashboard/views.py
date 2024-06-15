@@ -6,7 +6,9 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.template.loader import render_to_string
 import random
-import json 
+import json
+import os
+from django.conf import settings 
 from django.db import transaction
 import logging
 from django.contrib.auth import login
@@ -333,8 +335,8 @@ def import_experiment(request):
 
 
 
-@login_required
 @csrf_exempt
+@login_required
 def add_project(request):
     if request.method == 'POST':
         try:
@@ -343,20 +345,24 @@ def add_project(request):
             # Check if the project ID already exists
             if Project.objects.filter(Project_ID=project_id).exists():
                 return JsonResponse({'success': False, 'error': 'Project ID already exists.'})
+
+            user_id = request.user.id
             start_year = request.POST.get('Start_year')
             interactions_count = request.POST.get('Interactions_count')
-            interaction_1 = request.POST.get('Interaction_1', '')
-            interaction_2 = request.POST.get('Interaction_2', '')
-            interaction_3 = request.POST.get('Interaction_3', '')
+            interaction_1 = request.POST.get('Interaction_1')
+            interaction_2 = request.POST.get('Interaction_2')
+            interaction_3 = request.POST.get('Interaction_3')
             crop = request.POST.get('Crop')
             no_of_years = request.POST.get('No_of_Year')
             project_editors = request.POST.get('Project_Editors')
             funding_source = request.POST.get('Funding_Source')
             metadata = request.POST.get('MetaData')
+            view_type = request.POST.get('View_Type')
 
-            # Create a new Project instance
-            new_project = Project(
+            # Create the project
+            project = Project.objects.create(
                 Project_ID=project_id,
+                User_ID_id=user_id,
                 Start_year=start_year,
                 Interactions_count=interactions_count,
                 Interaction_1=interaction_1,
@@ -367,16 +373,42 @@ def add_project(request):
                 Project_Editors=project_editors,
                 Funding_Source=funding_source,
                 MetaData=metadata,
-                User_ID=request.user  # Set the current user
+                View_Type=view_type
             )
-            new_project.save()
+
+            # Create folder and save project details as a .txt file
+            # base_dir = os.path.join(settings.BASE_DIR, 'N_trail_folder')
+            base_dir = os.path.join(r'C:\Users\sayee\OneDrive\Desktop', 'N_trail_folder')
+
+
+            if not os.path.exists(base_dir):
+                os.makedirs(base_dir)
+            project_dir = os.path.join(base_dir, project_id)
+            os.makedirs(project_dir, exist_ok=True)
+
+            print(f"Base directory: {base_dir}")
+            print(f"Project directory: {project_dir}")
+
+            file_path = os.path.join(project_dir, f'{project_id}.txt')
+            with open(file_path, 'w') as file:
+                file.write(f'Project ID: {project_id}\n')
+                file.write(f'User ID: {user_id}\n')
+                file.write(f'Start Year: {start_year}\n')
+                file.write(f'Interactions Count: {interactions_count}\n')
+                file.write(f'Interaction 1: {interaction_1}\n')
+                file.write(f'Interaction 2: {interaction_2}\n')
+                file.write(f'Interaction 3: {interaction_3}\n')
+                file.write(f'Crop: {crop}\n')
+                file.write(f'Number of Years: {no_of_years}\n')
+                file.write(f'Project Editors: {project_editors}\n')
+                file.write(f'Funding Source: {funding_source}\n')
+                file.write(f'Metadata: {metadata}\n')
+                file.write(f'View Type: {view_type}\n')
 
             return JsonResponse({'success': True})
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
-
-    return JsonResponse({'success': False, 'error': 'Invalid request method'})
-@csrf_exempt
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
 @login_required
 def add_experiment(request):
     if request.method == 'POST':
