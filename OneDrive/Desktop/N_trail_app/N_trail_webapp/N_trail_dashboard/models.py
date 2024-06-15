@@ -4,7 +4,7 @@ import uuid
 
 class Project(models.Model):
     INTERACTION_CHOICES = (
-        ('Select', 'select'),
+        ('', 'select'),
         ('Timing', 'Timing'),
         ('Inhibitor', 'Inhibitor'),
         ('N_rate', 'N_rate'),
@@ -22,7 +22,7 @@ class Project(models.Model):
     
 
     CROP_CHOICES = (
-        ('Select', 'select'),
+        ('', 'select'),
         ('NA', 'Not Available'),
         ('Corn', 'Corn'),
         ('Cotton', 'Cotton'),

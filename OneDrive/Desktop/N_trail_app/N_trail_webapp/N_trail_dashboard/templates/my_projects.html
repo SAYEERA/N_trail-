@@ -89,7 +89,7 @@
       </select>
       <button type="button" id="add-project-editor">Add</button>
       <ul id="project-editors-list"></ul>
-      <input type="hidden" id="Project_Editors" name="Project_Editors" required><br>
+      <input type="hidden" id="Project_Editors" name="Project_Editors" ><br>
     </div>
     {% endif %}
 
@@ -99,7 +99,7 @@
       <button type="button" id="add-funding-source">Add</button>
     </div>
     <ul id="funding-source-list"></ul>
-    <input type="hidden" id="Funding_Source" name="Funding_Source" required><br>
+    <input type="hidden" id="Funding_Source" name="Funding_Source" ><br>
 
     <label for="MetaData">Metadata:</label>
     <textarea id="MetaData" name="MetaData" rows="4" cols="50" required></textarea><br>
@@ -138,6 +138,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Client-side validation: Ensure all required fields are filled
         const requiredFields = document.querySelectorAll('#project-form [required]');
+        console.log(requiredFields)
         let allFieldsFilled = true;
 
         requiredFields.forEach(field => {
@@ -149,6 +150,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 field.style.border = '';
             }
         });
+        console.log('wejhrej')
+        console.log(projectEditors)
+        console.log(fundingSources)
+        if(0 == projectEditors.length || 0==fundingSources.length){
+          alert('Please fill list values required fields.');
+            return;
+        }
 
         if (!allFieldsFilled) {
             alert('Please fill all required fields.');
@@ -157,6 +165,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Update hidden fields with concatenated values
         const projectEditorsField = document.querySelector('#Project_Editors');
+        console.log('projectEditorsField - value - ' + projectEditorsField.value)
         projectEditorsField.value = projectEditors.join(',');
         const fundingSourceField = document.querySelector('#Funding_Source');
         fundingSourceField.value = fundingSources.join(',');
@@ -222,28 +231,35 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Update interaction fields dynamically based on Interactions Count
-    document.querySelector('#Interactions_count').addEventListener('change', function() {
-        const count = parseInt(this.value);
-        const interactionFieldsContainer = document.querySelector('#interaction-fields');
-        interactionFieldsContainer.innerHTML = ''; // Clear existing fields
+document.querySelector('#Interactions_count').addEventListener('change', function() {
+    const count = parseInt(this.value);
+    const interactionFieldsContainer = document.querySelector('#interaction-fields');
+    interactionFieldsContainer.innerHTML = ''; // Clear existing fields
 
-        for (let i = 1; i <= count; i++) {
-            const label = document.createElement('label');
-            label.setAttribute('for', `Interaction_${i}`);
-            label.textContent = `Interaction ${i}:`;
-            interactionFieldsContainer.appendChild(label);
+    for (let i = 1; i <= count; i++) {
+        const label = document.createElement('label');
+        label.setAttribute('for', `Interaction_${i}`);
+        label.textContent = `Interaction ${i}:`;
+        interactionFieldsContainer.appendChild(label);
 
-            const select = document.createElement('select');
-            select.setAttribute('id', `Interaction_${i}`);
-            select.setAttribute('name', `Interaction_${i}`);
-            select.required = true;
-            interactionChoices.forEach(choice => {
-                const option = document.createElement('option');
-                option.value = choice;
-                option.textContent = choice;
-                select.appendChild(option);
-            });
-            interactionFieldsContainer.appendChild(select);
+        const select = document.createElement('select');
+        select.setAttribute('id', `Interaction_${i}`);
+        select.setAttribute('name', `Interaction_${i}`);
+        select.required = true;
+
+        // Add the default empty option
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = 'Select an option';
+        select.appendChild(defaultOption);
+
+        interactionChoices.forEach(choice => {
+            const option = document.createElement('option');
+            option.value = choice;
+            option.textContent = choice;
+            select.appendChild(option);
+        });
+        interactionFieldsContainer.appendChild(select);
 
             // Create an input field for entering details when "other" is selected
             const otherInput = document.createElement('input');
