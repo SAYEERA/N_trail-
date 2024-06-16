@@ -409,100 +409,100 @@ def add_project(request):
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
     return JsonResponse({'success': False, 'error': 'Invalid request'})
-@login_required
-def add_experiment(request):
-    if request.method == 'POST':
-        try:
-            project_id = request.POST.get('Project_ID')
-            experiment_id = request.POST.get('Experiment_ID')
-            year = request.POST.get('Year')
-            location_id = request.POST.get('Location_ID')
-            interaction_1_count = request.POST.get('Interaction_1_count', '0') or '0'
-            interaction_2_count = request.POST.get('Interaction_2_count', '0') or '0'
-            interaction_3_count = request.POST.get('Interaction_3_count', '0') or '0'
-            metadata = request.POST.get('MetaData')
-            no_of_replicates = request.POST.get('No_of_Replicates')
+# @login_required
+# def add_experiment(request):
+#     if request.method == 'POST':
+#         try:
+#             project_id = request.POST.get('Project_ID')
+#             experiment_id = request.POST.get('Experiment_ID')
+#             year = request.POST.get('Year')
+#             location_id = request.POST.get('Location_ID')
+#             interaction_1_count = request.POST.get('Interaction_1_count', '0') or '0'
+#             interaction_2_count = request.POST.get('Interaction_2_count', '0') or '0'
+#             interaction_3_count = request.POST.get('Interaction_3_count', '0') or '0'
+#             metadata = request.POST.get('MetaData')
+#             no_of_replicates = request.POST.get('No_of_Replicates')
 
-            # Convert interaction counts to integers
-            interaction_1_count = int(interaction_1_count)
-            interaction_2_count = int(interaction_2_count)
-            interaction_3_count = int(interaction_3_count)
+#             # Convert interaction counts to integers
+#             interaction_1_count = int(interaction_1_count)
+#             interaction_2_count = int(interaction_2_count)
+#             interaction_3_count = int(interaction_3_count)
 
-            # Fetch the Project instance
-            project = get_object_or_404(Project, pk=project_id)
+#             # Fetch the Project instance
+#             project = get_object_or_404(Project, pk=project_id)
 
-            # Handle the "Other" location option
-            if location_id == 'other':
-                location_data = {
-                    'Location_ID': request.POST.get('New_Location_ID'),
-                    'State': request.POST.get('New_State'),
-                    'County': request.POST.get('New_County'),
-                    'Owner': request.POST.get('New_Owner'),
-                    'Latitude': request.POST.get('New_Latitude'),
-                    'Longitude': request.POST.get('New_Longitude'),
-                    'Contact': request.POST.get('New_Contact'),
-                    'MetaData': request.POST.get('New_MetaData')
-                }
-                location = Location.objects.create(**location_data)
-                location_id = location.Location_ID
-            else:
-                location = get_object_or_404(Location, pk=location_id)
+#             # Handle the "Other" location option
+#             if location_id == 'other':
+#                 location_data = {
+#                     'Location_ID': request.POST.get('New_Location_ID'),
+#                     'State': request.POST.get('New_State'),
+#                     'County': request.POST.get('New_County'),
+#                     'Owner': request.POST.get('New_Owner'),
+#                     'Latitude': request.POST.get('New_Latitude'),
+#                     'Longitude': request.POST.get('New_Longitude'),
+#                     'Contact': request.POST.get('New_Contact'),
+#                     'MetaData': request.POST.get('New_MetaData')
+#                 }
+#                 location = Location.objects.create(**location_data)
+#                 location_id = location.Location_ID
+#             else:
+#                 location = get_object_or_404(Location, pk=location_id)
 
-            # Save the experiment data to the database
-            experiment = Experiment.objects.create(
-                Experiment_ID=experiment_id,
-                Project_ID=project,
-                Location_ID=location,
-                Year=year,
-                Interaction_1_count=interaction_1_count,
-                Interaction_2_count=interaction_2_count,
-                Interaction_3_count=interaction_3_count,
-                MetaData=metadata
-            )
+#             # Save the experiment data to the database
+#             experiment = Experiment.objects.create(
+#                 Experiment_ID=experiment_id,
+#                 Project_ID=project,
+#                 Location_ID=location,
+#                 Year=year,
+#                 Interaction_1_count=interaction_1_count,
+#                 Interaction_2_count=interaction_2_count,
+#                 Interaction_3_count=interaction_3_count,
+#                 MetaData=metadata
+#             )
 
-            # Save dynamically generated fields
-            interaction_1_values = []
-            interaction_2_values = []
-            interaction_3_values = []
+#             # Save dynamically generated fields
+#             interaction_1_values = []
+#             interaction_2_values = []
+#             interaction_3_values = []
 
-            for i in range(1, interaction_1_count + 1):
-                value = request.POST.get(f'Interaction_1_{i}', 'NA')
-                interaction_1_values.append(value)
+#             for i in range(1, interaction_1_count + 1):
+#                 value = request.POST.get(f'Interaction_1_{i}', 'NA')
+#                 interaction_1_values.append(value)
 
-            for i in range(1, interaction_2_count + 1):
-                value = request.POST.get(f'Interaction_2_{i}', 'NA')
-                interaction_2_values.append(value)
+#             for i in range(1, interaction_2_count + 1):
+#                 value = request.POST.get(f'Interaction_2_{i}', 'NA')
+#                 interaction_2_values.append(value)
 
-            for i in range(1, interaction_3_count + 1):
-                value = request.POST.get(f'Interaction_3_{i}', 'NA')
-                interaction_3_values.append(value)
+#             for i in range(1, interaction_3_count + 1):
+#                 value = request.POST.get(f'Interaction_3_{i}', 'NA')
+#                 interaction_3_values.append(value)
 
-            experiment.Interaction_1_value = ','.join(interaction_1_values)
-            experiment.Interaction_2_value = ','.join(interaction_2_values)
-            experiment.Interaction_3_value = ','.join(interaction_3_values)
+#             experiment.Interaction_1_value = ','.join(interaction_1_values)
+#             experiment.Interaction_2_value = ','.join(interaction_2_values)
+#             experiment.Interaction_3_value = ','.join(interaction_3_values)
 
-            # Save additional fields
-            experiment.Yield_Map = request.POST.get('Yield_Map', '')
-            experiment.Soil_Sample = request.POST.get('Soil_Sample', '')
-            experiment.Sonic_sensor = request.POST.get('Sonic_sensor', '')
-            experiment.GCP = request.POST.get('GCP', '')
-            experiment.RAWUAV = request.POST.get('RAWUAV', '')
-            experiment.Orthomosic_UAV = request.POST.get('Orthomosic_UAV', '')
-            experiment.DSM_UAV = request.POST.get('DSM_UAV', '')
-            experiment.Orthomosic_SAT = request.POST.get('Orthomosic_SAT', '')
-            experiment.DSM_SAT = request.POST.get('DSM_SAT', '')
-            experiment.VI_1 = request.POST.get('VI_1', '')
-            experiment.VI_2 = request.POST.get('VI_2', '')
-            experiment.VI_3 = request.POST.get('VI_3', '')
+#             # Save additional fields
+#             experiment.Yield_Map = request.POST.get('Yield_Map', '')
+#             experiment.Soil_Sample = request.POST.get('Soil_Sample', '')
+#             experiment.Sonic_sensor = request.POST.get('Sonic_sensor', '')
+#             experiment.GCP = request.POST.get('GCP', '')
+#             experiment.RAWUAV = request.POST.get('RAWUAV', '')
+#             experiment.Orthomosic_UAV = request.POST.get('Orthomosic_UAV', '')
+#             experiment.DSM_UAV = request.POST.get('DSM_UAV', '')
+#             experiment.Orthomosic_SAT = request.POST.get('Orthomosic_SAT', '')
+#             experiment.DSM_SAT = request.POST.get('DSM_SAT', '')
+#             experiment.VI_1 = request.POST.get('VI_1', '')
+#             experiment.VI_2 = request.POST.get('VI_2', '')
+#             experiment.VI_3 = request.POST.get('VI_3', '')
 
-            experiment.save()
+#             experiment.save()
 
-            # Redirect to show_treatments after saving experiment
-            return JsonResponse({'success': True, 'experiment_id': experiment.Experiment_ID, 'no_of_replicates': no_of_replicates})
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
-    else:
-        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+#             # Redirect to show_treatments after saving experiment
+#             return JsonResponse({'success': True, 'experiment_id': experiment.Experiment_ID, 'no_of_replicates': no_of_replicates})
+#         except Exception as e:
+#             return JsonResponse({'success': False, 'error': str(e)})
+#     else:
+#         return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 
 @login_required
@@ -592,3 +592,133 @@ def show_treatments(request, experiment_id):
         treatments = Treatment.objects.filter(Experiment_ID=experiment)
 
     return render(request, 'show_treatments.html', {'experiment': experiment, 'treatments': treatments})
+
+
+
+@login_required
+def add_experiment(request):
+    if request.method == 'POST':
+        try:
+            project_id = request.POST.get('Project_ID')
+            experiment_id = request.POST.get('Experiment_ID')
+            year = request.POST.get('Year')
+            location_id = request.POST.get('Location_ID')
+            interaction_1_count = request.POST.get('Interaction_1_count', '0') or '0'
+            interaction_2_count = request.POST.get('Interaction_2_count', '0') or '0'
+            interaction_3_count = request.POST.get('Interaction_3_count', '0') or '0'
+            metadata = request.POST.get('MetaData')
+            no_of_replicates = request.POST.get('No_of_Replicates')
+
+            # Convert interaction counts to integers
+            interaction_1_count = int(interaction_1_count)
+            interaction_2_count = int(interaction_2_count)
+            interaction_3_count = int(interaction_3_count)
+
+            # Fetch the Project instance
+            project = get_object_or_404(Project, pk=project_id)
+
+            # Handle the "Other" location option
+            if location_id == 'other':
+                location_data = {
+                    'Location_ID': request.POST.get('New_Location_ID'),
+                    'State': request.POST.get('New_State'),
+                    'County': request.POST.get('New_County'),
+                    'Owner': request.POST.get('New_Owner'),
+                    'Latitude': request.POST.get('New_Latitude'),
+                    'Longitude': request.POST.get('New_Longitude'),
+                    'Contact': request.POST.get('New_Contact'),
+                    'MetaData': request.POST.get('New_MetaData')
+                }
+                location = Location.objects.create(**location_data)
+                location_id = location.Location_ID
+            else:
+                location = get_object_or_404(Location, pk=location_id)
+
+            # Save the experiment data to the database
+            experiment = Experiment.objects.create(
+                Experiment_ID=experiment_id,
+                Project_ID=project,
+                Location_ID=location,
+                Year=year,
+                Interaction_1_count=interaction_1_count,
+                Interaction_2_count=interaction_2_count,
+                Interaction_3_count=interaction_3_count,
+                MetaData=metadata
+            )
+
+            # Save dynamically generated fields
+            interaction_1_values = []
+            interaction_2_values = []
+            interaction_3_values = []
+
+            for i in range(1, interaction_1_count + 1):
+                value = request.POST.get(f'Interaction_1_{i}', 'NA')
+                interaction_1_values.append(value)
+
+            for i in range(1, interaction_2_count + 1):
+                value = request.POST.get(f'Interaction_2_{i}', 'NA')
+                interaction_2_values.append(value)
+
+            for i in range(1, interaction_3_count + 1):
+                value = request.POST.get(f'Interaction_3_{i}', 'NA')
+                interaction_3_values.append(value)
+
+            experiment.Interaction_1_value = ','.join(interaction_1_values)
+            experiment.Interaction_2_value = ','.join(interaction_2_values)
+            experiment.Interaction_3_value = ','.join(interaction_3_values)
+
+            experiment.save()
+
+            # Save experiment details to a text file
+            base_dir = os.path.join(r'C:\Users\sayee\OneDrive\Desktop', 'N_trail_folder')
+            project_folder = os.path.join(base_dir, project.Project_ID)
+            experiment_folder = os.path.join(project_folder, experiment_id)
+            os.makedirs(experiment_folder, exist_ok=True)
+
+            file_path = os.path.join(experiment_folder, f'{experiment_id}.txt')
+            with open(file_path, 'w') as file:
+                file.write(f'Experiment ID: {experiment_id}\n')
+                file.write(f'Project ID: {project_id}\n')
+                file.write(f'Location ID: {location_id}\n')
+                file.write(f'Year: {year}\n')
+                file.write(f'Interaction 1 Count: {interaction_1_count}\n')
+                file.write(f'Interaction 1 Value: {experiment.Interaction_1_value}\n')
+                file.write(f'Interaction 2 Count: {interaction_2_count}\n')
+                file.write(f'Interaction 2 Value: {experiment.Interaction_2_value}\n')
+                file.write(f'Interaction 3 Count: {interaction_3_count}\n')
+                file.write(f'Interaction 3 Value: {experiment.Interaction_3_value}\n')
+                file.write(f'Metadata: {metadata}\n')
+
+            return JsonResponse({'success': True, 'experiment_id': experiment.Experiment_ID, 'no_of_replicates': no_of_replicates})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    else:
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+@login_required
+@csrf_exempt
+def upload_experiment_file(request, experiment_id, file_field):
+    if request.method == 'POST':
+        experiment = get_object_or_404(Experiment, pk=experiment_id)
+        file = request.FILES.get('file')
+        if file:
+            try:
+                base_dir = os.path.join(r'C:\Users\sayee\OneDrive\Desktop', 'N_trail_folder')
+                project_folder = os.path.join(base_dir, experiment.Project_ID.Project_ID)
+                experiment_folder = os.path.join(project_folder, experiment.Experiment_ID)
+                os.makedirs(experiment_folder, exist_ok=True)
+                file_path = os.path.join(experiment_folder, file.name)
+                
+                with open(file_path, 'wb+') as destination:
+                    for chunk in file.chunks():
+                        destination.write(chunk)
+                
+                # Save the file path in the database as a relative path to make the URL work correctly
+                file_url = os.path.relpath(file_path, settings.MEDIA_ROOT)
+                setattr(experiment, file_field, file_url)
+                experiment.save()
+                return JsonResponse({'success': True, 'file_name': file.name, 'file_url': settings.MEDIA_URL + file_url})
+            except Exception as e:
+                return JsonResponse({'success': False, 'error': str(e)})
+        return JsonResponse({'success': False, 'error': 'No file uploaded'})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})

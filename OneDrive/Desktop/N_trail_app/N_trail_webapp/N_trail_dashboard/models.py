@@ -66,6 +66,7 @@ class Location(models.Model):
     def __str__(self):
         return self.Location_ID
 
+
 class Experiment(models.Model):
     LOCATION_CHOICES = (
         ('Select', 'select'),
@@ -75,32 +76,33 @@ class Experiment(models.Model):
         ('FDRC', 'FDRC'),
     )
 
-    Experiment_ID           = models.CharField('Experiment_ID', max_length=120, blank=False, null=False, primary_key=True)
-    Project_ID              = models.ForeignKey(Project, on_delete=models.CASCADE)
-    Location_ID             = models.ForeignKey(Location, on_delete=models.CASCADE) 
-    Year                    = models.CharField('Year', max_length=120, blank=False, null=False)
+    Experiment_ID = models.CharField('Experiment_ID', max_length=120, blank=False, null=False, primary_key=True)
+    Project_ID = models.ForeignKey(Project, on_delete=models.CASCADE)
+    Location_ID = models.ForeignKey(Location, on_delete=models.CASCADE)
+    Year = models.CharField('Year', max_length=120, blank=False, null=False)
     Interaction_1_count = models.IntegerField(default=0)
     Interaction_1_value = models.TextField(default="")
     Interaction_2_count = models.IntegerField(default=0)
     Interaction_2_value = models.TextField(default="")
     Interaction_3_count = models.IntegerField(default=0)
     Interaction_3_value = models.TextField(default="")
-    Yield_Map               = models.TextField('Yield_Map', blank=True, null=True)
-    Soil_Sample             = models.TextField('Soil_Sample', blank=True, null=True)
-    Sonic_sensor            = models.TextField('Sonic_sensor', blank=True, null=True)
-    GCP                     = models.TextField('GCP', blank=True, null=True)
-    RAWUAV                  = models.TextField('RAWUAV', blank=True, null=True)
-    Orthomosic_UAV          = models.TextField('Orthomosic_UAV', blank=True, null=True)
-    DSM_UAV                 = models.TextField('DSM_UAV', blank=True, null=True)
-    Orthomosic_SAT          = models.TextField('Orthomosic_SAT', blank=True, null=True)
-    DSM_SAT                 = models.TextField('DSM_SAT', blank=True, null=True)
-    VI_1                    = models.TextField('VI_1', blank=True, null=True)
-    VI_2                    = models.TextField('VI_2', blank=True, null=True)
-    VI_3                    = models.TextField('VI_3', blank=True, null=True)
-    MetaData                = models.TextField('MetaData', max_length=120, blank=False, null=False)
-    
+    Yield_Map = models.TextField('Yield_Map', blank=True, null=True)
+    Soil_Sample = models.TextField('Soil_Sample', blank=True, null=True)
+    Sonic_sensor = models.TextField('Sonic_sensor', blank=True, null=True)
+    GCP = models.TextField('GCP', blank=True, null=True)
+    RAWUAV = models.TextField('RAWUAV', blank=True, null=True)
+    Orthomosic_UAV = models.TextField('Orthomosic_UAV', blank=True, null=True)
+    DSM_UAV = models.TextField('DSM_UAV', blank=True, null=True)
+    Orthomosic_SAT = models.TextField('Orthomosic_SAT', blank=True, null=True)
+    DSM_SAT = models.TextField('DSM_SAT', blank=True, null=True)
+    VI_1 = models.TextField('VI_1', blank=True, null=True)
+    VI_2 = models.TextField('VI_2', blank=True, null=True)
+    VI_3 = models.TextField('VI_3', blank=True, null=True)
+    MetaData = models.TextField('MetaData', max_length=120, blank=False, null=False)
+
     def __str__(self):
         return self.Experiment_ID
+
 class Treatment(models.Model):
     Treatment_ID            = models.IntegerField(primary_key=True)
     Experiment_ID           = models.ForeignKey(Experiment, on_delete=models.CASCADE)
