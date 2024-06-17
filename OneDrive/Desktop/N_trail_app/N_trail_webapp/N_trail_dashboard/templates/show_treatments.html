@@ -54,7 +54,7 @@
 
 <script>
   let deletedTreatments = [];
-  let maxTreatmentId = Math.max(...Array.from(document.querySelectorAll('#treatments-table tr')).map(row => parseInt(row.querySelector('td:first-child').innerText, 10)));
+  let maxTreatmentId = Math.max(...Array.from(document.querySelectorAll('#treatments-table tr')).map(row => parseInt(row.querySelector('td:first-child').innerText.match(/\d+/)[0], 10)));
 
   function enableEditing(treatmentId) {
     document.querySelector(`[name="interaction_1_value_${treatmentId}"]`).disabled = false;
@@ -71,8 +71,8 @@
   }
 
   function addNewRow() {
-    const newTreatmentId = maxTreatmentId + 1; // Increment the maximum existing Treatment ID by 1
-    maxTreatmentId = newTreatmentId; // Update the maxTreatmentId for subsequent new rows
+    const newTreatmentId = `t${maxTreatmentId + 1}e{{ experiment.Experiment_ID }}`; // Increment the maximum existing Treatment ID by 1
+    maxTreatmentId += 1; // Update the maxTreatmentId for subsequent new rows
 
     const newRow = document.createElement('tr');
     newRow.id = `treatment-row-${newTreatmentId}`;
@@ -106,9 +106,6 @@
     const treatmentsData = [];
     const csrfToken = formData.get('csrfmiddlewaretoken');
 
-    let hasEmptyFields = false;
-    let emptyFieldDetails = ''; // To capture which fields are empty
-
     document.querySelectorAll('#treatments-table tr').forEach(row => {
       const treatmentId = row.querySelector('td:first-child').innerText;
       const interaction_1_value = formData.get(`interaction_1_value_${treatmentId}`)?.trim() || '';
@@ -116,20 +113,6 @@
       const interaction_3_value = formData.get(`interaction_3_value_${treatmentId}`)?.trim() || '';
       const no_of_replication = formData.get(`no_of_replication_${treatmentId}`)?.trim() || '';
       const metadata = formData.get(`metadata_${treatmentId}`)?.trim() || '';
-
-      // Debug statements to inspect values
-      console.log(`Treatment ID: ${treatmentId}`);
-      console.log(`Interaction 1 Value: ${interaction_1_value}`);
-      console.log(`Interaction 2 Value: ${interaction_2_value}`);
-      console.log(`Interaction 3 Value: ${interaction_3_value}`);
-      console.log(`No of Replication: ${no_of_replication}`);
-      console.log(`Metadata: ${metadata}`);
-
-      if (!interaction_1_value && !interaction_2_value && !interaction_3_value) {
-        hasEmptyFields = true;
-        emptyFieldDetails += `Treatment ID ${treatmentId}: At least one interaction value must be filled. `;
-        return; // Skip adding this treatment to the list
-      }
 
       treatmentsData.push({
         treatment_id: treatmentId,
@@ -140,11 +123,6 @@
         metadata: metadata
       });
     });
-
-    if (hasEmptyFields) {
-      alert(`Fields cannot be empty:\n${emptyFieldDetails}`);
-      return;
-    }
 
     fetch('{% url "show_treatments" experiment.Experiment_ID %}', {
       method: 'POST',
