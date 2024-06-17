@@ -1,3 +1,5 @@
+{% load custom_filters %}
+
 {% block content %}
 <h1>Treatments for Experiment: {{ experiment.Experiment_ID }}</h1>
 
@@ -52,9 +54,36 @@
   Treatments added successfully!
 </div>
 
+<div id="plot-tables-section" class="flex-container">
+  {% for treatment in treatments %}
+  <div id="plot-table-{{ treatment.Treatment_ID }}" class="card">
+    <h3>Treatment-{{ treatment.Treatment_ID }}</h3>
+    <p>Interaction Values: {{ treatment.Interaction_1_Value }}, {{ treatment.Interaction_2_Value }}, {{ treatment.Interaction_3_Value }}</p>
+    <table border="1">
+      <thead>
+        <tr>
+          <th>Replication ID</th>
+          <th>Plot ID</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in treatment.No_of_Replication|range_filter %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td><input type="text" name="plot_id_{{ treatment.Treatment_ID }}_{{ forloop.counter }}" value=""></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <button type="button" onclick="savePlotTable('{{ treatment.Treatment_ID }}')">Save</button>
+  </div>
+  {% endfor %}
+</div>
+
 <script>
   let deletedTreatments = [];
   let maxTreatmentId = Math.max(...Array.from(document.querySelectorAll('#treatments-table tr')).map(row => parseInt(row.querySelector('td:first-child').innerText.match(/\d+/)[0], 10)));
+
 
   function enableEditing(treatmentId) {
     document.querySelector(`[name="interaction_1_value_${treatmentId}"]`).disabled = false;
@@ -79,7 +108,7 @@
 
     newRow.innerHTML = `
       <td>${newTreatmentId}</td>
-      <td>{{ experiment.Experiment_ID }}</td>
+      <td>${experimentId}</td>
       <td><input type="text" name="interaction_1_value_${newTreatmentId}" value=""></td>
       <td><input type="text" name="interaction_2_value_${newTreatmentId}" value=""></td>
       <td><input type="text" name="interaction_3_value_${newTreatmentId}" value=""></td>
@@ -92,6 +121,35 @@
     `;
 
     document.getElementById('treatments-table').appendChild(newRow);
+
+    const newPlotTable = document.createElement('div');
+    newPlotTable.id = `plot-table-${newTreatmentId}`;
+    newPlotTable.classList.add('card');
+    newPlotTable.innerHTML = `
+      <h3>Treatment-${newTreatmentId}</h3>
+      <p>Interaction Values: <span id="interaction-values-${newTreatmentId}"></span></p>
+      <table border="1">
+        <thead>
+          <tr>
+            <th>Replication ID</th>
+            <th>Plot ID</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Placeholder for new plots -->
+          <tr>
+            <td>1</td>
+            <td><input type="text" name="plot_id_${newTreatmentId}_1" value=""></td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><input type="text" name="plot_id_${newTreatmentId}_2" value=""></td>
+          </tr>
+        </tbody>
+      </table>
+      <button type="button" onclick="savePlotTable('${newTreatmentId}')">Save</button>
+    `;
+    document.getElementById('plot-tables-section').appendChild(newPlotTable);
   }
 
   function enableAllInputs() {
@@ -124,6 +182,8 @@
       });
     });
 
+
+
     fetch('{% url "show_treatments" experiment.Experiment_ID %}', {
       method: 'POST',
       headers: {
@@ -133,7 +193,7 @@
       body: JSON.stringify({
         action: 'submit_all',
         treatments: treatmentsData,
-        deleted_treatments: deletedTreatments // Send deleted treatments as well
+        deleted_treatments: deletedTreatments
       })
     })
     .then(response => response.json())
@@ -142,8 +202,8 @@
         document.getElementById('success-message').style.display = 'block';
         setTimeout(() => {
           document.getElementById('success-message').style.display = 'none';
-          window.location.reload(); // Reload the page to reflect changes
-        }, 3000); // Hide the message after 3 seconds
+          window.location.reload();
+        }, 3000);
       } else {
         alert('Error submitting treatments: ' + data.error);
       }
@@ -153,6 +213,70 @@
       alert('Error submitting treatments. Please try again.');
     });
   }
+
+  function savePlotTable(treatmentId) {
+    const plotData = [];
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    document.querySelectorAll(`#plot-table-${treatmentId} tbody tr`).forEach(row => {
+      const replicationId = row.querySelector('td:first-child').innerText;
+      const plotId = row.querySelector('input').value.trim();
+
+      plotData.push({
+        treatment_id: treatmentId,
+        replication_id: replicationId,
+        plot_id: plotId
+      });
+    });
+
+    fetch(`/treatment/${treatmentId}/save_plot_data/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken
+      },
+      body: JSON.stringify({
+        action: 'save_plot_data',
+        plot_data: plotData
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert('Plot data saved successfully!');
+      } else {
+        alert('Error saving plot data: ' + data.error);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Error saving plot data. Please try again.');
+    });
+  }
 </script>
+
+<style>
+  .flex-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .card {
+    border: 1px solid #ccc;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    width: 300px;
+  }
+
+  .card h3 {
+    margin-top: 0;
+  }
+
+  .card table {
+    width: 100%;
+  }
+</style>
 
 {% endblock %}

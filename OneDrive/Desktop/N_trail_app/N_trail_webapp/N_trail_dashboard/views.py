@@ -120,46 +120,6 @@ def add_location(request):
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 
-
-# @login_required
-# def show_treatments(request, experiment_id):
-#     experiment = get_object_or_404(Experiment, pk=experiment_id)
-#     treatments = Treatment.objects.filter(Experiment_ID=experiment)
-
-#     interaction_1_values = experiment.Interaction_1_value.split(',')
-#     interaction_2_values = experiment.Interaction_2_value.split(',')
-#     interaction_3_values = experiment.Interaction_3_value.split(',') if experiment.Interaction_3_value else ['']
-
-#     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-#         html = render_to_string('show_treatments.html', {'experiment': experiment, 'treatments': treatments}, request)
-#         return JsonResponse({'html': html})
-
-#     combinations = list(product(interaction_1_values, interaction_2_values, interaction_3_values))
-#     num_combinations = len(combinations)
-
-#     if not treatments.exists():
-#         existing_ids = set(Treatment.objects.values_list('Treatment_ID', flat=True))
-#         new_treatment_id = max(existing_ids) + 1 if existing_ids else 1
-
-#         for combination in combinations:
-#             while new_treatment_id in existing_ids:
-#                 new_treatment_id += 1
-#             Treatment.objects.create(
-#                 Treatment_ID=new_treatment_id,
-#                 Experiment_ID=experiment,
-#                 Interaction_1_Value=combination[0],
-#                 Interaction_2_Value=combination[1],
-#                 Interaction_3_Value=combination[2],
-#                 No_of_Replication='1',
-#                 MetaData='Generated'
-#             )
-#             new_treatment_id += 1
-#         treatments = Treatment.objects.filter(Experiment_ID=experiment)
-
-#     return render(request, 'show_treatments.html', {'experiment': experiment, 'treatments': treatments})
-
-
-
 @csrf_exempt
 @login_required
 def import_experiment(request):
@@ -238,101 +198,6 @@ def import_experiment(request):
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
-# @csrf_exempt
-# @login_required
-# def add_experiment(request):
-#     if request.method == 'POST':
-#         try:
-#             project_id = request.POST.get('Project_ID')
-#             experiment_id = request.POST.get('Experiment_ID')
-#             year = request.POST.get('Year')
-#             location_id = request.POST.get('Location_ID')
-#             interaction_1_count = request.POST.get('Interaction_1_count', '0') or '0'
-#             interaction_2_count = request.POST.get('Interaction_2_count', '0') or '0'
-#             interaction_3_count = request.POST.get('Interaction_3_count', '0') or '0'
-#             metadata = request.POST.get('MetaData')
-
-#             # Convert interaction counts to integers
-#             interaction_1_count = int(interaction_1_count)
-#             interaction_2_count = int(interaction_2_count)
-#             interaction_3_count = int(interaction_3_count)
-
-#             # Fetch the Project instance
-#             project = get_object_or_404(Project, pk=project_id)
-
-#             # Handle the "Other" location option
-#             if location_id == 'other':
-#                 location_data = {
-#                     'Location_ID': request.POST.get('New_Location_ID'),
-#                     'State': request.POST.get('New_State'),
-#                     'County': request.POST.get('New_County'),
-#                     'Owner': request.POST.get('New_Owner'),
-#                     'Latitude': request.POST.get('New_Latitude'),
-#                     'Longitude': request.POST.get('New_Longitude'),
-#                     'Contact': request.POST.get('New_Contact'),
-#                     'MetaData': request.POST.get('New_MetaData')
-#                 }
-#                 location = Location.objects.create(**location_data)
-#                 location_id = location.Location_ID
-#             else:
-#                 location = get_object_or_404(Location, pk=location_id)
-
-#             # Save the experiment data to the database
-#             experiment = Experiment.objects.create(
-#                 Experiment_ID=experiment_id,
-#                 Project_ID=project,
-#                 Location_ID=location,
-#                 Year=year,
-#                 Interaction_1_count=interaction_1_count,
-#                 Interaction_2_count=interaction_2_count,
-#                 Interaction_3_count=interaction_3_count,
-#                 MetaData=metadata
-#             )
-
-#             # Save dynamically generated fields
-#             interaction_1_values = []
-#             interaction_2_values = []
-#             interaction_3_values = []
-
-#             for i in range(1, interaction_1_count + 1):
-#                 value = request.POST.get(f'Interaction_1_{i}', 'NA')
-#                 interaction_1_values.append(value)
-
-#             for i in range(1, interaction_2_count + 1):
-#                 value = request.POST.get(f'Interaction_2_{i}', 'NA')
-#                 interaction_2_values.append(value)
-
-#             for i in range(1, interaction_3_count + 1):
-#                 value = request.POST.get(f'Interaction_3_{i}', 'NA')
-#                 interaction_3_values.append(value)
-
-#             experiment.Interaction_1_value = ','.join(interaction_1_values)
-#             experiment.Interaction_2_value = ','.join(interaction_2_values)
-#             experiment.Interaction_3_value = ','.join(interaction_3_values)
-
-#             # Save additional fields
-#             experiment.Yield_Map = request.POST.get('Yield_Map', '')
-#             experiment.Soil_Sample = request.POST.get('Soil_Sample', '')
-#             experiment.Sonic_sensor = request.POST.get('Sonic_sensor', '')
-#             experiment.GCP = request.POST.get('GCP', '')
-#             experiment.RAWUAV = request.POST.get('RAWUAV', '')
-#             experiment.Orthomosic_UAV = request.POST.get('Orthomosic_UAV', '')
-#             experiment.DSM_UAV = request.POST.get('DSM_UAV', '')
-#             experiment.Orthomosic_SAT = request.POST.get('Orthomosic_SAT', '')
-#             experiment.DSM_SAT = request.POST.get('DSM_SAT', '')
-#             experiment.VI_1 = request.POST.get('VI_1', '')
-#             experiment.VI_2 = request.POST.get('VI_2', '')
-#             experiment.VI_3 = request.POST.get('VI_3', '')
-
-#             experiment.save()
-
-#             # Redirect to show_treatments after saving experiment
-#             return JsonResponse({'success': True, 'experiment_id': experiment.Experiment_ID})
-#         except Exception as e:
-#             return JsonResponse({'success': False, 'error': str(e)})
-#     else:
-#         return JsonResponse({'success': False, 'error': 'Invalid request method'})
-
 
 
 @csrf_exempt
@@ -409,431 +274,6 @@ def add_project(request):
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
     return JsonResponse({'success': False, 'error': 'Invalid request'})
-# @login_required
-# def add_experiment(request):
-#     if request.method == 'POST':
-#         try:
-#             project_id = request.POST.get('Project_ID')
-#             experiment_id = request.POST.get('Experiment_ID')
-#             year = request.POST.get('Year')
-#             location_id = request.POST.get('Location_ID')
-#             interaction_1_count = request.POST.get('Interaction_1_count', '0') or '0'
-#             interaction_2_count = request.POST.get('Interaction_2_count', '0') or '0'
-#             interaction_3_count = request.POST.get('Interaction_3_count', '0') or '0'
-#             metadata = request.POST.get('MetaData')
-#             no_of_replicates = request.POST.get('No_of_Replicates')
-
-#             # Convert interaction counts to integers
-#             interaction_1_count = int(interaction_1_count)
-#             interaction_2_count = int(interaction_2_count)
-#             interaction_3_count = int(interaction_3_count)
-
-#             # Fetch the Project instance
-#             project = get_object_or_404(Project, pk=project_id)
-
-#             # Handle the "Other" location option
-#             if location_id == 'other':
-#                 location_data = {
-#                     'Location_ID': request.POST.get('New_Location_ID'),
-#                     'State': request.POST.get('New_State'),
-#                     'County': request.POST.get('New_County'),
-#                     'Owner': request.POST.get('New_Owner'),
-#                     'Latitude': request.POST.get('New_Latitude'),
-#                     'Longitude': request.POST.get('New_Longitude'),
-#                     'Contact': request.POST.get('New_Contact'),
-#                     'MetaData': request.POST.get('New_MetaData')
-#                 }
-#                 location = Location.objects.create(**location_data)
-#                 location_id = location.Location_ID
-#             else:
-#                 location = get_object_or_404(Location, pk=location_id)
-
-#             # Save the experiment data to the database
-#             experiment = Experiment.objects.create(
-#                 Experiment_ID=experiment_id,
-#                 Project_ID=project,
-#                 Location_ID=location,
-#                 Year=year,
-#                 Interaction_1_count=interaction_1_count,
-#                 Interaction_2_count=interaction_2_count,
-#                 Interaction_3_count=interaction_3_count,
-#                 MetaData=metadata
-#             )
-
-#             # Save dynamically generated fields
-#             interaction_1_values = []
-#             interaction_2_values = []
-#             interaction_3_values = []
-
-#             for i in range(1, interaction_1_count + 1):
-#                 value = request.POST.get(f'Interaction_1_{i}', 'NA')
-#                 interaction_1_values.append(value)
-
-#             for i in range(1, interaction_2_count + 1):
-#                 value = request.POST.get(f'Interaction_2_{i}', 'NA')
-#                 interaction_2_values.append(value)
-
-#             for i in range(1, interaction_3_count + 1):
-#                 value = request.POST.get(f'Interaction_3_{i}', 'NA')
-#                 interaction_3_values.append(value)
-
-#             experiment.Interaction_1_value = ','.join(interaction_1_values)
-#             experiment.Interaction_2_value = ','.join(interaction_2_values)
-#             experiment.Interaction_3_value = ','.join(interaction_3_values)
-
-#             # Save additional fields
-#             experiment.Yield_Map = request.POST.get('Yield_Map', '')
-#             experiment.Soil_Sample = request.POST.get('Soil_Sample', '')
-#             experiment.Sonic_sensor = request.POST.get('Sonic_sensor', '')
-#             experiment.GCP = request.POST.get('GCP', '')
-#             experiment.RAWUAV = request.POST.get('RAWUAV', '')
-#             experiment.Orthomosic_UAV = request.POST.get('Orthomosic_UAV', '')
-#             experiment.DSM_UAV = request.POST.get('DSM_UAV', '')
-#             experiment.Orthomosic_SAT = request.POST.get('Orthomosic_SAT', '')
-#             experiment.DSM_SAT = request.POST.get('DSM_SAT', '')
-#             experiment.VI_1 = request.POST.get('VI_1', '')
-#             experiment.VI_2 = request.POST.get('VI_2', '')
-#             experiment.VI_3 = request.POST.get('VI_3', '')
-
-#             experiment.save()
-
-#             # Redirect to show_treatments after saving experiment
-#             return JsonResponse({'success': True, 'experiment_id': experiment.Experiment_ID, 'no_of_replicates': no_of_replicates})
-#         except Exception as e:
-#             return JsonResponse({'success': False, 'error': str(e)})
-#     else:
-#         return JsonResponse({'success': False, 'error': 'Invalid request method'})
-
-
-# @login_required
-# @csrf_exempt
-# def show_treatments(request, experiment_id):
-#     experiment = get_object_or_404(Experiment, pk=experiment_id)
-#     treatments = Treatment.objects.filter(Experiment_ID=experiment)
-
-#     interaction_1_values = experiment.Interaction_1_value.split(',')
-#     interaction_2_values = experiment.Interaction_2_value.split(',')
-#     interaction_3_values = experiment.Interaction_3_value.split(',') if experiment.Interaction_3_value else ['']
-
-#     if request.method == 'POST':
-#         try:
-#             data = json.loads(request.body)
-#             action = data.get('action')
-#             if action == 'submit_all':
-#                 treatments_data = data.get('treatments', [])
-#                 deleted_treatments = data.get('deleted_treatments', [])
-
-#                 with transaction.atomic():
-#                     # Delete treatments
-#                     for treatment_id in deleted_treatments:
-#                         Treatment.objects.filter(Treatment_ID=treatment_id).delete()
-
-#                     # Update or create treatments
-#                     for treatment in treatments_data:
-#                         treatment_id = treatment.get('treatment_id')
-#                         interaction_1_value = treatment.get('interaction_1_value', '').strip()
-#                         interaction_2_value = treatment.get('interaction_2_value', '').strip()
-#                         interaction_3_value = treatment.get('interaction_3_value', '').strip()
-#                         no_of_replication = treatment.get('no_of_replication', '').strip()
-#                         metadata = treatment.get('metadata', '').strip()
-
-#                         # Ensure at least one interaction value is provided
-#                         if not interaction_1_value and not interaction_2_value and not interaction_3_value:
-#                             raise ValueError(f"At least one interaction value must be provided for treatment {treatment_id}")
-
-#                         # Ensure no_of_replication is provided
-#                         if not no_of_replication:
-#                             raise ValueError(f"No_of_Replication for treatment {treatment_id} cannot be empty")
-
-#                         # Update or create the treatment
-#                         Treatment.objects.update_or_create(
-#                             Treatment_ID=treatment_id,
-#                             Experiment_ID=experiment,
-#                             defaults={
-#                                 'Interaction_1_Value': interaction_1_value,
-#                                 'Interaction_2_Value': interaction_2_value,
-#                                 'Interaction_3_Value': interaction_3_value,
-#                                 'No_of_Replication': no_of_replication,
-#                                 'MetaData': metadata
-#                             }
-#                         )
-
-#                 return JsonResponse({'success': True})
-#         except Exception as e:
-#             logger.error(f"Error submitting treatments: {str(e)}", exc_info=True)
-#             return JsonResponse({'success': False, 'error': str(e)})
-
-#     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-#         html = render_to_string('show_treatments.html', {'experiment': experiment, 'treatments': treatments}, request)
-#         return JsonResponse({'html': html})
-
-#     no_of_replicates = request.GET.get('no_of_replicates', '1')
-
-#     combinations = list(product(interaction_1_values, interaction_2_values, interaction_3_values))
-#     num_combinations = len(combinations)
-
-#     if not treatments.exists():
-#         existing_ids = set(Treatment.objects.values_list('Treatment_ID', flat=True))
-#         new_treatment_id = max(existing_ids) + 1 if existing_ids else 1
-
-#         for combination in combinations:
-#             while new_treatment_id in existing_ids:
-#                 new_treatment_id += 1
-#             Treatment.objects.create(
-#                 Treatment_ID=new_treatment_id,
-#                 Experiment_ID=experiment,
-#                 Interaction_1_Value=combination[0],
-#                 Interaction_2_Value=combination[1],
-#                 Interaction_3_Value=combination[2],
-#                 No_of_Replication=no_of_replicates,
-#                 MetaData='Generated'
-#             )
-#             new_treatment_id += 1
-#         treatments = Treatment.objects.filter(Experiment_ID=experiment)
-
-#     return render(request, 'show_treatments.html', {'experiment': experiment, 'treatments': treatments})
-
-
-
-# @login_required
-# def add_experiment(request):
-#     if request.method == 'POST':
-#         try:
-#             project_id = request.POST.get('Project_ID')
-#             experiment_id = request.POST.get('Experiment_ID')
-#             year = request.POST.get('Year')
-#             location_id = request.POST.get('Location_ID')
-#             interaction_1_count = request.POST.get('Interaction_1_count', '0') or '0'
-#             interaction_2_count = request.POST.get('Interaction_2_count', '0') or '0'
-#             interaction_3_count = request.POST.get('Interaction_3_count', '0') or '0'
-#             metadata = request.POST.get('MetaData')
-#             no_of_replicates = request.POST.get('No_of_Replicates')
-
-#             # Convert interaction counts to integers
-#             interaction_1_count = int(interaction_1_count)
-#             interaction_2_count = int(interaction_2_count)
-#             interaction_3_count = int(interaction_3_count)
-
-#             # Fetch the Project instance
-#             project = get_object_or_404(Project, pk=project_id)
-
-#             # Handle the "Other" location option
-#             if location_id == 'other':
-#                 location_data = {
-#                     'Location_ID': request.POST.get('New_Location_ID'),
-#                     'State': request.POST.get('New_State'),
-#                     'County': request.POST.get('New_County'),
-#                     'Owner': request.POST.get('New_Owner'),
-#                     'Latitude': request.POST.get('New_Latitude'),
-#                     'Longitude': request.POST.get('New_Longitude'),
-#                     'Contact': request.POST.get('New_Contact'),
-#                     'MetaData': request.POST.get('New_MetaData')
-#                 }
-#                 location = Location.objects.create(**location_data)
-#                 location_id = location.Location_ID
-#             else:
-#                 location = get_object_or_404(Location, pk=location_id)
-
-#             # Save the experiment data to the database
-#             experiment = Experiment.objects.create(
-#                 Experiment_ID=experiment_id,
-#                 Project_ID=project,
-#                 Location_ID=location,
-#                 Year=year,
-#                 Interaction_1_count=interaction_1_count,
-#                 Interaction_2_count=interaction_2_count,
-#                 Interaction_3_count=interaction_3_count,
-#                 MetaData=metadata
-#             )
-
-#             # Save dynamically generated fields
-#             interaction_1_values = []
-#             interaction_2_values = []
-#             interaction_3_values = []
-
-#             for i in range(1, interaction_1_count + 1):
-#                 value = request.POST.get(f'Interaction_1_{i}', 'NA')
-#                 interaction_1_values.append(value)
-
-#             for i in range(1, interaction_2_count + 1):
-#                 value = request.POST.get(f'Interaction_2_{i}', 'NA')
-#                 interaction_2_values.append(value)
-
-#             for i in range(1, interaction_3_count + 1):
-#                 value = request.POST.get(f'Interaction_3_{i}', 'NA')
-#                 interaction_3_values.append(value)
-
-#             experiment.Interaction_1_value = ','.join(interaction_1_values)
-#             experiment.Interaction_2_value = ','.join(interaction_2_values)
-#             experiment.Interaction_3_value = ','.join(interaction_3_values)
-
-#             experiment.save()
-
-#             # Save experiment details to a text file
-#             base_dir = os.path.join(r'C:\Users\sayee\OneDrive\Desktop', 'N_trail_folder')
-#             project_folder = os.path.join(base_dir, project.Project_ID)
-#             experiment_folder = os.path.join(project_folder, experiment_id)
-#             os.makedirs(experiment_folder, exist_ok=True)
-
-#             file_path = os.path.join(experiment_folder, f'{experiment_id}.txt')
-#             with open(file_path, 'w') as file:
-#                 file.write(f'Experiment ID: {experiment_id}\n')
-#                 file.write(f'Project ID: {project_id}\n')
-#                 file.write(f'Location ID: {location_id}\n')
-#                 file.write(f'Year: {year}\n')
-#                 file.write(f'Interaction 1 Count: {interaction_1_count}\n')
-#                 file.write(f'Interaction 1 Value: {experiment.Interaction_1_value}\n')
-#                 file.write(f'Interaction 2 Count: {interaction_2_count}\n')
-#                 file.write(f'Interaction 2 Value: {experiment.Interaction_2_value}\n')
-#                 file.write(f'Interaction 3 Count: {interaction_3_count}\n')
-#                 file.write(f'Interaction 3 Value: {experiment.Interaction_3_value}\n')
-#                 file.write(f'Metadata: {metadata}\n')
-
-#             return JsonResponse({'success': True, 'experiment_id': experiment.Experiment_ID, 'no_of_replicates': no_of_replicates})
-#         except Exception as e:
-#             return JsonResponse({'success': False, 'error': str(e)})
-#     else:
-#         return JsonResponse({'success': False, 'error': 'Invalid request method'})
-
-# @login_required
-# @csrf_exempt
-# def upload_experiment_file(request, experiment_id, file_field):
-#     if request.method == 'POST':
-#         experiment = get_object_or_404(Experiment, pk=experiment_id)
-#         file = request.FILES.get('file')
-#         if file:
-#             try:
-#                 base_dir = os.path.join(r'C:\Users\sayee\OneDrive\Desktop', 'N_trail_folder')
-#                 project_folder = os.path.join(base_dir, experiment.Project_ID.Project_ID)
-#                 experiment_folder = os.path.join(project_folder, experiment.Experiment_ID)
-#                 os.makedirs(experiment_folder, exist_ok=True)
-#                 file_path = os.path.join(experiment_folder, file.name)
-                
-#                 with open(file_path, 'wb+') as destination:
-#                     for chunk in file.chunks():
-#                         destination.write(chunk)
-                
-#                 # Save the file path in the database as a relative path to make the URL work correctly
-#                 file_url = os.path.relpath(file_path, settings.MEDIA_ROOT)
-#                 setattr(experiment, file_field, file_url)
-#                 experiment.save()
-#                 return JsonResponse({'success': True, 'file_name': file.name, 'file_url': settings.MEDIA_URL + file_url})
-#             except Exception as e:
-#                 return JsonResponse({'success': False, 'error': str(e)})
-#         return JsonResponse({'success': False, 'error': 'No file uploaded'})
-#     return JsonResponse({'success': False, 'error': 'Invalid request method'})
-
-
-
-
-
-
-# @login_required
-# @csrf_exempt
-# def show_treatments(request, experiment_id):
-#     experiment = get_object_or_404(Experiment, pk=experiment_id)
-#     treatments = Treatment.objects.filter(Experiment_ID=experiment)
-
-#     interaction_1_values = experiment.Interaction_1_value.split(',')
-#     interaction_2_values = experiment.Interaction_2_value.split(',')
-#     interaction_3_values = experiment.Interaction_3_value.split(',') if experiment.Interaction_3_value else ['']
-
-#     if request.method == 'POST':
-#         try:
-#             data = json.loads(request.body)
-#             action = data.get('action')
-#             if action == 'submit_all':
-#                 treatments_data = data.get('treatments', [])
-#                 deleted_treatments = data.get('deleted_treatments', [])
-
-#                 with transaction.atomic():
-#                     # Delete treatments
-#                     for treatment_id in deleted_treatments:
-#                         Treatment.objects.filter(Treatment_ID=treatment_id).delete()
-
-#                     # Update or create treatments
-#                     for treatment in treatments_data:
-#                         treatment_id = treatment.get('treatment_id')
-#                         interaction_1_value = treatment.get('interaction_1_value', '').strip()
-#                         interaction_2_value = treatment.get('interaction_2_value', '').strip()
-#                         interaction_3_value = treatment.get('interaction_3_value', '').strip()
-#                         no_of_replication = treatment.get('no_of_replication', '').strip()
-#                         metadata = treatment.get('metadata', '').strip()
-
-#                         # Ensure at least one interaction value is provided
-#                         if not interaction_1_value and not interaction_2_value and not interaction_3_value:
-#                             raise ValueError(f"At least one interaction value must be provided for treatment {treatment_id}")
-
-#                         # Ensure no_of_replication is provided
-#                         if not no_of_replication:
-#                             raise ValueError(f"No_of_Replication for treatment {treatment_id} cannot be empty")
-
-#                         # Update or create the treatment
-#                         Treatment.objects.update_or_create(
-#                             Treatment_ID=treatment_id,
-#                             Experiment_ID=experiment,
-#                             defaults={
-#                                 'Interaction_1_Value': interaction_1_value,
-#                                 'Interaction_2_Value': interaction_2_value,
-#                                 'Interaction_3_Value': interaction_3_value,
-#                                 'No_of_Replication': no_of_replication,
-#                                 'MetaData': metadata
-#                             }
-#                         )
-
-#                 return JsonResponse({'success': True})
-#             elif action == 'save_plot_data':
-#                 plot_data = data.get('plot_data', [])
-
-#                 # Save the plot data here
-#                 for plot in plot_data:
-#                     treatment_id = plot.get('treatment_id')
-#                     replication_id = plot.get('replication_id')
-#                     plot_id = plot.get('plot_id')
-
-#                     # Save the plot data to the database (implement your model and saving logic here)
-#                     Plot.objects.update_or_create(
-#                         Treatment_ID=treatment_id,
-#                         Replication_ID=replication_id,
-#                         defaults={
-#                             'Plot_ID': plot_id,
-#                         }
-#                     )
-
-#                 return JsonResponse({'success': True})
-#         except Exception as e:
-#             logger.error(f"Error processing request: {str(e)}", exc_info=True)
-#             return JsonResponse({'success': False, 'error': str(e)})
-
-#     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-#         html = render_to_string('show_treatments.html', {'experiment': experiment, 'treatments': treatments}, request)
-#         return JsonResponse({'html': html})
-
-#     no_of_replicates = request.GET.get('no_of_replicates', '1')
-
-#     combinations = list(product(interaction_1_values, interaction_2_values, interaction_3_values))
-#     num_combinations = len(combinations)
-
-#     if not treatments.exists():
-#         existing_ids = set(Treatment.objects.values_list('Treatment_ID', flat=True))
-#         new_treatment_id = max(existing_ids) + 1 if existing_ids else 1
-
-#         for combination in combinations:
-#             while new_treatment_id in existing_ids:
-#                 new_treatment_id += 1
-#             Treatment.objects.create(
-#                 Treatment_ID=new_treatment_id,
-#                 Experiment_ID=experiment,
-#                 Interaction_1_Value=combination[0],
-#                 Interaction_2_Value=combination[1],
-#                 Interaction_3_Value=combination[2],
-#                 No_of_Replication=no_of_replicates,
-#                 MetaData='Generated'
-#             )
-#             new_treatment_id += 1
-#         treatments = Treatment.objects.filter(Experiment_ID=experiment)
-
-#     return render(request, 'show_treatments.html', {'experiment': experiment, 'treatments': treatments})
 
 
 
@@ -869,175 +309,6 @@ def save_plot_data(request, treatment_id):
             return JsonResponse({'success': False, 'error': str(e)})
     return JsonResponse({'success': False, 'error': 'Invalid request method.'})
 
-# @login_required
-# @csrf_exempt
-# def show_treatments(request, experiment_id):
-#     experiment = get_object_or_404(Experiment, pk=experiment_id)
-#     treatments = Treatment.objects.filter(Experiment_ID=experiment)
-
-#     if request.method == 'POST':
-#         try:
-#             data = json.loads(request.body)
-#             action = data.get('action')
-#             if action == 'submit_all':
-#                 treatments_data = data.get('treatments', [])
-#                 deleted_treatments = data.get('deleted_treatments', [])
-
-#                 with transaction.atomic():
-#                     # Delete treatments
-#                     for treatment_id in deleted_treatments:
-#                         Treatment.objects.filter(Treatment_ID=treatment_id, Experiment_ID=experiment).delete()
-
-#                     # Get the max numeric part of the Treatment_ID within this experiment
-#                     existing_ids = Treatment.objects.filter(Experiment_ID=experiment).values_list('Treatment_ID', flat=True)
-#                     max_numeric_id = 0
-#                     for id in existing_ids:
-#                         numeric_part = int(id.split('e')[0])
-#                         if numeric_part > max_numeric_id:
-#                             max_numeric_id = numeric_part
-
-#                     # Update or create treatments
-#                     for treatment in treatments_data:
-#                         treatment_id = treatment.get('treatment_id')
-#                         interaction_1_value = treatment.get('interaction_1_value', '').strip()
-#                         interaction_2_value = treatment.get('interaction_2_value', '').strip()
-#                         interaction_3_value = treatment.get('interaction_3_value', '').strip()
-#                         no_of_replication = treatment.get('no_of_replication', '').strip()
-#                         metadata = treatment.get('metadata', '').strip()
-
-#                         # Ensure at least one interaction value is provided
-#                         if not interaction_1_value and not interaction_2_value and not interaction_3_value:
-#                             raise ValueError(f"At least one interaction value must be provided for treatment {treatment_id}")
-
-#                         # Ensure no_of_replication is provided
-#                         if not no_of_replication:
-#                             raise ValueError(f"No_of_Replication for treatment {treatment_id} cannot be empty")
-
-#                         # Generate new Treatment_ID if it's a new treatment
-#                         if treatment_id.isnumeric():
-#                             max_numeric_id += 1
-#                             treatment_id = f"{max_numeric_id}e{experiment.Experiment_ID}"
-
-#                         # Update or create the treatment
-#                         Treatment.objects.update_or_create(
-#                             Treatment_ID=treatment_id,
-#                             Experiment_ID=experiment,
-#                             defaults={
-#                                 'Interaction_1_Value': interaction_1_value,
-#                                 'Interaction_2_Value': interaction_2_value,
-#                                 'Interaction_3_Value': interaction_3_value,
-#                                 'No_of_Replication': no_of_replication,
-#                                 'MetaData': metadata
-#                             }
-#                         )
-
-#                 return JsonResponse({'success': True})
-#         except Exception as e:
-#             logger.error(f"Error submitting treatments: {str(e)}", exc_info=True)
-#             return JsonResponse({'success': False, 'error': str(e)})
-
-#     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-#         html = render_to_string('show_treatments.html', {'experiment': experiment, 'treatments': treatments}, request)
-#         return JsonResponse({'html': html})
-
-#     return render(request, 'show_treatments.html', {'experiment': experiment, 'treatments': treatments})
-
-
-
-
-# @login_required
-# def add_experiment(request):
-#     if request.method == 'POST':
-#         try:
-#             project_id = request.POST.get('Project_ID')
-#             experiment_id = request.POST.get('Experiment_ID')
-#             year = request.POST.get('Year')
-#             location_id = request.POST.get('Location_ID')
-#             interaction_1_count = request.POST.get('Interaction_1_count', '0') or '0'
-#             interaction_2_count = request.POST.get('Interaction_2_count', '0') or '0'
-#             interaction_3_count = request.POST.get('Interaction_3_count', '0') or '0'
-#             metadata = request.POST.get('MetaData')
-#             no_of_replicates = request.POST.get('No_of_Replicates')
-
-#             interaction_1_count = int(interaction_1_count)
-#             interaction_2_count = int(interaction_2_count)
-#             interaction_3_count = int(interaction_3_count)
-
-#             project = get_object_or_404(Project, pk=project_id)
-
-#             if location_id == 'other':
-#                 location_data = {
-#                     'Location_ID': request.POST.get('New_Location_ID'),
-#                     'State': request.POST.get('New_State'),
-#                     'County': request.POST.get('New_County'),
-#                     'Owner': request.POST.get('New_Owner'),
-#                     'Latitude': request.POST.get('New_Latitude'),
-#                     'Longitude': request.POST.get('New_Longitude'),
-#                     'Contact': request.POST.get('New_Contact'),
-#                     'MetaData': request.POST.get('New_MetaData')
-#                 }
-#                 location = Location.objects.create(**location_data)
-#                 location_id = location.Location_ID
-#             else:
-#                 location = get_object_or_404(Location, pk=location_id)
-
-#             experiment = Experiment.objects.create(
-#                 Experiment_ID=experiment_id,
-#                 Project_ID=project,
-#                 Location_ID=location,
-#                 Year=year,
-#                 Interaction_1_count=interaction_1_count,
-#                 Interaction_2_count=interaction_2_count,
-#                 Interaction_3_count=interaction_3_count,
-#                 MetaData=metadata
-#             )
-
-#             interaction_1_values = []
-#             interaction_2_values = []
-#             interaction_3_values = []
-
-#             for i in range(1, interaction_1_count + 1):
-#                 value = request.POST.get(f'Interaction_1_{i}', 'NA')
-#                 interaction_1_values.append(value)
-
-#             for i in range(1, interaction_2_count + 1):
-#                 value = request.POST.get(f'Interaction_2_{i}', 'NA')
-#                 interaction_2_values.append(value)
-
-#             for i in range(1, interaction_3_count + 1):
-#                 value = request.POST.get(f'Interaction_3_{i}', 'NA')
-#                 interaction_3_values.append(value)
-
-#             experiment.Interaction_1_value = ','.join(interaction_1_values)
-#             experiment.Interaction_2_value = ','.join(interaction_2_values)
-#             experiment.Interaction_3_value = ','.join(interaction_3_values)
-
-#             experiment.save()
-
-#             base_dir = os.path.join(r'C:\Users\sayee\OneDrive\Desktop', 'N_trail_folder')
-#             project_folder = os.path.join(base_dir, project.Project_ID)
-#             experiment_folder = os.path.join(project_folder, experiment_id)
-#             os.makedirs(experiment_folder, exist_ok=True)
-
-#             file_path = os.path.join(experiment_folder, f'{experiment_id}.txt')
-#             with open(file_path, 'w') as file:
-#                 file.write(f'Experiment ID: {experiment_id}\n')
-#                 file.write(f'Project ID: {project_id}\n')
-#                 file.write(f'Location ID: {location_id}\n')
-#                 file.write(f'Year: {year}\n')
-#                 file.write(f'Interaction 1 Count: {interaction_1_count}\n')
-#                 file.write(f'Interaction 1 Value: {experiment.Interaction_1_value}\n')
-#                 file.write(f'Interaction 2 Count: {interaction_2_count}\n')
-#                 file.write(f'Interaction 2 Value: {experiment.Interaction_2_value}\n')
-#                 file.write(f'Interaction 3 Count: {interaction_3_count}\n')
-#                 file.write(f'Interaction 3 Value: {experiment.Interaction_3_value}\n')
-#                 file.write(f'Metadata: {metadata}\n')
-
-#             return JsonResponse({'success': True, 'experiment_id': experiment.Experiment_ID, 'no_of_replicates': no_of_replicates})
-#         except Exception as e:
-#             return JsonResponse({'success': False, 'error': str(e)})
-#     else:
-#         return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 @login_required
 @csrf_exempt
@@ -1087,76 +358,126 @@ def download_file(request, file_path):
         return HttpResponseNotFound("File not found")
 
 
-
-
 # @login_required
-# @csrf_exempt
-# def show_treatments(request, experiment_id):
-#     experiment = get_object_or_404(Experiment, pk=experiment_id)
-#     treatments = Treatment.objects.filter(Experiment_ID=experiment)
-
+# def add_experiment(request):
 #     if request.method == 'POST':
 #         try:
-#             data = json.loads(request.body)
-#             action = data.get('action')
-#             if action == 'submit_all':
-#                 treatments_data = data.get('treatments', [])
-#                 deleted_treatments = data.get('deleted_treatments', [])
+#             project_id = request.POST.get('Project_ID')
+#             experiment_id = request.POST.get('Experiment_ID')
+#             year = request.POST.get('Year')
+#             location_id = request.POST.get('Location_ID')
+#             interaction_1_count = request.POST.get('Interaction_1_count', '0') or '0'
+#             interaction_2_count = request.POST.get('Interaction_2_count', '0') or '0'
+#             interaction_3_count = request.POST.get('Interaction_3_count', '0') or '0'
+#             metadata = request.POST.get('MetaData')
+#             no_of_replicates = request.POST.get('No_of_Replicates')
 
-#                 with transaction.atomic():
-#                     # Delete treatments
-#                     for treatment_id in deleted_treatments:
-#                         Treatment.objects.filter(Treatment_ID=treatment_id, Experiment_ID=experiment).delete()
+#             interaction_1_count = int(interaction_1_count)
+#             interaction_2_count = int(interaction_2_count)
+#             interaction_3_count = int(interaction_3_count)
+#             no_of_replicates = int(no_of_replicates)
 
-#                     # Get the max numeric part of the Treatment_ID within this experiment
-#                     existing_ids = Treatment.objects.filter(Experiment_ID=experiment).values_list('Treatment_ID', flat=True)
-#                     max_numeric_id = 0
-#                     for id in existing_ids:
-#                         numeric_part = int(id.split('e')[0])
-#                         if numeric_part > max_numeric_id:
-#                             max_numeric_id = numeric_part
+#             project = get_object_or_404(Project, pk=project_id)
 
-#                     # Update or create treatments
-#                     for treatment in treatments_data:
-#                         treatment_id = treatment.get('treatment_id')
-#                         interaction_1_value = treatment.get('interaction_1_value', '').strip()
-#                         interaction_2_value = treatment.get('interaction_2_value', '').strip()
-#                         interaction_3_value = treatment.get('interaction_3_value', '').strip()
-#                         no_of_replication = treatment.get('no_of_replication', '').strip()
-#                         metadata = treatment.get('metadata', '').strip()
+#             if location_id == 'other':
+#                 location_data = {
+#                     'Location_ID': request.POST.get('New_Location_ID'),
+#                     'State': request.POST.get('New_State'),
+#                     'County': request.POST.get('New_County'),
+#                     'Owner': request.POST.get('New_Owner'),
+#                     'Latitude': request.POST.get('New_Latitude'),
+#                     'Longitude': request.POST.get('New_Longitude'),
+#                     'Contact': request.POST.get('New_Contact'),
+#                     'MetaData': request.POST.get('New_MetaData')
+#                 }
+#                 location = Location.objects.create(**location_data)
+#                 location_id = location.Location_ID
+#             else:
+#                 location = get_object_or_404(Location, pk=location_id)
 
-#                         # Ensure at least one interaction value is provided
-#                         if not interaction_1_value and not interaction_2_value and not interaction_3_value:
-#                             raise ValueError(f"At least one interaction value must be provided for treatment {treatment_id}")
+#             experiment = Experiment.objects.create(
+#                 Experiment_ID=experiment_id,
+#                 Project_ID=project,
+#                 Location_ID=location,
+#                 Year=year,
+#                 Interaction_1_count=interaction_1_count,
+#                 Interaction_2_count=interaction_2_count,
+#                 Interaction_3_count=interaction_3_count,
+#                 MetaData=metadata
+#             )
 
-#                         # Generate new Treatment_ID if it's a new treatment
-#                         if treatment_id.isnumeric():
-#                             max_numeric_id += 1
-#                             treatment_id = f"{max_numeric_id}e{experiment.Experiment_ID}"
+#             interaction_1_values = []
+#             interaction_2_values = []
+#             interaction_3_values = []
 
-#                         # Update or create the treatment
-#                         Treatment.objects.update_or_create(
-#                             Treatment_ID=treatment_id,
-#                             Experiment_ID=experiment,
-#                             defaults={
-#                                 'Interaction_1_Value': interaction_1_value,
-#                                 'Interaction_2_Value': interaction_2_value,
-#                                 'Interaction_3_Value': interaction_3_value,
-#                                 'No_of_Replication': no_of_replication,
-#                                 'MetaData': metadata
-#                             }
-#                         )
+#             for i in range(1, interaction_1_count + 1):
+#                 value = request.POST.get(f'Interaction_1_{i}', 'NA')
+#                 interaction_1_values.append(value)
 
-#                 return JsonResponse({'success': True})
+#             for i in range(1, interaction_2_count + 1):
+#                 value = request.POST.get(f'Interaction_2_{i}', 'NA')
+#                 interaction_2_values.append(value)
+
+#             for i in range(1, interaction_3_count + 1):
+#                 value = request.POST.get(f'Interaction_3_{i}', 'NA')
+#                 interaction_3_values.append(value)
+
+#             experiment.Interaction_1_value = ','.join(interaction_1_values)
+#             experiment.Interaction_2_value = ','.join(interaction_2_values)
+#             experiment.Interaction_3_value = ','.join(interaction_3_values)
+
+#             experiment.save()
+
+#             base_dir = os.path.join(r'C:\Users\sayee\OneDrive\Desktop', 'N_trail_folder')
+#             project_folder = os.path.join(base_dir, project.Project_ID)
+#             experiment_folder = os.path.join(project_folder, experiment_id)
+#             os.makedirs(experiment_folder, exist_ok=True)
+
+#             file_path = os.path.join(experiment_folder, f'{experiment_id}.txt')
+#             with open(file_path, 'w') as file:
+#                 file.write(f'Experiment ID: {experiment_id}\n')
+#                 file.write(f'Project ID: {project_id}\n')
+#                 file.write(f'Location ID: {location_id}\n')
+#                 file.write(f'Year: {year}\n')
+#                 file.write(f'Interaction 1 Count: {interaction_1_count}\n')
+#                 file.write(f'Interaction 1 Value: {experiment.Interaction_1_value}\n')
+#                 file.write(f'Interaction 2 Count: {interaction_2_count}\n')
+#                 file.write(f'Interaction 2 Value: {experiment.Interaction_2_value}\n')
+#                 file.write(f'Interaction 3 Count: {interaction_3_count}\n')
+#                 file.write(f'Interaction 3 Value: {experiment.Interaction_3_value}\n')
+#                 file.write(f'Metadata: {metadata}\n')
+
+#             # Generate treatments
+#             interaction_combinations = list(product(
+#                 interaction_1_values or [''],
+#                 interaction_2_values or [''],
+#                 interaction_3_values or ['']
+#             ))
+
+#             total_combinations = len(interaction_combinations)
+#             treatments = []
+#             treatment_id_prefix = f"{experiment_id}_T"
+
+#             for idx, (i1, i2, i3) in enumerate(interaction_combinations):
+#                 for replicate in range(1, no_of_replicates + 1):
+#                     treatment_id = f"{treatment_id_prefix}{idx+1}_R{replicate}"
+#                     treatments.append(Treatment(
+#                         Treatment_ID=treatment_id,
+#                         Experiment_ID=experiment,
+#                         Interaction_1_Value=i1,
+#                         Interaction_2_Value=i2,
+#                         Interaction_3_Value=i3,
+#                         No_of_Replication=no_of_replicates,
+#                         MetaData=metadata
+#                     ))
+
+#             Treatment.objects.bulk_create(treatments)
+
+#             return JsonResponse({'success': True, 'experiment_id': experiment.Experiment_ID, 'no_of_replicates': no_of_replicates, 'total_combinations': total_combinations})
 #         except Exception as e:
-#             logger.error(f"Error submitting treatments: {str(e)}", exc_info=True)
 #             return JsonResponse({'success': False, 'error': str(e)})
-
-#     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-#         html = render_to_string('show_treatments.html', {'experiment': experiment, 'treatments': treatments}, request)
-#         return JsonResponse({'html': html})
-
-#     return render(request, 'show_treatments.html', {'experiment': experiment, 'treatments': treatments})
+#     else:
+#         return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 
 @login_required
@@ -1167,15 +488,11 @@ def add_experiment(request):
             experiment_id = request.POST.get('Experiment_ID')
             year = request.POST.get('Year')
             location_id = request.POST.get('Location_ID')
-            interaction_1_count = request.POST.get('Interaction_1_count', '0') or '0'
-            interaction_2_count = request.POST.get('Interaction_2_count', '0') or '0'
-            interaction_3_count = request.POST.get('Interaction_3_count', '0') or '0'
+            interaction_1_count = int(request.POST.get('Interaction_1_count', '0') or '0')
+            interaction_2_count = int(request.POST.get('Interaction_2_count', '0') or '0')
+            interaction_3_count = int(request.POST.get('Interaction_3_count', '0') or '0')
             metadata = request.POST.get('MetaData')
-            no_of_replicates = request.POST.get('No_of_Replicates')
-
-            interaction_1_count = int(interaction_1_count)
-            interaction_2_count = int(interaction_2_count)
-            interaction_3_count = int(interaction_3_count)
+            no_of_replicates = int(request.POST.get('No_of_Replicates', '1'))
 
             project = get_object_or_404(Project, pk=project_id)
 
@@ -1206,21 +523,9 @@ def add_experiment(request):
                 MetaData=metadata
             )
 
-            interaction_1_values = []
-            interaction_2_values = []
-            interaction_3_values = []
-
-            for i in range(1, interaction_1_count + 1):
-                value = request.POST.get(f'Interaction_1_{i}', 'NA')
-                interaction_1_values.append(value)
-
-            for i in range(1, interaction_2_count + 1):
-                value = request.POST.get(f'Interaction_2_{i}', 'NA')
-                interaction_2_values.append(value)
-
-            for i in range(1, interaction_3_count + 1):
-                value = request.POST.get(f'Interaction_3_{i}', 'NA')
-                interaction_3_values.append(value)
+            interaction_1_values = [request.POST.get(f'Interaction_1_{i}', 'NA') for i in range(1, interaction_1_count + 1)]
+            interaction_2_values = [request.POST.get(f'Interaction_2_{i}', 'NA') for i in range(1, interaction_2_count + 1)]
+            interaction_3_values = [request.POST.get(f'Interaction_3_{i}', 'NA') for i in range(1, interaction_3_count + 1)]
 
             experiment.Interaction_1_value = ','.join(interaction_1_values)
             experiment.Interaction_2_value = ','.join(interaction_2_values)
@@ -1248,24 +553,22 @@ def add_experiment(request):
                 file.write(f'Metadata: {metadata}\n')
 
             # Generate treatments
-            interaction_combinations = list(product(
-                interaction_1_values or [''],
-                interaction_2_values or [''],
-                interaction_3_values or ['']
-            ))
+            interactions = [interaction_1_values, interaction_2_values, interaction_3_values]
+            valid_interactions = [i for i in interactions if i]  # Filter out empty lists
+            interaction_combinations = list(product(*valid_interactions))
 
             treatments = []
             treatment_id_prefix = f"{experiment_id}_T"
 
-            for idx, (i1, i2, i3) in enumerate(interaction_combinations):
-                for replicate in range(1, int(no_of_replicates) + 1):
-                    treatment_id = f"{treatment_id_prefix}{idx+1}_R{replicate}"
+            for idx, combination in enumerate(interaction_combinations):
+                for replicate in range(1, no_of_replicates + 1):
+                    treatment_id = f"{treatment_id_prefix}{idx + 1}_R{replicate}"
                     treatments.append(Treatment(
                         Treatment_ID=treatment_id,
                         Experiment_ID=experiment,
-                        Interaction_1_Value=i1,
-                        Interaction_2_Value=i2,
-                        Interaction_3_Value=i3,
+                        Interaction_1_Value=combination[0] if len(combination) > 0 else '',
+                        Interaction_2_Value=combination[1] if len(combination) > 1 else '',
+                        Interaction_3_Value=combination[2] if len(combination) > 2 else '',
                         No_of_Replication=no_of_replicates,
                         MetaData=metadata
                     ))
@@ -1277,16 +580,15 @@ def add_experiment(request):
             return JsonResponse({'success': False, 'error': str(e)})
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request method'})
-
-
-
 @login_required
 @csrf_exempt
 def show_treatments(request, experiment_id):
-    logger.debug("Entering show_treatments view")
     experiment = get_object_or_404(Experiment, pk=experiment_id)
     treatments = Treatment.objects.filter(Experiment_ID=experiment)
-    logger.debug(f"Fetched treatments: {treatments}")
+
+    interaction_1_values = experiment.Interaction_1_value.split(',')
+    interaction_2_values = experiment.Interaction_2_value.split(',')
+    interaction_3_values = experiment.Interaction_3_value.split(',') if experiment.Interaction_3_value else ['']
 
     if request.method == 'POST':
         try:
@@ -1295,24 +597,52 @@ def show_treatments(request, experiment_id):
             if action == 'submit_all':
                 treatments_data = data.get('treatments', [])
                 deleted_treatments = data.get('deleted_treatments', [])
-                logger.debug("Processing submit_all action")
 
                 with transaction.atomic():
                     # Delete treatments
                     for treatment_id in deleted_treatments:
                         Treatment.objects.filter(Treatment_ID=treatment_id).delete()
 
+                    # Get the max numeric part of the Treatment_ID within this experiment
+                    existing_ids = Treatment.objects.filter(Experiment_ID=experiment).values_list('Treatment_ID', flat=True)
+                    max_numeric_id = 0
+                    for id in existing_ids:
+                        numeric_part = int(id.split('e')[0])
+                        if numeric_part > max_numeric_id:
+                            max_numeric_id = numeric_part
+
                     # Update or create treatments
                     for treatment in treatments_data:
+                        treatment_id = treatment.get('treatment_id')
+                        interaction_1_value = treatment.get('interaction_1_value', '').strip()
+                        interaction_2_value = treatment.get('interaction_2_value', '').strip()
+                        interaction_3_value = treatment.get('interaction_3_value', '').strip()
+                        no_of_replication = treatment.get('no_of_replication', '').strip()
+                        metadata = treatment.get('metadata', '').strip()
+
+                        # Ensure at least one interaction value is provided
+                        if not interaction_1_value and not interaction_2_value and not interaction_3_value:
+                            raise ValueError(f"At least one interaction value must be provided for treatment {treatment_id}")
+
+                        # Ensure no_of_replication is provided
+                        if not no_of_replication:
+                            raise ValueError(f"No_of_Replication for treatment {treatment_id} cannot be empty")
+
+                        # Generate new Treatment_ID if it's a new treatment
+                        if treatment_id.isnumeric():
+                            max_numeric_id += 1
+                            treatment_id = f"{max_numeric_id}e{experiment.Experiment_ID}"
+
+                        # Update or create the treatment
                         Treatment.objects.update_or_create(
-                            Treatment_ID=treatment.get('treatment_id'),
+                            Treatment_ID=treatment_id,
                             Experiment_ID=experiment,
                             defaults={
-                                'Interaction_1_Value': treatment.get('interaction_1_value', '').strip(),
-                                'Interaction_2_Value': treatment.get('interaction_2_value', '').strip(),
-                                'Interaction_3_Value': treatment.get('interaction_3_value', '').strip(),
-                                'No_of_Replication': treatment.get('no_of_replication', '').strip(),
-                                'MetaData': treatment.get('metadata', '').strip()
+                                'Interaction_1_Value': interaction_1_value,
+                                'Interaction_2_Value': interaction_2_value,
+                                'Interaction_3_Value': interaction_3_value,
+                                'No_of_Replication': no_of_replication,
+                                'MetaData': metadata
                             }
                         )
 
@@ -1321,29 +651,58 @@ def show_treatments(request, experiment_id):
             logger.error(f"Error submitting treatments: {str(e)}", exc_info=True)
             return JsonResponse({'success': False, 'error': str(e)})
 
-    # Generate treatments based on the interaction counts
-    interaction_1_values = experiment.Interaction_1_value.split(',')
-    interaction_2_values = experiment.Interaction_2_value.split(',')
-    interaction_3_values = experiment.Interaction_3_value.split(',') if experiment.Interaction_3_value else ['']
-    
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        html = render_to_string('show_treatments.html', {'experiment': experiment, 'treatments': treatments}, request)
+        return JsonResponse({'html': html})
+
+    no_of_replicates = request.GET.get('no_of_replicates', '1')
+
     combinations = list(product(interaction_1_values, interaction_2_values, interaction_3_values))
     num_combinations = len(combinations)
-    
+
     if not treatments.exists():
-        new_treatments = []
-        for i, combination in enumerate(combinations, start=1):
-            treatment_id = f"t{i}e{experiment_id}"
-            new_treatments.append(Treatment(
-                Treatment_ID=treatment_id,
+        existing_ids = set(Treatment.objects.values_list('Treatment_ID', flat=True))
+        new_treatment_id = max([int(id.split('e')[0]) for id in existing_ids]) + 1 if existing_ids else 1
+
+        for combination in combinations:
+            while f"{new_treatment_id}e{experiment.Experiment_ID}" in existing_ids:
+                new_treatment_id += 1
+            Treatment.objects.create(
+                Treatment_ID=f"{new_treatment_id}e{experiment.Experiment_ID}",
                 Experiment_ID=experiment,
                 Interaction_1_Value=combination[0],
                 Interaction_2_Value=combination[1],
                 Interaction_3_Value=combination[2],
-                No_of_Replication=experiment.Interaction_1_count * experiment.Interaction_2_count * experiment.Interaction_3_count,
+                No_of_Replication=no_of_replicates,
                 MetaData='Generated'
-            ))
-        Treatment.objects.bulk_create(new_treatments)
+            )
+            new_treatment_id += 1
         treatments = Treatment.objects.filter(Experiment_ID=experiment)
 
-    logger.debug("Rendering show_treatments template")
     return render(request, 'show_treatments.html', {'experiment': experiment, 'treatments': treatments})
+
+@login_required
+@csrf_exempt
+def save_plot_data(request, treatment_id):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            plot_data = data.get('plot_data', [])
+
+            with transaction.atomic():
+                # Delete existing plot data for this treatment
+                Plot.objects.filter(Treatment_ID=treatment_id).delete()
+
+                # Insert new plot data
+                for plot in plot_data:
+                    Plot.objects.create(
+                        Treatment_ID=Treatment.objects.get(Treatment_ID=treatment_id),
+                        Replication_ID=plot['replication_id'],
+                        Plot_ID=plot['plot_id']
+                    )
+
+            return JsonResponse({'success': True})
+        except Exception as e:
+            logger.error(f"Error saving plot data: {str(e)}", exc_info=True)
+            return JsonResponse({'success': False, 'error': str(e)})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
