@@ -45,89 +45,79 @@
     <td>{{ experiment.Interaction_2_value }}</td>
     <td>{{ experiment.Interaction_3_count }}</td>
     <td>{{ experiment.Interaction_3_value }}</td>
+
+    
     <td>
-      {% if experiment.Yield_Map %}
-        <a href="{{ experiment.Yield_Map }}">{{ experiment.Yield_Map|basename }}</a>
-      {% else %}
-        <button onclick="uploadFile('{{ experiment.Experiment_ID }}', 'Yield_Map')">Upload</button>
-      {% endif %}
+      {% for file in experiment.Yield_Map %}
+        <a href="{{ MEDIA_URL }}{{ file }}" target="_blank">{{ file|basename }}</a><br>
+      {% endfor %}
+      <button onclick="uploadFiles('{{ experiment.Experiment_ID }}', 'Yield_Map')">Upload</button>
     </td>
     <td>
-      {% if experiment.Soil_Sample %}
-        <a href="{{ experiment.Soil_Sample }}">{{ experiment.Soil_Sample|basename }}</a>
-      {% else %}
-        <button onclick="uploadFile('{{ experiment.Experiment_ID }}', 'Soil_Sample')">Upload</button>
-      {% endif %}
+      {% for file in experiment.Soil_Sample %}
+        <a href="{{ MEDIA_URL }}{{ file }}" target="_blank">{{ file|basename }}</a><br>
+      {% endfor %}
+      <button onclick="uploadFiles('{{ experiment.Experiment_ID }}', 'Soil_Sample')">Upload</button>
     </td>
     <td>
-      {% if experiment.Sonic_sensor %}
-        <a href="{{ experiment.Sonic_sensor }}">{{ experiment.Sonic_sensor|basename }}</a>
-      {% else %}
-        <button onclick="uploadFile('{{ experiment.Experiment_ID }}', 'Sonic_sensor')">Upload</button>
-      {% endif %}
+      {% for file in experiment.Sonic_sensor %}
+        <a href="{{ MEDIA_URL }}{{ file }}" target="_blank">{{ file|basename }}</a><br>
+      {% endfor %}
+      <button onclick="uploadFiles('{{ experiment.Experiment_ID }}', 'Sonic_sensor')">Upload</button>
     </td>
     <td>
-      {% if experiment.GCP %}
-        <a href="{{ experiment.GCP }}">{{ experiment.GCP|basename }}</a>
-      {% else %}
-        <button onclick="uploadFile('{{ experiment.Experiment_ID }}', 'GCP')">Upload</button>
-      {% endif %}
+      {% for file in experiment.GCP %}
+        <a href="{{ MEDIA_URL }}{{ file }}" target="_blank">{{ file|basename }}</a><br>
+      {% endfor %}
+      <button onclick="uploadFiles('{{ experiment.Experiment_ID }}', 'GCP')">Upload</button>
     </td>
     <td>
-      {% if experiment.RAWUAV %}
-        <a href="{{ experiment.RAWUAV }}">{{ experiment.RAWUAV|basename }}</a>
-      {% else %}
-        <button onclick="uploadFile('{{ experiment.Experiment_ID }}', 'RAWUAV')">Upload</button>
-      {% endif %}
+      {% for file in experiment.RAWUAV %}
+        <a href="{{ MEDIA_URL }}{{ file }}" target="_blank">{{ file|basename }}</a><br>
+      {% endfor %}
+      <button onclick="uploadFiles('{{ experiment.Experiment_ID }}', 'RAWUAV')">Upload</button>
     </td>
     <td>
-      {% if experiment.Orthomosic_UAV %}
-        <a href="{{ experiment.Orthomosic_UAV }}">{{ experiment.Orthomosic_UAV|basename }}</a>
-      {% else %}
-        <button onclick="uploadFile('{{ experiment.Experiment_ID }}', 'Orthomosic_UAV')">Upload</button>
-      {% endif %}
+      {% for file in experiment.Orthomosic_UAV %}
+        <a href="{{ MEDIA_URL }}{{ file }}" target="_blank">{{ file|basename }}</a><br>
+      {% endfor %}
+      <button onclick="uploadFiles('{{ experiment.Experiment_ID }}', 'Orthomosic_UAV')">Upload</button>
     </td>
     <td>
-      {% if experiment.DSM_UAV %}
-        <a href="{{ experiment.DSM_UAV }}">{{ experiment.DSM_UAV|basename }}</a>
-      {% else %}
-        <button onclick="uploadFile('{{ experiment.Experiment_ID }}', 'DSM_UAV')">Upload</button>
-      {% endif %}
+      {% for file in experiment.DSM_UAV %}
+        <a href="{{ MEDIA_URL }}{{ file }}" target="_blank">{{ file|basename }}</a><br>
+      {% endfor %}
+      <button onclick="uploadFiles('{{ experiment.Experiment_ID }}', 'DSM_UAV')">Upload</button>
     </td>
     <td>
-      {% if experiment.Orthomosic_SAT %}
-        <a href="{{ experiment.Orthomosic_SAT }}">{{ experiment.Orthomosic_SAT|basename }}</a>
-      {% else %}
-        <button onclick="uploadFile('{{ experiment.Experiment_ID }}', 'Orthomosic_SAT')">Upload</button>
-      {% endif %}
+      {% for file in experiment.Orthomosic_SAT %}
+        <a href="{{ MEDIA_URL }}{{ file }}" target="_blank">{{ file|basename }}</a><br>
+      {% endfor %}
+      <button onclick="uploadFiles('{{ experiment.Experiment_ID }}', 'Orthomosic_SAT')">Upload</button>
     </td>
     <td>
-      {% if experiment.DSM_SAT %}
-        <a href="{{ experiment.DSM_SAT }}">{{ experiment.DSM_SAT|basename }}</a>
-      {% else %}
-        <button onclick="uploadFile('{{ experiment.Experiment_ID }}', 'DSM_SAT')">Upload</button>
-      {% endif %}
+      {% for file in experiment.DSM_SAT %}
+        <a href="{{ MEDIA_URL }}{{ file }}" target="_blank">{{ file|basename }}</a><br>
+      {% endfor %}
+      <button onclick="uploadFiles('{{ experiment.Experiment_ID }}', 'DSM_SAT')">Upload</button>
     </td>
     <td>
-      {% if experiment.VI_1 %}
-        <a href="{{ experiment.VI_1 }}">{{ experiment.VI_1|basename }}</a>
-      {% else %}
-        <button onclick="uploadFile('{{ experiment.Experiment_ID }}', 'VI_1')">Upload</button>
-      {% endif %}
+      {% for file in experiment.VI_1 %}
+        <a href="{{ MEDIA_URL }}{{ file }}" target="_blank">{{ file|basename }}</a><br>
+      {% endfor %}
+      <button onclick="uploadFiles('{{ experiment.Experiment_ID }}', 'VI_1')">Upload</button>
     </td>
     <td>
-      {% if experiment.VI_2 %}
-        <a href="{{ experiment.VI_2 }}">{{ experiment.VI_2|basename }}</a>
-      {% else %}
-        <button onclick="uploadFile('{{ experiment.Experiment_ID }}', 'VI_2')">Upload</button>
-      {% endif %}
+      {% for file in experiment.VI_2 %}
+        <a href="{{ MEDIA_URL }}{{ file }}" target="_blank">{{ file|basename }}</a><br>
+      {% endfor %}
+      <button onclick="uploadFiles('{{ experiment.Experiment_ID }}', 'VI_2')">Upload</button>
     </td>
     <td>
-      {% if experiment.VI_3 %}
-        <a href="{{ experiment.VI_3 }}">{{ experiment.VI_3|basename }}</a>
-      {% else %}
-        <button onclick="uploadFile('{{ experiment.Experiment_ID }}', 'VI_3')">Upload</button>
-      {% endif %}
+      {% for file in experiment.VI_3 %}
+        <a href="{{ MEDIA_URL }}{{ file }}" target="_blank">{{ file|basename }}</a><br>
+      {% endfor %}
+      <button onclick="uploadFiles('{{ experiment.Experiment_ID }}', 'VI_3')">Upload</button>
     </td>
     <td>{{ experiment.MetaData }}</td>
     <td><a href="{% url 'show_treatments' experiment_id=experiment.Experiment_ID %}">Show</a></td>
@@ -243,42 +233,6 @@
     <div id="interaction_3-fields"></div>
     {% endif %}
 
-    <label for="Yield_Map">Yield Map:</label>
-    <textarea id="Yield_Map" name="Yield_Map" rows="4" cols="50"></textarea><br>
-
-    <label for="Soil_Sample">Soil Sample:</label>
-    <textarea id="Soil_Sample" name="Soil_Sample" rows="4" cols="50"></textarea><br>
-
-    <label for="Sonic_sensor">Sonic Sensor:</label>
-    <textarea id="Sonic_sensor" name="Sonic_sensor" rows="4" cols="50"></textarea><br>
-
-    <label for="GCP">GCP:</label>
-    <textarea id="GCP" name="GCP" rows="4" cols="50"></textarea><br>
-
-    <label for="RAWUAV">RAW UAV:</label>
-    <textarea id="RAWUAV" name="RAWUAV" rows="4" cols="50"></textarea><br>
-
-    <label for="Orthomosic_UAV">Orthomosic UAV:</label>
-    <textarea id="Orthomosic_UAV" name="Orthomosic_UAV" rows="4" cols="50"></textarea><br>
-
-    <label for="DSM_UAV">DSM UAV:</label>
-    <textarea id="DSM_UAV" name="DSM_UAV" rows="4" cols="50"></textarea><br>
-
-    <label for="Orthomosic_SAT">Orthomosic SAT:</label>
-    <textarea id="Orthomosic_SAT" name="Orthomosic_SAT" rows="4" cols="50"></textarea><br>
-
-    <label for="DSM_SAT">DSM SAT:</label>
-    <textarea id="DSM_SAT" name="DSM_SAT" rows="4" cols="50"></textarea><br>
-
-    <label for="VI_1">VI 1:</label>
-    <textarea id="VI_1" name="VI_1" rows="4" cols="50"></textarea><br>
-
-    <label for="VI_2">VI 2:</label>
-    <textarea id="VI_2" name="VI_2" rows="4" cols="50"></textarea><br>
-
-    <label for="VI_3">VI 3:</label>
-    <textarea id="VI_3" name="VI_3" rows="4" cols="50"></textarea><br>
-
     <label for="MetaData">Metadata:</label>
     <textarea id="MetaData" name="MetaData" rows="4" cols="50"></textarea><br>
 
@@ -345,38 +299,6 @@
 </style>
 
 <script>
-function uploadFile(experimentId, fileField) {
-  const fileInput = document.createElement('input');
-  fileInput.type = 'file';
-  fileInput.onchange = function() {
-    const file = fileInput.files[0];
-    const formData = new FormData();
-    formData.append('file', file);
-    fetch(`/upload_experiment_file/${experimentId}/${fileField}/`, {
-      method: 'POST',
-      body: formData,
-      headers: {
-        'X-CSRFToken': '{{ csrf_token }}'
-      }
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        alert(`File uploaded successfully: ${data.file_name}`);
-        location.reload();
-      } else {
-        alert(`Failed to upload file: ${data.error}`);
-      }
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      alert('Failed to upload file. Please try again.');
-    });
-  };
-  fileInput.click();
-}
-
-
 document.addEventListener('DOMContentLoaded', function() {
   const unitOptions = ['u1', 'u2', 'u3', 'na'];
 
@@ -675,6 +597,42 @@ document.addEventListener('DOMContentLoaded', function() {
     updateInteractionFields('Interaction_1_count', 'interaction_1-fields', 'Interaction_1', 'class', interaction1Values);
     updateInteractionFields('Interaction_2_count', 'interaction_2-fields', 'Interaction_2', 'class', interaction2Values);
     updateInteractionFields('Interaction_3_count', 'interaction_3-fields', 'Interaction_3', 'class', interaction3Values);
+  };
+
+  window.uploadFiles = function(experimentId, fileField) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '*/*'; // Accept any file type
+    input.multiple = true; // Allow multiple files to be selected
+    input.onchange = function(event) {
+      const files = event.target.files;
+      if (files.length > 0) {
+        const formData = new FormData();
+        for (let i = 0; i < files.length; i++) {
+          formData.append('files', files[i]);
+        }
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        fetch(`/upload_experiment_file/${experimentId}/${fileField}/`, {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('Files uploaded successfully!');
+            location.reload(); // Reload the page to reflect the changes
+          } else {
+            alert('Failed to upload files: ' + data.error);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Failed to upload files. Please try again.');
+        });
+      }
+    };
+    input.click();
   };
 });
 </script>

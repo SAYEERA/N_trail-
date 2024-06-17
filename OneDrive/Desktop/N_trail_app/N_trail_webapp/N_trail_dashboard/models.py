@@ -86,32 +86,43 @@ class Experiment(models.Model):
     Interaction_2_value = models.TextField(default="")
     Interaction_3_count = models.IntegerField(default=0)
     Interaction_3_value = models.TextField(default="")
-    Yield_Map = models.TextField('Yield_Map', blank=True, null=True)
+    Yield_Map = models.JSONField(default=list, blank=True, null=True)
     Soil_Sample = models.TextField('Soil_Sample', blank=True, null=True)
-    Sonic_sensor = models.TextField('Sonic_sensor', blank=True, null=True)
-    GCP = models.TextField('GCP', blank=True, null=True)
-    RAWUAV = models.TextField('RAWUAV', blank=True, null=True)
-    Orthomosic_UAV = models.TextField('Orthomosic_UAV', blank=True, null=True)
-    DSM_UAV = models.TextField('DSM_UAV', blank=True, null=True)
-    Orthomosic_SAT = models.TextField('Orthomosic_SAT', blank=True, null=True)
-    DSM_SAT = models.TextField('DSM_SAT', blank=True, null=True)
-    VI_1 = models.TextField('VI_1', blank=True, null=True)
-    VI_2 = models.TextField('VI_2', blank=True, null=True)
-    VI_3 = models.TextField('VI_3', blank=True, null=True)
+    Sonic_sensor = models.JSONField(default=list, blank=True, null=True)
+    GCP = models.JSONField(default=list, blank=True, null=True)
+    RAWUAV = models.JSONField(default=list, blank=True, null=True)
+    Orthomosic_UAV = models.JSONField(default=list, blank=True, null=True)
+    DSM_UAV = models.JSONField(default=list, blank=True, null=True)
+    Orthomosic_SAT = models.JSONField(default=list, blank=True, null=True)
+    DSM_SAT = models.CharField(max_length=255, blank=True, null=True)
+    VI_1 = models.JSONField(default=list, blank=True, null=True)
+    VI_2 = models.JSONField(default=list, blank=True, null=True)
+    VI_3 = models.JSONField(default=list, blank=True, null=True)
     MetaData = models.TextField('MetaData', max_length=120, blank=False, null=False)
 
     def __str__(self):
         return self.Experiment_ID
 
 class Treatment(models.Model):
-    Treatment_ID            = models.IntegerField(primary_key=True)
-    Experiment_ID           = models.ForeignKey(Experiment, on_delete=models.CASCADE)
-    Interaction_1_Value     = models.CharField('Interaction_1_Value', max_length=120, blank=False, null=False)
-    Interaction_2_Value     = models.CharField('Interaction_2_Value', max_length=120, blank=False, null=False)
-    Interaction_3_Value     = models.CharField('Interaction_3_Value', max_length=120, blank=False, null=False)
-    No_of_Replication       = models.CharField('No_of_Replication', max_length=120, blank=False, null=False)
-    MetaData                = models.TextField('MetaData', max_length=120, blank=False, null=False)
-    
+    Treatment_ID = models.CharField(max_length=50, primary_key=True)
+    Experiment_ID = models.ForeignKey(Experiment, on_delete=models.CASCADE)
+    Interaction_1_Value = models.CharField('Interaction_1_Value', max_length=120, blank=False, null=False)
+    Interaction_2_Value = models.CharField('Interaction_2_Value', max_length=120, blank=False, null=False)
+    Interaction_3_Value = models.CharField('Interaction_3_Value', max_length=120, blank=False, null=False)
+    No_of_Replication = models.CharField('No_of_Replication', max_length=120, blank=False, null=False)
+    MetaData = models.TextField('MetaData', max_length=120, blank=False, null=False)
+
     def __str__(self):
-        return str(self.Treatment_ID)
+        return self.Treatment_ID
+
+class Plot(models.Model):
+    Treatment_ID = models.ForeignKey(Treatment, on_delete=models.CASCADE)
+    Replication_ID = models.IntegerField()
+    Plot_ID = models.CharField(max_length=120)
+
+    class Meta:
+        unique_together = (('Treatment_ID', 'Replication_ID'),)
+
+    def __str__(self):
+        return f"Treatment: {self.Treatment_ID}, Replication: {self.Replication_ID}"
     

@@ -4,7 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from .views import (home, browse, signup, my_projects, logout_view, import_experiment,
                     all_projects, all_locations, project_database, add_project, add_experiment, show_experiments,
-                    add_location, show_treatments,upload_experiment_file)
+                    add_location, show_treatments,upload_experiment_file,download_file)
 
 
 urlpatterns = [
@@ -27,7 +27,12 @@ urlpatterns = [
     path('import_experiment/', import_experiment, name='import_experiment'),
     path('experiments/<str:experiment_id>/treatments/', show_treatments, name='show_treatments'),
     path('upload_experiment_file/<str:experiment_id>/<str:file_field>/', upload_experiment_file, name='upload_experiment_file'),
+    # path('treatment/<int:treatment_id>/save_plot_data/', save_plot_data, name='save_plot_data'),
+    path('download/<path:file_path>/', download_file, name='download_file'),
 ]
 
+
+
 if settings.DEBUG:
+    from django.conf.urls.static import static
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
