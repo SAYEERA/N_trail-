@@ -30,3 +30,9 @@ def add(value, arg):
 @register.filter
 def times(number):
     return range(int(number))
+
+
+
+@register.filter
+def get_attribute(obj, attr):
+    return getattr(obj, attr)

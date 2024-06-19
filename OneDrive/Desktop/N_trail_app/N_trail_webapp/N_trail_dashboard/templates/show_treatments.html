@@ -70,7 +70,7 @@
         {% for i in treatment.No_of_Replication|range_filter %}
         <tr>
           <td>{{ forloop.counter }}</td>
-          <td><input type="text" name="plot_id_{{ treatment.Treatment_ID }}_{{ forloop.counter }}" value=""></td>
+          <td><input type="text" name="plot_id_{{ treatment.Treatment_ID }}_{{ forloop.counter }}" value="" id="plot_id_{{ treatment.Treatment_ID }}_{{ forloop.counter }}"></td>
         </tr>
         {% endfor %}
       </tbody>
@@ -81,25 +81,54 @@
 </div>
 
 <script>
-  let deletedTreatments = [];
-  let maxTreatmentId = Math.max(...Array.from(document.querySelectorAll('#treatments-table tr')).map(row => parseInt(row.querySelector('td:first-child').innerText.match(/\d+/)[0], 10)));
+let deletedTreatments = [];
+let maxTreatmentId = Math.max(...Array.from(document.querySelectorAll('#treatments-table tr')).map(row => parseInt(row.querySelector('td:first-child').innerText.match(/\d+/)[0], 10))) || 0;
 
+document.addEventListener("DOMContentLoaded", function() {
+    console.log("DOM fully loaded and parsed. Fetching plot data...");
+    document.querySelectorAll('.card').forEach(function(card) {
+        let treatmentId = card.id.split('-')[2];
+        fetchPlotData(treatmentId);
+    });
+});
 
-  function enableEditing(treatmentId) {
+function fetchPlotData(treatmentId) {
+    console.log(`Fetching plot data for treatment ID: ${treatmentId}`);
+    fetch(`/treatment/${treatmentId}/get_plot_data/`)
+    .then(response => response.json())
+    .then(data => {
+      console.log("Plot data", data);
+        if (data.success) {
+
+            console.log(`Plot data retrieved for treatment ID ${treatmentId}:`, data.plot_data);
+            for (let replicationId in data.plot_data) {
+                console.log(`Setting value for plot_id_${treatmentId}_${replicationId}: ${data.plot_data[replicationId]}`);
+                document.querySelector(`#plot_id_${treatmentId}_${replicationId}`).value = data.plot_data[replicationId];
+            }
+        } else {
+            console.error('Error fetching plot data:', data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+function enableEditing(treatmentId) {
     document.querySelector(`[name="interaction_1_value_${treatmentId}"]`).disabled = false;
     document.querySelector(`[name="interaction_2_value_${treatmentId}"]`).disabled = false;
     document.querySelector(`[name="interaction_3_value_${treatmentId}"]`).disabled = false;
     document.querySelector(`[name="no_of_replication_${treatmentId}"]`).disabled = false;
     document.querySelector(`[name="metadata_${treatmentId}"]`).disabled = false;
-  }
+}
 
-  function deleteTreatment(treatmentId) {
+function deleteTreatment(treatmentId) {
     const row = document.getElementById(`treatment-row-${treatmentId}`);
     row.parentNode.removeChild(row);
     deletedTreatments.push(treatmentId);
-  }
+}
 
-  function addNewRow() {
+function addNewRow() {
     const newTreatmentId = `t${maxTreatmentId + 1}e{{ experiment.Experiment_ID }}`; // Increment the maximum existing Treatment ID by 1
     maxTreatmentId += 1; // Update the maxTreatmentId for subsequent new rows
 
@@ -108,7 +137,7 @@
 
     newRow.innerHTML = `
       <td>${newTreatmentId}</td>
-      <td>${experimentId}</td>
+      <td>{{ experiment.Experiment_ID }}</td>
       <td><input type="text" name="interaction_1_value_${newTreatmentId}" value=""></td>
       <td><input type="text" name="interaction_2_value_${newTreatmentId}" value=""></td>
       <td><input type="text" name="interaction_3_value_${newTreatmentId}" value=""></td>
@@ -150,109 +179,106 @@
       <button type="button" onclick="savePlotTable('${newTreatmentId}')">Save</button>
     `;
     document.getElementById('plot-tables-section').appendChild(newPlotTable);
-  }
+}
 
-  function enableAllInputs() {
+function enableAllInputs() {
     document.querySelectorAll('#treatments-table input').forEach(input => {
-      input.disabled = false;
+        input.disabled = false;
     });
-  }
+}
 
-  function submitTreatments() {
+function submitTreatments() {
     enableAllInputs();  // Ensure inputs are enabled
     const formData = new FormData(document.getElementById('treatments-form'));
     const treatmentsData = [];
     const csrfToken = formData.get('csrfmiddlewaretoken');
 
     document.querySelectorAll('#treatments-table tr').forEach(row => {
-      const treatmentId = row.querySelector('td:first-child').innerText;
-      const interaction_1_value = formData.get(`interaction_1_value_${treatmentId}`)?.trim() || '';
-      const interaction_2_value = formData.get(`interaction_2_value_${treatmentId}`)?.trim() || '';
-      const interaction_3_value = formData.get(`interaction_3_value_${treatmentId}`)?.trim() || '';
-      const no_of_replication = formData.get(`no_of_replication_${treatmentId}`)?.trim() || '';
-      const metadata = formData.get(`metadata_${treatmentId}`)?.trim() || '';
+        const treatmentId = row.querySelector('td:first-child').innerText;
+        const interaction_1_value = formData.get(`interaction_1_value_${treatmentId}`)?.trim() || '';
+        const interaction_2_value = formData.get(`interaction_2_value_${treatmentId}`)?.trim() || '';
+        const interaction_3_value = formData.get(`interaction_3_value_${treatmentId}`)?.trim() || '';
+        const no_of_replication = formData.get(`no_of_replication_${treatmentId}`)?.trim() || '';
+        const metadata = formData.get(`metadata_${treatmentId}`)?.trim() || '';
 
-      treatmentsData.push({
-        treatment_id: treatmentId,
-        interaction_1_value: interaction_1_value,
-        interaction_2_value: interaction_2_value,
-        interaction_3_value: interaction_3_value,
-        no_of_replication: no_of_replication,
-        metadata: metadata
-      });
+        treatmentsData.push({
+            treatment_id: treatmentId,
+            interaction_1_value: interaction_1_value,
+            interaction_2_value: interaction_2_value,
+            interaction_3_value: interaction_3_value,
+            no_of_replication: no_of_replication,
+            metadata: metadata
+        });
     });
 
-
-
     fetch('{% url "show_treatments" experiment.Experiment_ID %}', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': csrfToken
-      },
-      body: JSON.stringify({
-        action: 'submit_all',
-        treatments: treatmentsData,
-        deleted_treatments: deletedTreatments
-      })
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            action: 'submit_all',
+            treatments: treatmentsData,
+            deleted_treatments: deletedTreatments
+        })
     })
     .then(response => response.json())
     .then(data => {
-      if (data.success) {
-        document.getElementById('success-message').style.display = 'block';
-        setTimeout(() => {
-          document.getElementById('success-message').style.display = 'none';
-          window.location.reload();
-        }, 3000);
-      } else {
-        alert('Error submitting treatments: ' + data.error);
-      }
+        if (data.success) {
+            document.getElementById('success-message').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('success-message').style.display = 'none';
+                window.location.reload();
+            }, 3000);
+        } else {
+            alert('Error submitting treatments: ' + data.error);
+        }
     })
     .catch(error => {
-      console.error('Error:', error);
-      alert('Error submitting treatments. Please try again.');
+        console.error('Error:', error);
+        alert('Error submitting treatments. Please try again.');
     });
-  }
+}
 
-  function savePlotTable(treatmentId) {
+function savePlotTable(treatmentId) {
     const plotData = [];
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
     document.querySelectorAll(`#plot-table-${treatmentId} tbody tr`).forEach(row => {
-      const replicationId = row.querySelector('td:first-child').innerText;
-      const plotId = row.querySelector('input').value.trim();
+        const replicationId = row.querySelector('td:first-child').innerText;
+        const plotId = row.querySelector('input').value.trim();
 
-      plotData.push({
-        treatment_id: treatmentId,
-        replication_id: replicationId,
-        plot_id: plotId
-      });
+        plotData.push({
+            replication_id: replicationId,
+            plot_id: plotId
+        });
     });
 
     fetch(`/treatment/${treatmentId}/save_plot_data/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': csrfToken
-      },
-      body: JSON.stringify({
-        action: 'save_plot_data',
-        plot_data: plotData
-      })
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            plot_data: plotData
+        })
     })
     .then(response => response.json())
     .then(data => {
-      if (data.success) {
-        alert('Plot data saved successfully!');
-      } else {
-        alert('Error saving plot data: ' + data.error);
-      }
+        if (data.success) {
+            alert('Plot data saved successfully!');
+            location.reload();  // Reload the page to display updated plot data
+        } else {
+            alert('Error saving plot data: ' + data.error);
+        }
     })
     .catch(error => {
-      console.error('Error:', error);
-      alert('Error saving plot data. Please try again.');
+        console.error('Error:', error);
+        alert('Error saving plot data. Please try again.');
     });
-  }
+}
 </script>
 
 <style>

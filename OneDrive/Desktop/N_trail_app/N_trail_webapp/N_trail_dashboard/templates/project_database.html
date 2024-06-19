@@ -1,11 +1,10 @@
-<!-- N_trail_dashboard/templates/project_database.html -->
 {% extends 'base.html' %}
 
 {% block title %}Project Database{% endblock %}
 
 {% block content %}
 
-<h1>My Projects</h1>
+<h1>Projects</h1>
 
 <!-- Display Project Table -->
 <table border="1">
@@ -38,10 +37,15 @@
     <td>{{ project.Project_Editors }}</td>
     <td>{{ project.Funding_Source }}</td>
     <td>{{ project.MetaData }}</td>
-    <td><a href="{% url 'show_experiments' project_id=project.Project_ID %}">Show</a></td> <!-- Button to view experiments -->
+    <td>
+      {% if project.Project_ID %}
+        <a href="{% url 'project_experiments' project_id=project.Project_ID %}">Show</a>
+      {% else %}
+        No ID
+      {% endif %}
+    </td>
   </tr>
   {% endfor %}
 </table>
 
-</div>
 {% endblock %}

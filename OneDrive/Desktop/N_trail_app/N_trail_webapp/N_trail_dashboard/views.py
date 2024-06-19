@@ -1,6 +1,6 @@
 from django.shortcuts import render,get_object_or_404,redirect
 from .models import Project, Location, Experiment, Treatment, Plot
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse, HttpResponseNotFound 
 from itertools import product
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
@@ -70,22 +70,61 @@ def my_projects(request):
 
     return render(request, 'my_projects.html', context)
 
-def show_experiments(request, project_id):
-    location_choices = Experiment.LOCATION_CHOICES
-    project = get_object_or_404(Project, pk=project_id)
+
+def project_experiments(request, project_id):
+    project = get_object_or_404(Project, Project_ID=project_id)
     experiments = Experiment.objects.filter(Project_ID=project)
 
+    context = {
+        'project': project,
+        'experiments1': experiments,
+    }
+    return render(request, 'project_experiments.html', context)
 
-    context ={'experiments': experiments, 
-              'location_choices': location_choices,
-              'project': project,
-            
-     }
+def show_experiments(request, project_id):
+    # location_choices = Experiment.LOCATION_CHOICES
+    location_choices = Location.objects.all()  # Fetch all locations
+    project = get_object_or_404(Project, pk=project_id)
+    experiments = Experiment.objects.filter(Project_ID=project)
+    file_types = [
+        'Yield_Map', 'Soil_Sample', 'Sonic_sensor', 'GCP',
+        'RAWUAV', 'Orthomosic_UAV', 'DSM_UAV', 'Orthomosic_SAT',
+        'DSM_SAT', 'VI_1', 'VI_2', 'VI_3'
+    ]
+
+    context = {
+        'experiments': experiments, 
+        'location_choices': location_choices,
+        'project': project,
+        'file_types': file_types,  # Add file_types to the context
+    }
+
+
     return render(request, 'show_experiments.html',context )
 
 
+def show_treatments_and_plots(request, experiment_id):
+    experiment = get_object_or_404(Experiment, pk=experiment_id)
+    treatments = Treatment.objects.filter(Experiment_ID=experiment)
+    plot_data = {}
+    for treatment in treatments:
+        plots = Plot.objects.filter(Treatment_ID=treatment.Treatment_ID)
+        for plot in plots:
+            plot_data[(treatment.Treatment_ID, plot.Replication_ID)] = plot.Plot_ID
+
+
+    
+    context = {
+        'experiment': experiment,
+        'treatments': treatments,
+        'plot_data': plot_data
+    }
+    return render(request, 'treatments_and_plots.html', context)
+
+@login_required
 def all_projects(request):
-    return render(request, 'all_projects.html')
+    public_projects = Project.objects.select_related('User_ID').filter(View_Type='private')
+    return render(request, 'all_projects.html', {'projects': public_projects})
 
 def all_locations(request):
     if request.method == 'POST':
@@ -254,7 +293,7 @@ def add_project(request):
             print(f"Base directory: {base_dir}")
             print(f"Project directory: {project_dir}")
 
-            file_path = os.path.join(project_dir, f'{project_id}.txt')
+            file_path = os.path.join(project_dir, 'Meta_data.txt')
             with open(file_path, 'w') as file:
                 file.write(f'Project ID: {project_id}\n')
                 file.write(f'User ID: {user_id}\n')
@@ -276,39 +315,54 @@ def add_project(request):
     return JsonResponse({'success': False, 'error': 'Invalid request'})
 
 
-
-
-
-
 @login_required
-@csrf_exempt
-def save_plot_data(request, treatment_id):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            plot_data = data.get('plot_data', [])
+def download_file(request, file_path):
+    file_path = os.path.join(settings.MEDIA_ROOT, file_path)
+    if os.path.exists(file_path):
+        with open(file_path, 'rb') as file:
+            response = HttpResponse(file.read(), content_type='application/force-download')
+            response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
+            return response
+    else:
+        return HttpResponseNotFound("File not found")
 
-            # Ensure the treatment exists
-            treatment = get_object_or_404(Treatment, Treatment_ID=treatment_id)
 
-            # Save the plot data
-            for plot in plot_data:
-                replication_id = plot.get('replication_id')
-                plot_id = plot.get('plot_id')
 
-                # Save the plot data to the database
-                Plot.objects.update_or_create(
-                    Treatment_ID=treatment,
-                    Replication_ID=replication_id,
-                    defaults={'Plot_ID': plot_id}
-                )
 
-            return JsonResponse({'success': True})
-        except Exception as e:
-            logger.error(f"Error saving plot data: {str(e)}", exc_info=True)
-            return JsonResponse({'success': False, 'error': str(e)})
-    return JsonResponse({'success': False, 'error': 'Invalid request method.'})
 
+# @login_required
+# @csrf_exempt
+# def upload_experiment_file(request, experiment_id, file_field):
+#     if request.method == 'POST':
+#         experiment = get_object_or_404(Experiment, pk=experiment_id)
+#         files = request.FILES.getlist('files')
+#         if files:
+#             try:
+#                 project_dir = os.path.join(settings.MEDIA_ROOT, 'N_trail_folder', str(experiment.Project_ID.Project_ID))
+#                 experiment_dir = os.path.join(project_dir, str(experiment.Experiment_ID))
+#                 os.makedirs(experiment_dir, exist_ok=True)
+                
+#                 file_paths = []
+#                 for file in files:
+#                     file_path = os.path.join(experiment_dir, file.name)
+#                     with open(file_path, 'wb+') as destination:
+#                         for chunk in file.chunks():
+#                             destination.write(chunk)
+#                     file_paths.append(os.path.relpath(file_path, settings.MEDIA_ROOT))
+                
+#                 # Update the experiment model field
+#                 existing_files = getattr(experiment, file_field, [])
+#                 if isinstance(existing_files, str):
+#                     existing_files = [existing_files]
+#                 existing_files.extend(file_paths)
+#                 setattr(experiment, file_field, existing_files)
+#                 experiment.save()
+
+#                 return JsonResponse({'success': True})
+#             except Exception as e:
+#                 return JsonResponse({'success': False, 'error': str(e)})
+#         return JsonResponse({'success': False, 'error': 'No files uploaded'})
+#     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 @login_required
 @csrf_exempt
@@ -344,7 +398,6 @@ def upload_experiment_file(request, experiment_id, file_field):
         return JsonResponse({'success': False, 'error': 'No files uploaded'})
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
-
     
 @login_required
 def download_file(request, file_path):
@@ -357,127 +410,6 @@ def download_file(request, file_path):
     else:
         return HttpResponseNotFound("File not found")
 
-
-# @login_required
-# def add_experiment(request):
-#     if request.method == 'POST':
-#         try:
-#             project_id = request.POST.get('Project_ID')
-#             experiment_id = request.POST.get('Experiment_ID')
-#             year = request.POST.get('Year')
-#             location_id = request.POST.get('Location_ID')
-#             interaction_1_count = request.POST.get('Interaction_1_count', '0') or '0'
-#             interaction_2_count = request.POST.get('Interaction_2_count', '0') or '0'
-#             interaction_3_count = request.POST.get('Interaction_3_count', '0') or '0'
-#             metadata = request.POST.get('MetaData')
-#             no_of_replicates = request.POST.get('No_of_Replicates')
-
-#             interaction_1_count = int(interaction_1_count)
-#             interaction_2_count = int(interaction_2_count)
-#             interaction_3_count = int(interaction_3_count)
-#             no_of_replicates = int(no_of_replicates)
-
-#             project = get_object_or_404(Project, pk=project_id)
-
-#             if location_id == 'other':
-#                 location_data = {
-#                     'Location_ID': request.POST.get('New_Location_ID'),
-#                     'State': request.POST.get('New_State'),
-#                     'County': request.POST.get('New_County'),
-#                     'Owner': request.POST.get('New_Owner'),
-#                     'Latitude': request.POST.get('New_Latitude'),
-#                     'Longitude': request.POST.get('New_Longitude'),
-#                     'Contact': request.POST.get('New_Contact'),
-#                     'MetaData': request.POST.get('New_MetaData')
-#                 }
-#                 location = Location.objects.create(**location_data)
-#                 location_id = location.Location_ID
-#             else:
-#                 location = get_object_or_404(Location, pk=location_id)
-
-#             experiment = Experiment.objects.create(
-#                 Experiment_ID=experiment_id,
-#                 Project_ID=project,
-#                 Location_ID=location,
-#                 Year=year,
-#                 Interaction_1_count=interaction_1_count,
-#                 Interaction_2_count=interaction_2_count,
-#                 Interaction_3_count=interaction_3_count,
-#                 MetaData=metadata
-#             )
-
-#             interaction_1_values = []
-#             interaction_2_values = []
-#             interaction_3_values = []
-
-#             for i in range(1, interaction_1_count + 1):
-#                 value = request.POST.get(f'Interaction_1_{i}', 'NA')
-#                 interaction_1_values.append(value)
-
-#             for i in range(1, interaction_2_count + 1):
-#                 value = request.POST.get(f'Interaction_2_{i}', 'NA')
-#                 interaction_2_values.append(value)
-
-#             for i in range(1, interaction_3_count + 1):
-#                 value = request.POST.get(f'Interaction_3_{i}', 'NA')
-#                 interaction_3_values.append(value)
-
-#             experiment.Interaction_1_value = ','.join(interaction_1_values)
-#             experiment.Interaction_2_value = ','.join(interaction_2_values)
-#             experiment.Interaction_3_value = ','.join(interaction_3_values)
-
-#             experiment.save()
-
-#             base_dir = os.path.join(r'C:\Users\sayee\OneDrive\Desktop', 'N_trail_folder')
-#             project_folder = os.path.join(base_dir, project.Project_ID)
-#             experiment_folder = os.path.join(project_folder, experiment_id)
-#             os.makedirs(experiment_folder, exist_ok=True)
-
-#             file_path = os.path.join(experiment_folder, f'{experiment_id}.txt')
-#             with open(file_path, 'w') as file:
-#                 file.write(f'Experiment ID: {experiment_id}\n')
-#                 file.write(f'Project ID: {project_id}\n')
-#                 file.write(f'Location ID: {location_id}\n')
-#                 file.write(f'Year: {year}\n')
-#                 file.write(f'Interaction 1 Count: {interaction_1_count}\n')
-#                 file.write(f'Interaction 1 Value: {experiment.Interaction_1_value}\n')
-#                 file.write(f'Interaction 2 Count: {interaction_2_count}\n')
-#                 file.write(f'Interaction 2 Value: {experiment.Interaction_2_value}\n')
-#                 file.write(f'Interaction 3 Count: {interaction_3_count}\n')
-#                 file.write(f'Interaction 3 Value: {experiment.Interaction_3_value}\n')
-#                 file.write(f'Metadata: {metadata}\n')
-
-#             # Generate treatments
-#             interaction_combinations = list(product(
-#                 interaction_1_values or [''],
-#                 interaction_2_values or [''],
-#                 interaction_3_values or ['']
-#             ))
-
-#             total_combinations = len(interaction_combinations)
-#             treatments = []
-#             treatment_id_prefix = f"{experiment_id}_T"
-
-#             for idx, (i1, i2, i3) in enumerate(interaction_combinations):
-#                 for replicate in range(1, no_of_replicates + 1):
-#                     treatment_id = f"{treatment_id_prefix}{idx+1}_R{replicate}"
-#                     treatments.append(Treatment(
-#                         Treatment_ID=treatment_id,
-#                         Experiment_ID=experiment,
-#                         Interaction_1_Value=i1,
-#                         Interaction_2_Value=i2,
-#                         Interaction_3_Value=i3,
-#                         No_of_Replication=no_of_replicates,
-#                         MetaData=metadata
-#                     ))
-
-#             Treatment.objects.bulk_create(treatments)
-
-#             return JsonResponse({'success': True, 'experiment_id': experiment.Experiment_ID, 'no_of_replicates': no_of_replicates, 'total_combinations': total_combinations})
-#         except Exception as e:
-#             return JsonResponse({'success': False, 'error': str(e)})
-#     else:
-#         return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 
 @login_required
@@ -538,7 +470,7 @@ def add_experiment(request):
             experiment_folder = os.path.join(project_folder, experiment_id)
             os.makedirs(experiment_folder, exist_ok=True)
 
-            file_path = os.path.join(experiment_folder, f'{experiment_id}.txt')
+            file_path = os.path.join(experiment_folder, 'Meta-data.txt')
             with open(file_path, 'w') as file:
                 file.write(f'Experiment ID: {experiment_id}\n')
                 file.write(f'Project ID: {project_id}\n')
@@ -551,28 +483,37 @@ def add_experiment(request):
                 file.write(f'Interaction 3 Count: {interaction_3_count}\n')
                 file.write(f'Interaction 3 Value: {experiment.Interaction_3_value}\n')
                 file.write(f'Metadata: {metadata}\n')
-
+            
             # Generate treatments
+
+            interaction_1_count = len(interaction_1_values)
+            interaction_2_count = len(interaction_2_values)
+            interaction_3_count = len(interaction_3_values)
+            
+            # Organize Interactions
             interactions = [interaction_1_values, interaction_2_values, interaction_3_values]
-            valid_interactions = [i for i in interactions if i]  # Filter out empty lists
+            valid_interactions = [i for i in interactions if i]  # Filter out empty lists 
+
+            #generate combinations
             interaction_combinations = list(product(*valid_interactions))
 
             treatments = []
             treatment_id_prefix = f"{experiment_id}_T"
 
+           # Generate Treatments
             for idx, combination in enumerate(interaction_combinations):
-                for replicate in range(1, no_of_replicates + 1):
-                    treatment_id = f"{treatment_id_prefix}{idx + 1}_R{replicate}"
-                    treatments.append(Treatment(
-                        Treatment_ID=treatment_id,
-                        Experiment_ID=experiment,
-                        Interaction_1_Value=combination[0] if len(combination) > 0 else '',
-                        Interaction_2_Value=combination[1] if len(combination) > 1 else '',
-                        Interaction_3_Value=combination[2] if len(combination) > 2 else '',
-                        No_of_Replication=no_of_replicates,
-                        MetaData=metadata
-                    ))
+                treatment_id = f"{treatment_id_prefix}{idx + 1}"
+                treatments.append(Treatment(
+                    Treatment_ID=treatment_id,
+                    Experiment_ID=experiment,
+                    Interaction_1_Value=combination[0] if len(combination) > 0 else '',
+                    Interaction_2_Value=combination[1] if len(combination) > 1 else '',
+                    Interaction_3_Value=combination[2] if len(combination) > 2 else '',
+                    No_of_Replication=no_of_replicates,
+                    MetaData=metadata
+                ))
 
+            # Bulk Create Treatments
             Treatment.objects.bulk_create(treatments)
 
             return JsonResponse({'success': True, 'experiment_id': experiment.Experiment_ID, 'no_of_replicates': no_of_replicates})
@@ -580,6 +521,37 @@ def add_experiment(request):
             return JsonResponse({'success': False, 'error': str(e)})
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+@login_required
+@csrf_exempt
+def save_plot_data(request, treatment_id):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            plot_data = data.get('plot_data', [])
+
+            with transaction.atomic():
+                # Delete existing plot data for this treatment
+                Plot.objects.filter(Treatment_ID=treatment_id).delete()
+
+                # Insert new plot data
+                for plot in plot_data:
+                    Plot.objects.create(
+                        Treatment_ID=Treatment.objects.get(Treatment_ID=treatment_id),
+                        Replication_ID=plot['replication_id'],
+                        Plot_ID=plot['plot_id']
+                    )
+
+            return JsonResponse({'success': True})
+        except Exception as e:
+            logger.error(f"Error saving plot data: {str(e)}", exc_info=True)
+            return JsonResponse({'success': False, 'error': str(e)})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+
+
 @login_required
 @csrf_exempt
 def show_treatments(request, experiment_id):
@@ -590,6 +562,16 @@ def show_treatments(request, experiment_id):
     interaction_2_values = experiment.Interaction_2_value.split(',')
     interaction_3_values = experiment.Interaction_3_value.split(',') if experiment.Interaction_3_value else ['']
 
+    # Collect plot data
+    plot_data = {}
+    for treatment in treatments:
+        plots = Plot.objects.filter(Treatment_ID=treatment.Treatment_ID)
+        for plot in plots:
+            plot_data[(treatment.Treatment_ID, plot.Replication_ID)] = plot.Plot_ID
+
+    print(f"Plot data collected: {plot_data}")  # Debugging
+
+    
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -607,9 +589,11 @@ def show_treatments(request, experiment_id):
                     existing_ids = Treatment.objects.filter(Experiment_ID=experiment).values_list('Treatment_ID', flat=True)
                     max_numeric_id = 0
                     for id in existing_ids:
-                        numeric_part = int(id.split('e')[0])
-                        if numeric_part > max_numeric_id:
-                            max_numeric_id = numeric_part
+                        numeric_part = id.split('e')[0]
+                        if numeric_part.isdigit():
+                            numeric_part = int(numeric_part)
+                            if numeric_part > max_numeric_id:
+                                max_numeric_id = numeric_part
 
                     # Update or create treatments
                     for treatment in treatments_data:
@@ -629,7 +613,7 @@ def show_treatments(request, experiment_id):
                             raise ValueError(f"No_of_Replication for treatment {treatment_id} cannot be empty")
 
                         # Generate new Treatment_ID if it's a new treatment
-                        if treatment_id.isnumeric():
+                        if treatment_id.isdigit():
                             max_numeric_id += 1
                             treatment_id = f"{max_numeric_id}e{experiment.Experiment_ID}"
 
@@ -662,7 +646,7 @@ def show_treatments(request, experiment_id):
 
     if not treatments.exists():
         existing_ids = set(Treatment.objects.values_list('Treatment_ID', flat=True))
-        new_treatment_id = max([int(id.split('e')[0]) for id in existing_ids]) + 1 if existing_ids else 1
+        new_treatment_id = max([int(id.split('e')[0]) for id in existing_ids if id.split('e')[0].isdigit()]) + 1 if existing_ids else 1
 
         for combination in combinations:
             while f"{new_treatment_id}e{experiment.Experiment_ID}" in existing_ids:
@@ -679,30 +663,17 @@ def show_treatments(request, experiment_id):
             new_treatment_id += 1
         treatments = Treatment.objects.filter(Experiment_ID=experiment)
 
-    return render(request, 'show_treatments.html', {'experiment': experiment, 'treatments': treatments})
+    return render(request, 'show_treatments.html', {'experiment': experiment, 'treatments': treatments, 'plot_data': plot_data})
+
 
 @login_required
 @csrf_exempt
-def save_plot_data(request, treatment_id):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            plot_data = data.get('plot_data', [])
-
-            with transaction.atomic():
-                # Delete existing plot data for this treatment
-                Plot.objects.filter(Treatment_ID=treatment_id).delete()
-
-                # Insert new plot data
-                for plot in plot_data:
-                    Plot.objects.create(
-                        Treatment_ID=Treatment.objects.get(Treatment_ID=treatment_id),
-                        Replication_ID=plot['replication_id'],
-                        Plot_ID=plot['plot_id']
-                    )
-
-            return JsonResponse({'success': True})
-        except Exception as e:
-            logger.error(f"Error saving plot data: {str(e)}", exc_info=True)
-            return JsonResponse({'success': False, 'error': str(e)})
-    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+def get_plot_data(request, treatment_id):
+    try:
+        plots = Plot.objects.filter(Treatment_ID=treatment_id)
+        plot_data = {plot.Replication_ID: plot.Plot_ID for plot in plots}
+        print(f"Retrieved plot data for treatment {treatment_id}: {plot_data}")  # Debugging
+        return JsonResponse({'success': True, 'plot_data': plot_data})
+    except Exception as e:
+        logger.error(f"Error fetching plot data: {str(e)}", exc_info=True)
+        return JsonResponse({'success': False, 'error': str(e)})

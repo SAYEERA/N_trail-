@@ -1,29 +1,91 @@
-<!-- N_trail_dashboard/templates/home.html -->
 {% extends 'base.html' %}
 
 {% block title %}Home{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-body">
+    <div class="row justify-content-center">
+        <div class="{% if user.is_authenticated %}col-md-6{% else %}col-md-8{% endif %}">
+            <div class="card card-custom">
+                <div class="card-body d-flex flex-column align-items-center">
                     <h5 class="card-title">Project Database</h5>
-                    <p class="card-text">Explore various Project Databases.</p>
-                    <a href="{% url 'project_database' %}" class="btn btn-primary">Go to Project Database</a>
+                    <p class="card-text text-center ">Explore various Project Databases.</p>
+                    <a href="{% url 'project_database' %}" class="btn btn-custom mb-3">Go to Project Database</a>
                 </div>
             </div>
+            {% if not user.is_authenticated %}
+            <p class="mt-3 text-center font-weight-bold para-red">Improving Nitrogen Fertilizer Recommendations: This initiative aims to improve productivity and sustainability, reducing nutrient loss and increasing nutrient efficiency across modern cropping systems.</p>
+            {% endif %}
         </div>
+        {% if user.is_authenticated %}
         <div class="col-md-6">
-            <div class="card">
-                <div class="card-body">
+            <div class="card card-custom">
+                <div class="card-body d-flex flex-column align-items-center">
                     <h5 class="card-title">My Projects</h5>
-                    <p class="card-text">View and manage your projects.</p>
-                    <a href="{% url 'my_projects' %}" class="btn btn-primary">Go to My Projects</a>
+                    <p class="card-text text-center">View and manage your projects.</p>
+                    <a href="{% url 'my_projects' %}" class="btn btn-custom mb-3">Go to My Projects</a>
                 </div>
             </div>
         </div>
+        {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block extra_styles %}
+<style>
+    body {
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        background-color: #d9c6ba;  /* Light Mint Green */
+    }
+    .navbar-brand {
+        font-weight: bold;
+        color: whitesmoke !important; /* White color for N_trail */
+    }
+    .navbar {
+        background-color: #475d21; /* Dark Green color */
+    }
+    .navbar-nav .nav-link {
+        font-size: 1.1em;
+        color: white !important;
+    }
+    .container {
+        background-color: #f2ece7;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(47, 79, 79, 0.1);
+        padding: 20px;
+    }
+    .card-custom {
+        background-color: #A9b388 !important; /* Red for card background */
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(47, 79, 79, 0.1);
+        color: #212b0f !important; /* White text inside the card for contrast */
+    }
+    .dropdown-menu {
+        border-radius: 0;
+    }
+    .btn-custom {
+        background-color: #5f6f52 !important; /* Custom button color */
+        color: #ffffff !important;  /* White text for better visibility */
+        border: 1px solid #000000 !important;  /* Black border */
+    }
+    .btn-custom:hover {
+        background-color: #white !important; /* Slightly darker red on hover */
+        color: #ffffff !important;
+    }
+    .card {
+        height: 80% !important;  /* Ensure cards take full height */
+    }
+    .col-md-8 {
+        max-width: 60% !important;  /* Smaller width for the card before login */
+    }
+    .col-md-6 {
+        max-width: 48% !important;
+        height: 80% !important; 
+          /* Adjust width for both cards to be the same after login */
+    }
+    .para-red {
+        color: #212b0f!important;  /* Red color for the paragraph */
+    }
+</style>
 {% endblock %}

@@ -31,6 +31,7 @@ class Project(models.Model):
     )
     
     VIEW_TYPE_CHOICES = (
+        ('', 'select'),
         ('private', 'Private'),
         ('protected', 'Protected'),
     )
