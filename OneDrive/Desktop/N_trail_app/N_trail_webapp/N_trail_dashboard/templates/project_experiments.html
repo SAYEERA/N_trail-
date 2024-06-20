@@ -4,7 +4,14 @@
 {% block content %}
 <h1 class="text-center">Experiments for Project: {{ project.Project_ID }}</h1>
 
-<!-- Display Project Table -->
+<!-- Filter Form -->
+<form method="GET" action="">
+  <label for="experiment-filter">Filter by Experiment ID:</label>
+  <input type="text" id="experiment-filter" name="experiment_filter" value="{{ request.GET.experiment_filter }}">
+  <button type="submit">Search</button>
+</form>
+
+<!-- Display Experiment Table -->
 <div class="table-container">
   <table class="table">
     <thead>

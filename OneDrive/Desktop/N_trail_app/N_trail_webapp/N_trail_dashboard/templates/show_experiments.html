@@ -56,9 +56,9 @@
                     <a href="{% url 'download_file' file %}" target="_blank">{{ file|basename }}</a><br>
                     
                     {% endfor %}
-                    <button onclick="uploadFiles('{{ experiment.Experiment_ID }}', '{{ file_type }}')" class="btn btn-orange"><i class="fas fa-arrow-up fa-sm"></i></button>
+                    <!-- <button onclick="uploadFiles('{{ experiment.Experiment_ID }}', '{{ file_type }}')" class="btn btn-orange"><i class="fas fa-arrow-up fa-sm"></i></button> -->
 
-                    <!-- <button onclick="uploadFiles('{{ experiment.Experiment_ID }}', '{{ file_type }}')" class="btn btn-orange">Upload</button> -->
+                    <button onclick="uploadFiles('{{ experiment.Experiment_ID }}', '{{ file_type }}')" class="btn btn-orange">Upload</button>
                 </td>
                 {% endfor %}
                 
@@ -276,7 +276,7 @@
 .btn-orange {
     background-color: #5f6f52;
     color: whitesmoke;
-    border: 0.5px solid black;
+ 
 }
 
 

@@ -70,6 +70,16 @@ def my_projects(request):
 
     return render(request, 'my_projects.html', context)
 
+# def project_experiments(request, project_id):
+#     project = get_object_or_404(Project, Project_ID=project_id)
+#     experiments = Experiment.objects.filter(Project_ID=project)
+
+#     context = {
+#         'project': project,
+#         'experiments': experiments,
+#     }
+#     return render(request, 'project_experiments.html', context)
+
 def project_experiments(request, project_id):
     project = get_object_or_404(Project, Project_ID=project_id)
     experiments = Experiment.objects.filter(Project_ID=project)
@@ -122,7 +132,8 @@ def show_treatments_and_plots(request, experiment_id):
 
 @login_required
 def all_projects(request):
-    public_projects = Project.objects.select_related('User_ID').filter(View_Type='private')
+    public_projects = Project.objects.select_related('User_ID')
+    # public_projects = Project.objects.select_related('User_ID').filter(View_Type='private')
     return render(request, 'all_projects.html', {'projects': public_projects})
 
 def all_locations(request):
@@ -142,7 +153,14 @@ def all_locations(request):
 #     return render(request, 'project_database.html')
 @csrf_exempt
 def project_database(request):
-    projects = Project.objects.all()  # Fetch all project data
+    # projects = Project.objects.all()  # Fetch all project data
+    # projects = Project.objects.select_related('User_ID').filter(View_Type='private')
+    # return render(request, 'project_database.html', {'projects': projects})
+    filter_value = request.GET.get('filter', '')
+    if filter_value:
+        projects = Project.objects.filter(Project_ID__icontains=filter_value)
+    else:
+        projects = Project.objects.all()
     return render(request, 'project_database.html', {'projects': projects})
 
 
