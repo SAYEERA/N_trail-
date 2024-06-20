@@ -1,7 +1,7 @@
 {% load custom_filters %}
 
 {% block content %}
-<h1>Treatments for Experiment: {{ experiment.Experiment_ID }}</h1>
+<h1 class="text-center">Treatments for Experiment: {{ experiment.Experiment_ID }}</h1>
 
 <form id="treatments-form">
   {% csrf_token %}

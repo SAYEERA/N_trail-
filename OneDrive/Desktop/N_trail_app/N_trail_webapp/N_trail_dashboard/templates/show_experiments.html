@@ -2,7 +2,7 @@
 {% load custom_filters %}
 
 {% block content %}
-<h1>Experiments for Project: {{ project.Project_ID }}</h1>
+<h1 class="text-center">Experiments for Project: {{ project.Project_ID }}</h1>
 
 <!-- Display Project Table -->
 <div class="table-responsive">
@@ -54,8 +54,11 @@
                 <td>
                     {% for file in experiment|get_attribute:file_type %}
                     <a href="{% url 'download_file' file %}" target="_blank">{{ file|basename }}</a><br>
+                    
                     {% endfor %}
-                    <button onclick="uploadFiles('{{ experiment.Experiment_ID }}', '{{ file_type }}')" class="btn btn-orange">Upload</button>
+                    <button onclick="uploadFiles('{{ experiment.Experiment_ID }}', '{{ file_type }}')" class="btn btn-orange"><i class="fas fa-arrow-up fa-sm"></i></button>
+
+                    <!-- <button onclick="uploadFiles('{{ experiment.Experiment_ID }}', '{{ file_type }}')" class="btn btn-orange">Upload</button> -->
                 </td>
                 {% endfor %}
                 
@@ -187,7 +190,7 @@
         <input type="checkbox" id="ManualSubmit">
 
         <button type="submit" id="submit-button" class="btn btn-orange">Generate Treatments</button>
-        <span id="success-message" style="color: green; display: none;">Experiment added successfully!</span>
+        <span id="success-message" style="color: #376413; display: none;">Experiment added successfully!</span>
     </form>
 </div>
 
@@ -271,15 +274,29 @@
 }
 
 .btn-orange {
-    background-color: #2c5a47;
+    background-color: #5f6f52;
     color: whitesmoke;
-    border: 1px solid black;
+    border: 0.5px solid black;
 }
 
+
 .btn-orange:hover {
-    background-color: #2c5a47;
+    background-color: #5f6f52;
     color: whitesmoke;
 }
+
+.btn-no-border {
+    background: none;
+    border: none;
+    color: green;
+    cursor: pointer;
+    padding: 0;
+    display: inline-block;
+    text-align: center;
+}
+
+
+
 </style>
 
 <script>
@@ -539,49 +556,122 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     window.duplicateExperiment = function(experimentId) {
-        const row = document.getElementById(`experiment-row-${experimentId}`);
-        const newRow = row.cloneNode(true);
+    console.log(`Duplicating experiment with ID: ${experimentId}`);
+    
+    const row = document.getElementById(`experiment-row-${experimentId}`);
+    if (!row) {
+        console.error(`Row with ID experiment-row-${experimentId} not found!`);
+        return;
+    }
 
-        // Duplicate the existing Experiment ID
-        const experimentIdField = newRow.querySelector('td:first-child');
+    const newRow = row.cloneNode(true);
+
+    // Duplicate the existing Experiment ID
+    const experimentIdField = newRow.querySelector('td:first-child');
+    if (experimentIdField) {
         experimentIdField.textContent = `${experimentId}_copy`;
         newRow.id = `experiment-row-${experimentId}_copy`;
+    } else {
+        console.error('Experiment ID field not found!');
+        return;
+    }
 
-        // Add the new row to the table
-        row.parentNode.insertBefore(newRow, row.nextSibling);
+    // Add the new row to the table
+    row.parentNode.insertBefore(newRow, row.nextSibling);
+    console.log(`New row added with ID: ${newRow.id}`);
 
-        // Show the add experiment form with existing row details
-        document.querySelector('#add-experiment-form').style.display = 'block';
-        document.querySelector('#Experiment_ID').value = `${experimentId}_copy`;
-        document.querySelector('#Year').value = row.querySelector('td:nth-child(4)').textContent;
-        document.querySelector('#Location_ID').value = row.querySelector('td:nth-child(3)').textContent;
-        document.querySelector('#No_of_Replicates').value = row.querySelector('td:nth-child(6)').textContent;
-        document.querySelector('#Interaction_1_count').value = row.querySelector('td:nth-child(5)').textContent;
-        document.querySelector('#Interaction_2_count').value = row.querySelector('td:nth-child(7)').textContent;
-        document.querySelector('#Interaction_3_count').value = row.querySelector('td:nth-child(9)').textContent;
-        document.querySelector('#Yield_Map').value = row.querySelector('td:nth-child(11)').textContent;
-        document.querySelector('#Soil_Sample').value = row.querySelector('td:nth-child(12)').textContent;
-        document.querySelector('#Sonic_sensor').value = row.querySelector('td:nth-child(13)').textContent;
-        document.querySelector('#GCP').value = row.querySelector('td:nth-child(14)').textContent;
-        document.querySelector('#RAWUAV').value = row.querySelector('td:nth-child(15)').textContent;
-        document.querySelector('#Orthomosic_UAV').value = row.querySelector('td:nth-child(16)').textContent;
-        document.querySelector('#DSM_UAV').value = row.querySelector('td:nth-child(17)').textContent;
-        document.querySelector('#Orthomosic_SAT').value = row.querySelector('td:nth-child(18)').textContent;
-        document.querySelector('#DSM_SAT').value = row.querySelector('td:nth-child(19)').textContent;
-        document.querySelector('#VI_1').value = row.querySelector('td:nth-child(20)').textContent;
-        document.querySelector('#VI_2').value = row.querySelector('td:nth-child(21)').textContent;
-        document.querySelector('#VI_3').value = row.querySelector('td:nth-child(22)').textContent;
-        document.querySelector('#MetaData').value = row.querySelector('td:nth-child(23)').textContent;
+    // Show the add experiment form with existing row details
+    const addExperimentForm = document.querySelector('#add-experiment-form');
+    addExperimentForm.style.display = 'block';
 
-        // Populate interaction values in the form
-        const interaction1Values = row.querySelector('td:nth-child(6)').textContent.split(',');
-        const interaction2Values = row.querySelector('td:nth-child(8)').textContent.split(',');
-        const interaction3Values = row.querySelector('td:nth-child(10)').textContent.split(',');
-
-        updateInteractionFields('Interaction_1_count', 'interaction_1-fields', 'Interaction_1', 'class', interaction1Values);
-        updateInteractionFields('Interaction_2_count', 'interaction_2-fields', 'Interaction_2', 'class', interaction2Values);
-        updateInteractionFields('Interaction_3_count', 'interaction_3-fields', 'Interaction_3', 'class', interaction3Values);
+    // Function to set form values and log if an element is not found
+    const setFormValue = (selector, value) => {
+        const element = addExperimentForm.querySelector(selector);
+        if (element) {
+            element.value = value;
+        } else {
+            console.error(`Form element with selector ${selector} not found!`);
+        }
     };
+
+    setFormValue('#Experiment_ID', `${experimentId}_copy`);
+    setFormValue('#Year', row.querySelector('td:nth-child(4)').textContent);
+    setFormValue('#Location_ID', row.querySelector('td:nth-child(3)').textContent);
+    setFormValue('#No_of_Replicates', row.querySelector('td:nth-child(6)').textContent);
+    setFormValue('#Interaction_1_count', row.querySelector('td:nth-child(5)').textContent);
+    setFormValue('#Interaction_2_count', row.querySelector('td:nth-child(7)').textContent);
+    setFormValue('#Interaction_3_count', row.querySelector('td:nth-child(9)').textContent);
+
+    // List of file-related fields and their respective cell indices
+    const fileFields = [
+        { name: 'Yield_Map', index: 11 },
+        { name: 'Soil_Sample', index: 12 },
+        { name: 'Sonic_sensor', index: 13 },
+        { name: 'GCP', index: 14 },
+        { name: 'RAWUAV', index: 15 },
+        { name: 'Orthomosaic_UAV', index: 16 },
+        { name: 'DSM_UAV', index: 17 },
+        { name: 'Orthomosaic_SAT', index: 18 },
+        { name: 'DSM_SAT', index: 19 },
+        { name: 'VI_1', index: 20 },
+        { name: 'VI_2', index: 21 },
+        { name: 'VI_3', index: 22 }
+    ];
+
+    // Clear the file-related fields and show upload button in the new row
+    fileFields.forEach(field => {
+        console.log(`Processing field: ${field.name}, Cell index: ${field.index}`);
+        
+        const cell = newRow.querySelector(`td:nth-child(${field.index})`);
+        if (cell) {
+           
+          console.log(`Clearing and adding upload button for cell at index ${field.index}`);
+          cell.innerHTML = `<button onclick="uploadFiles('${experimentId}_copy', '${field.name}')" class="btn-no-border" title="Upload"><i class="fas fa-arrow-up fa-sm"></i></button>`;
+            // cell.innerHTML = `<button onclick="uploadFiles('${experimentId}_copy', '${field.name}')" class="btn-no-border" title="Upload"><i class="fas fa-arrow-up fa-sm"></i></button>`;
+        } else {
+            console.error(`Cell at index ${field.index} not found!`);
+        }
+    });
+
+    // Clear the file-related fields in the form
+    fileFields.forEach(field => {
+        const inputElement = addExperimentForm.querySelector(`#${field.name}`);
+        if (inputElement) {
+            console.log(`Clearing input field: ${field.name}`);
+            inputElement.value = '';
+        } else {
+            console.error(`Input field: ${field.name} not found!`);
+        }
+    });
+
+    // Update remaining fields
+    setFormValue('#Soil_Sample', row.querySelector('td:nth-child(12)').textContent);
+    setFormValue('#Sonic_sensor', row.querySelector('td:nth-child(13)').textContent);
+    setFormValue('#GCP', row.querySelector('td:nth-child(14)').textContent);
+    setFormValue('#RAWUAV', row.querySelector('td:nth-child(15)').textContent);
+    setFormValue('#Orthomosaic_UAV', row.querySelector('td:nth-child(16)').textContent);
+    setFormValue('#DSM_UAV', row.querySelector('td:nth-child(17)').textContent);
+    setFormValue('#Orthomosaic_SAT', row.querySelector('td:nth-child(18)').textContent);
+    setFormValue('#DSM_SAT', row.querySelector('td:nth-child(19)').textContent);
+    setFormValue('#VI_1', row.querySelector('td:nth-child(20)').textContent);
+    setFormValue('#VI_2', row.querySelector('td:nth-child(21)').textContent);
+    setFormValue('#VI_3', row.querySelector('td:nth-child(22)').textContent);
+    setFormValue('#MetaData', row.querySelector('td:nth-child(23)').textContent);
+
+    // Populate interaction values in the form
+    const interaction1Values = row.querySelector('td:nth-child(6)').textContent.split(',');
+    const interaction2Values = row.querySelector('td:nth-child(8)').textContent.split(',');
+    const interaction3Values = row.querySelector('td:nth-child(10)').textContent.split(',');
+
+    updateInteractionFields('Interaction_1_count', 'interaction_1-fields', 'Interaction_1', 'class', interaction1Values);
+    updateInteractionFields('Interaction_2_count', 'interaction_2-fields', 'Interaction_2', 'class', interaction2Values);
+    updateInteractionFields('Interaction_3_count', 'interaction_3-fields', 'Interaction_3', 'class', interaction3Values);
+};
+
+function uploadFiles(experimentId, fileType) {
+    // Implement your upload logic here
+    alert(`Upload ${fileType} files for experiment ${experimentId}`);
+}
 
     window.uploadFiles = function(experimentId, fileField) {
         const input = document.createElement('input');

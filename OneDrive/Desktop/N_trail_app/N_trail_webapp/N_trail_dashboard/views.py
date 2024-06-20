@@ -70,14 +70,13 @@ def my_projects(request):
 
     return render(request, 'my_projects.html', context)
 
-
 def project_experiments(request, project_id):
     project = get_object_or_404(Project, Project_ID=project_id)
     experiments = Experiment.objects.filter(Project_ID=project)
 
     context = {
         'project': project,
-        'experiments1': experiments,
+        'experiments': experiments,
     }
     return render(request, 'project_experiments.html', context)
 
@@ -102,7 +101,6 @@ def show_experiments(request, project_id):
 
     return render(request, 'show_experiments.html',context )
 
-
 def show_treatments_and_plots(request, experiment_id):
     experiment = get_object_or_404(Experiment, pk=experiment_id)
     treatments = Treatment.objects.filter(Experiment_ID=experiment)
@@ -112,14 +110,15 @@ def show_treatments_and_plots(request, experiment_id):
         for plot in plots:
             plot_data[(treatment.Treatment_ID, plot.Replication_ID)] = plot.Plot_ID
 
-
-    
     context = {
         'experiment': experiment,
         'treatments': treatments,
         'plot_data': plot_data
     }
     return render(request, 'treatments_and_plots.html', context)
+
+
+
 
 @login_required
 def all_projects(request):
@@ -327,42 +326,6 @@ def download_file(request, file_path):
         return HttpResponseNotFound("File not found")
 
 
-
-
-
-# @login_required
-# @csrf_exempt
-# def upload_experiment_file(request, experiment_id, file_field):
-#     if request.method == 'POST':
-#         experiment = get_object_or_404(Experiment, pk=experiment_id)
-#         files = request.FILES.getlist('files')
-#         if files:
-#             try:
-#                 project_dir = os.path.join(settings.MEDIA_ROOT, 'N_trail_folder', str(experiment.Project_ID.Project_ID))
-#                 experiment_dir = os.path.join(project_dir, str(experiment.Experiment_ID))
-#                 os.makedirs(experiment_dir, exist_ok=True)
-                
-#                 file_paths = []
-#                 for file in files:
-#                     file_path = os.path.join(experiment_dir, file.name)
-#                     with open(file_path, 'wb+') as destination:
-#                         for chunk in file.chunks():
-#                             destination.write(chunk)
-#                     file_paths.append(os.path.relpath(file_path, settings.MEDIA_ROOT))
-                
-#                 # Update the experiment model field
-#                 existing_files = getattr(experiment, file_field, [])
-#                 if isinstance(existing_files, str):
-#                     existing_files = [existing_files]
-#                 existing_files.extend(file_paths)
-#                 setattr(experiment, file_field, existing_files)
-#                 experiment.save()
-
-#                 return JsonResponse({'success': True})
-#             except Exception as e:
-#                 return JsonResponse({'success': False, 'error': str(e)})
-#         return JsonResponse({'success': False, 'error': 'No files uploaded'})
-#     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 @login_required
 @csrf_exempt

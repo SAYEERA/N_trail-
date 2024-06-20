@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>Treatments and plots for Experiment: {{ experiment.Experiment_ID }}</h1>
+<h1 class="text-center">Treatments and plots for Experiment: {{ experiment.Experiment_ID }}</h1>
 
 <table class="treatments-table">
     <thead>
@@ -43,18 +43,19 @@
                 </tr>
             </thead>
             <tbody>
-                {% for plot in plot_data.treatment.Treatment_ID %}
-                <tr>
-                    <td>{{ plot.Replication_ID }}</td>
-                    <td>{{ plot.Plot_ID }}</td>
-                </tr>
+                {% for replication_id, plot_id in plot_data.items %}
+                    {% if replication_id.0 == treatment.Treatment_ID %}
+                    <tr>
+                        <td>{{ replication_id.1 }}</td>
+                        <td>{{ plot_id }}</td>
+                    </tr>
+                    {% endif %}
                 {% endfor %}
             </tbody>
         </table>
     </div>
     {% endfor %}
 </div>
-
 
 <style>
   .flex-container {
