@@ -32,20 +32,20 @@ class Project(models.Model):
     
     VIEW_TYPE_CHOICES = (
         ('', 'select'),
-        ('private', 'Private'),
+        ('public', 'Public'),
         ('protected', 'Protected'),
     )
 
 
     Project_ID = models.CharField(max_length=120, primary_key=True)
     User_ID = models.ForeignKey(User, on_delete=models.CASCADE)
-    Start_year = models.IntegerField(default=2022)
+    # Start_year = models.IntegerField(default=2022)
     Interactions_count = models.IntegerField(default=0)
     Interaction_1 = models.CharField(max_length=120, blank=True, null=True)
     Interaction_2 = models.CharField(max_length=120, blank=True, null=True)
     Interaction_3 = models.CharField(max_length=120, blank=True, null=True)
     Crop = models.CharField(max_length=50, choices=CROP_CHOICES, default='NA')
-    No_of_Year = models.IntegerField(default=1)
+    # No_of_Year = models.IntegerField(default=1)
     Project_Editors = models.CharField(max_length=100,  default='NA')
     Funding_Source = models.CharField(max_length=100, default='Unknown')
     MetaData = models.TextField(default='No metadata available')

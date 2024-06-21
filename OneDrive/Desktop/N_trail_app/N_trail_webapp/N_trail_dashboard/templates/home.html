@@ -4,12 +4,29 @@
 
 {% block content %}
 <div class="container mt-4">
+    <div class="row">
+        <div class="col-12 d-flex justify-content-end mb-4">
+            <form id="search-form" method="GET" action="{% url 'project_database' %}" class="form-inline">
+                <div class="form-group mb-2">
+                    <label for="project-id" class="sr-only">Project ID</label>
+                    <select id="project-id" name="filter" class="form-control form-control-sm mr-2">
+                        <option value="">Select Project ID</option>
+                        {% for project in projects %}
+                            <option value="{{ project.Project_ID }}">{{ project.Project_ID }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-sm btn-custom mb-2">Search</button>
+            </form>
+        </div>
+    </div>
+
     <div class="row justify-content-center">
         <div class="{% if user.is_authenticated %}col-md-6{% else %}col-md-8{% endif %}">
             <div class="card card-custom">
                 <div class="card-body d-flex flex-column align-items-center">
                     <h5 class="card-title">Project Database</h5>
-                    <p class="card-text text-center ">Explore various Project Databases.</p>
+                    <p class="card-text text-center">Explore various Project Databases.</p>
                     <a href="{% url 'project_database' %}" class="btn btn-custom mb-3">Go to Project Database</a>
                 </div>
             </div>
@@ -17,7 +34,10 @@
             <p class="mt-3 text-center font-weight-bold para-red">Improving Nitrogen Fertilizer Recommendations: This initiative aims to improve productivity and sustainability, reducing nutrient loss and increasing nutrient efficiency across modern cropping systems.</p>
             {% endif %}
         </div>
-        {% if user.is_authenticated %}
+    </div>
+
+    {% if user.is_authenticated %}
+    <div class="row justify-content-center mt-4">
         <div class="col-md-6">
             <div class="card card-custom">
                 <div class="card-body d-flex flex-column align-items-center">
@@ -27,8 +47,8 @@
                 </div>
             </div>
         </div>
-        {% endif %}
     </div>
+    {% endif %}
 </div>
 {% endblock %}
 
@@ -54,12 +74,14 @@
         border-radius: 8px;
         box-shadow: 0 2px 5px rgba(47, 79, 79, 0.1);
         padding: 20px;
+        position: relative;
     }
     .card-custom {
         background-color: #A9b388 !important; /* Red for card background */
         border-radius: 8px;
         box-shadow: 0 2px 5px rgba(47, 79, 79, 0.1);
         color: #212b0f !important; /* White text inside the card for contrast */
+        margin-top: 20px;
     }
     .dropdown-menu {
         border-radius: 0;
@@ -86,6 +108,12 @@
     }
     .para-green {
         color: #212b0f!important;  /* Red color for the paragraph */
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    .table {
+        margin-top: 20px;
     }
 </style>
 {% endblock %}

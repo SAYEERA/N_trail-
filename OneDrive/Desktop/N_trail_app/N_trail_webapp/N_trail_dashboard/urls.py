@@ -2,14 +2,15 @@ from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import (home, browse, signup, my_projects, logout_view, import_experiment,
+from .views import (home, browse, signup, my_projects, logout_view, import_experiment,download_csv, upload_csv,
                     all_projects, all_locations, project_database, add_project, add_experiment, show_experiments,
-                    add_location, show_treatments,upload_experiment_file,download_file,save_plot_data,get_plot_data, project_experiments,  show_treatments_and_plots)
+                    add_location,  show_treatments,upload_experiment_file,download_file,save_plot_data,get_plot_data, project_experiments,  show_treatments_and_plots)
 
 
 urlpatterns = [
     path('', home, name='home'),
     path('browse/', browse, name='browse'),
+ 
     path('accounts/', include('django.contrib.auth.urls')),
     path('signup/', signup, name='signup'),
     path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
@@ -32,6 +33,8 @@ urlpatterns = [
     path('treatment/<str:treatment_id>/save_plot_data/', save_plot_data, name='save_plot_data'),
     path('download/<path:file_path>/', download_file, name='download_file'),
     path('treatment/<str:treatment_id>/get_plot_data/', get_plot_data, name='get_plot_data'),
+    path('treatment/<str:treatment_id>/download_csv/', download_csv, name='download_csv'),  # Updated URL for downloading CSV
+    path('treatment/<str:treatment_id>/upload_csv/', upload_csv, name='upload_csv'),  # Updated URL for uploading CSV
     path('experiment/<str:experiment_id>/treatments_plots/', show_treatments_and_plots, name='show_treatments_and_plots'),
 ]
 

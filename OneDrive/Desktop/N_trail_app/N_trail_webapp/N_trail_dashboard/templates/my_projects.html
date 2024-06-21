@@ -11,13 +11,13 @@
             <tr>
                 <th>Project ID</th>
                 <th>User ID</th>
-                <th>Start Year</th>
+                <!-- <th>Start Year</th> -->
                 <th>Interactions Count</th>
                 <th>Interactions_1</th>
                 <th>Interactions_2</th>
                 <th>Interactions_3</th>
                 <th>Crop</th>
-                <th>Number of Years</th>
+                <!-- <th>Number of Years</th> -->
                 <th>Project Editors</th>
                 <th>Funding Source</th>
                 <th>Metadata</th>
@@ -30,13 +30,13 @@
             <tr>
                 <td>{{ project.Project_ID }}</td>
                 <td>{{ project.User_ID }}</td>
-                <td>{{ project.Start_year }}</td>
+                <!-- <td>{{ project.Start_year }}</td> -->
                 <td>{{ project.Interactions_count }}</td>
                 <td>{{ project.Interaction_1 }}</td>
                 <td>{{ project.Interaction_2 }}</td>
                 <td>{{ project.Interaction_3 }}</td>
                 <td>{{ project.Crop }}</td>
-                <td>{{ project.No_of_Year }}</td>
+                <!-- <td>{{ project.No_of_Year }}</td> -->
                 <td>{{ project.Project_Editors }}</td>
                 <td>{{ project.Funding_Source }}</td>
                 <td>{{ project.MetaData }}</td>
@@ -66,12 +66,12 @@
             </div>
         </div>
 
-        <div class="form-group">
+        <!-- <div class="form-group">
             <label for="Start_year" class="col-sm-2 control-label">Start Year:</label>
             <div class="col-sm-10">
                 <input type="number" id="Start_year" name="Start_year" class="form-control form-control-sm" required>
             </div>
-        </div>
+        </div> -->
 
         <div class="form-group">
             <label for="Interactions_count" class="col-sm-2 control-label">Interactions Count:</label>
@@ -94,13 +94,13 @@
                 </select>
             </div>
         </div>
-
+<!-- 
         <div style="display: none;">
             <label for="No_of_Year" class="col-sm-2 control-label">Number of Years:</label>
             <div class="col-sm-10">
                 <input type="hidden" id="No_of_Year" name="No_of_Year" class="form-control form-control-sm" required readonly>
             </div>
-        </div>
+        </div> -->
 
         {% if user.is_superuser %}
         <div class="form-group">
@@ -139,7 +139,7 @@
             <label for="View_Type" class="col-sm-2 control-label">View Type:</label>
             <div class="col-sm-10">
                 <select id="View_Type" name="View_Type" class="form-control form-control-sm" required>
-                    <option value="private">Private</option>
+                    <option value="public">Public</option>
                     <option value="protected">Protected</option>
                 </select>
             </div>
@@ -291,13 +291,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Update number of years based on start year
-    document.querySelector('#Start_year').addEventListener('input', function() {
-        const startYear = parseInt(this.value);
-        const currentYear = new Date().getFullYear();
-        const numberOfYears = currentYear - startYear + 1; // Calculate number of years
-        document.querySelector('#No_of_Year').value = numberOfYears > 0 ? numberOfYears : 0;
-    });
+    // // Update number of years based on start year
+    // document.querySelector('#Start_year').addEventListener('input', function() {
+    //     const startYear = parseInt(this.value);
+    //     const currentYear = new Date().getFullYear();
+    //     const numberOfYears = currentYear - startYear + 1; // Calculate number of years
+    //     document.querySelector('#No_of_Year').value = numberOfYears > 0 ? numberOfYears : 0;
+    // });
 
     // Add funding source
     document.querySelector('#add-funding-source').addEventListener('click', function() {

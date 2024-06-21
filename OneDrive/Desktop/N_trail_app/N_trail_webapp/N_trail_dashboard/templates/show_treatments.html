@@ -3,7 +3,7 @@
 {% block content %}
 <h1 class="text-center">Treatments for Experiment: {{ experiment.Experiment_ID }}</h1>
 
-<form id="treatments-form">
+<form id="treatments-form" method="post" enctype="multipart/form-data">
   {% csrf_token %}
   <table border="1">
     <thead>
@@ -48,6 +48,13 @@
   </table>
   <button type="button" onclick="addNewRow()">Add Row</button>
   <button type="button" onclick="submitTreatments()">Submit All</button>
+  <button type="button" onclick="window.location.href='{% url "show_treatments" experiment.Experiment_ID %}?download=true'">Download CSV</button>
+</form>
+
+<form id="upload-form" method="post" enctype="multipart/form-data" action="{% url 'show_treatments' experiment.Experiment_ID %}">
+  {% csrf_token %}
+  <input type="file" name="csv_file" id="csv_file" accept=".csv">
+  <button type="submit">Upload CSV</button>
 </form>
 
 <div id="success-message" style="color: green; display: none;">
@@ -240,6 +247,35 @@ function submitTreatments() {
         alert('Error submitting treatments. Please try again.');
     });
 }
+
+document.getElementById('upload-form').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const formData = new FormData(this);
+    const csrfToken = formData.get('csrfmiddlewaretoken');
+    fetch(this.action, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('success-message').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('success-message').style.display = 'none';
+                window.location.reload();
+            }, 3000);
+        } else {
+            alert('Error uploading CSV: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error uploading CSV. Please try again.');
+    });
+});
 
 function savePlotTable(treatmentId) {
     const plotData = [];

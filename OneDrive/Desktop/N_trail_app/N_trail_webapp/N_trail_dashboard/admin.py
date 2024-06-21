@@ -9,8 +9,8 @@ admin.site.site_header = 'N_trail Admin Dashboard'
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
     list_display = (
-        'Project_ID', 'User_ID', 'Start_year', 'Interactions_count', 'Interaction_1',
-        'Interaction_2', 'Interaction_3', 'Crop', 'No_of_Year', 'Project_Editors',
+        'Project_ID', 'User_ID', 'Interactions_count', 'Interaction_1',
+        'Interaction_2', 'Interaction_3', 'Crop', 'Project_Editors',
         'Funding_Source', 'MetaData'
     )
 
