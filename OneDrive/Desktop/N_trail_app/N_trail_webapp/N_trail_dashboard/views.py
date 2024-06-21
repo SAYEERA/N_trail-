@@ -345,51 +345,51 @@ def download_file(request, file_path):
 
 
 
-@login_required
-@csrf_exempt
-def upload_experiment_file(request, experiment_id, file_field):
-    if request.method == 'POST':
-        experiment = get_object_or_404(Experiment, pk=experiment_id)
-        files = request.FILES.getlist('files')
-        if files:
-            try:
-                project_dir = os.path.join(settings.MEDIA_ROOT, 'N_trail_folder', str(experiment.Project_ID.Project_ID))
-                experiment_dir = os.path.join(project_dir, str(experiment.Experiment_ID))
-                os.makedirs(experiment_dir, exist_ok=True)
+# @login_required
+# @csrf_exempt
+# def upload_experiment_file(request, experiment_id, file_field):
+#     if request.method == 'POST':
+#         experiment = get_object_or_404(Experiment, pk=experiment_id)
+#         files = request.FILES.getlist('files')
+#         if files:
+#             try:
+#                 project_dir = os.path.join(settings.MEDIA_ROOT, 'N_trail_folder', str(experiment.Project_ID.Project_ID))
+#                 experiment_dir = os.path.join(project_dir, str(experiment.Experiment_ID))
+#                 os.makedirs(experiment_dir, exist_ok=True)
                 
-                file_paths = []
-                for file in files:
-                    file_path = os.path.join(experiment_dir, file.name)
-                    with open(file_path, 'wb+') as destination:
-                        for chunk in file.chunks():
-                            destination.write(chunk)
-                    file_paths.append(os.path.relpath(file_path, settings.MEDIA_ROOT))
+#                 file_paths = []
+#                 for file in files:
+#                     file_path = os.path.join(experiment_dir, file.name)
+#                     with open(file_path, 'wb+') as destination:
+#                         for chunk in file.chunks():
+#                             destination.write(chunk)
+#                     file_paths.append(os.path.relpath(file_path, settings.MEDIA_ROOT))
                 
-                # Update the experiment model field
-                existing_files = getattr(experiment, file_field, [])
-                if isinstance(existing_files, str):
-                    existing_files = [existing_files]
-                existing_files.extend(file_paths)
-                setattr(experiment, file_field, existing_files)
-                experiment.save()
+#                 # Update the experiment model field
+#                 existing_files = getattr(experiment, file_field, [])
+#                 if isinstance(existing_files, str):
+#                     existing_files = [existing_files]
+#                 existing_files.extend(file_paths)
+#                 setattr(experiment, file_field, existing_files)
+#                 experiment.save()
 
-                return JsonResponse({'success': True})
-            except Exception as e:
-                return JsonResponse({'success': False, 'error': str(e)})
-        return JsonResponse({'success': False, 'error': 'No files uploaded'})
-    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+#                 return JsonResponse({'success': True})
+#             except Exception as e:
+#                 return JsonResponse({'success': False, 'error': str(e)})
+#         return JsonResponse({'success': False, 'error': 'No files uploaded'})
+#     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
     
-@login_required
-def download_file(request, file_path):
-    file_path = os.path.join(settings.MEDIA_ROOT, file_path)
-    if os.path.exists(file_path):
-        with open(file_path, 'rb') as file:
-            response = HttpResponse(file.read(), content_type='application/force-download')
-            response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
-            return response
-    else:
-        return HttpResponseNotFound("File not found")
+# @login_required
+# def download_file(request, file_path):
+#     file_path = os.path.join(settings.MEDIA_ROOT, file_path)
+#     if os.path.exists(file_path):
+#         with open(file_path, 'rb') as file:
+#             response = HttpResponse(file.read(), content_type='application/force-download')
+#             response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
+#             return response
+#     else:
+#         return HttpResponseNotFound("File not found")
 
 
 
@@ -658,3 +658,59 @@ def get_plot_data(request, treatment_id):
     except Exception as e:
         logger.error(f"Error fetching plot data: {str(e)}", exc_info=True)
         return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+def download_file(request, file_path):
+    # Log the received file path for debugging
+    # print(f"Requested file path: {file_path}")
+
+    # Construct the full file path
+    full_file_path = os.path.join(settings.MEDIA_ROOT, file_path)
+    # print(f"Full file path: {full_file_path}")
+
+    if os.path.exists(full_file_path):
+        with open(full_file_path, 'rb') as file:
+            response = HttpResponse(file.read(), content_type='application/force-download')
+            response['Content-Disposition'] = f'attachment; filename="{os.path.basename(full_file_path)}"'
+            return response
+    else:
+        # print(f"File not found: {full_file_path}")
+        return HttpResponseNotFound("File not found")
+
+@login_required
+@csrf_exempt
+def upload_experiment_file(request, experiment_id, file_field):
+    if request.method == 'POST':
+        experiment = get_object_or_404(Experiment, pk=experiment_id)
+        files = request.FILES.getlist('files')
+        if files:
+            try:
+                project_dir = os.path.join(settings.MEDIA_ROOT, 'N_trail_folder', str(experiment.Project_ID.Project_ID))
+                experiment_dir = os.path.join(project_dir, str(experiment.Experiment_ID))
+                os.makedirs(experiment_dir, exist_ok=True)
+                
+                file_paths = []
+                for file in files:
+                    user_provided_name = file.name
+                    file_path = os.path.join(experiment_dir, user_provided_name)
+                    with open(file_path, 'wb+') as destination:
+                        for chunk in file.chunks():
+                            destination.write(chunk)
+                    file_paths.append(os.path.relpath(file_path, settings.MEDIA_ROOT))
+                
+                existing_files = getattr(experiment, file_field, None)
+                if existing_files is None:
+                    existing_files = []
+                elif isinstance(existing_files, str):
+                    existing_files = [existing_files]
+                
+                existing_files.extend(file_paths)
+                setattr(experiment, file_field, existing_files)
+                experiment.save()
+
+                return JsonResponse({'success': True})
+            except Exception as e:
+                return JsonResponse({'success': False, 'error': str(e)})
+        return JsonResponse({'success': False, 'error': 'No files uploaded'})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
