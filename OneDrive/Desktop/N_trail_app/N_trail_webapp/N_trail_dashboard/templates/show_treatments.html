@@ -53,8 +53,12 @@
 
 <form id="upload-form" method="post" enctype="multipart/form-data" action="{% url 'show_treatments' experiment.Experiment_ID %}">
   {% csrf_token %}
-  <input type="file" name="csv_file" id="csv_file" accept=".csv">
+  <input type="file" name="csv_file" id="csv_file" accept=".csv" onchange="handleFileUpload(event)">
   <button type="submit">Upload CSV</button>
+  <div id="uploaded-file-info" style="display: {% if uploaded_file_name %}block{% else %}none{% endif %};">
+    <p>Uploaded file: <span id="uploaded-file-name">{{ uploaded_file_name }}</span></p>
+    <a id="uploaded-file-link" href="{{ uploaded_file_path }}" download>Download uploaded file</a>
+  </div>
 </form>
 
 <div id="success-message" style="color: green; display: none;">
@@ -77,7 +81,7 @@
         {% for i in treatment.No_of_Replication|range_filter %}
         <tr>
           <td>{{ forloop.counter }}</td>
-          <td><input type="text" name="plot_id_{{ treatment.Treatment_ID }}_{{ forloop.counter }}" value="" id="plot_id_{{ treatment.Treatment_ID }}_{{ forloop.counter }}"></td>
+          <td><input type="text" name="plot_id_{{ treatment.Treatment_ID }}_{{ forloop.counter }}" value="{% if plot_data %}{{ plot_data.treatment_id.forloop.counter }}{% endif %}" id="plot_id_{{ treatment.Treatment_ID }}_{{ forloop.counter }}"></td>
         </tr>
         {% endfor %}
       </tbody>
@@ -106,7 +110,6 @@ function fetchPlotData(treatmentId) {
     .then(data => {
       console.log("Plot data", data);
         if (data.success) {
-
             console.log(`Plot data retrieved for treatment ID ${treatmentId}:`, data.plot_data);
             for (let replicationId in data.plot_data) {
                 console.log(`Setting value for plot_id_${treatmentId}_${replicationId}: ${data.plot_data[replicationId]}`);
@@ -277,6 +280,13 @@ document.getElementById('upload-form').addEventListener('submit', function(event
     });
 });
 
+function handleFileUpload(event) {
+    const fileName = event.target.files[0].name;
+    document.getElementById('uploaded-file-name').textContent = fileName;
+    document.getElementById('uploaded-file-link').href = URL.createObjectURL(event.target.files[0]);
+    document.getElementById('uploaded-file-info').style.display = 'block';
+}
+
 function savePlotTable(treatmentId) {
     const plotData = [];
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
@@ -338,6 +348,10 @@ function savePlotTable(treatmentId) {
 
   .card table {
     width: 100%;
+  }
+
+  #uploaded-file-info {
+    margin-top: 10px;
   }
 </style>
 

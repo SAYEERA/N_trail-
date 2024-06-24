@@ -935,7 +935,17 @@ def download_csv(request, experiment_id):
 
 #     return render(request, 'show_treatments.html', {'experiment': experiment, 'treatments': treatments, 'plot_data': plot_data})
 
-
+import os
+import csv
+import json
+from django.conf import settings
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, render
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+from django.template.loader import render_to_string
+from django.db import transaction
+from .models import Experiment, Treatment, Plot
 
 @login_required
 @csrf_exempt
@@ -958,10 +968,19 @@ def show_treatments(request, experiment_id):
         if 'csv_file' in request.FILES:
             # Handle CSV upload
             csv_file = request.FILES['csv_file']
-            decoded_file = csv_file.read().decode('utf-8').splitlines()
-            reader = csv.reader(decoded_file)
+            file_name = csv_file.name
+            upload_dir = os.path.join(settings.MEDIA_ROOT, 'N_trail_folder')
+            os.makedirs(upload_dir, exist_ok=True)
+            upload_path = os.path.join(upload_dir, file_name)
+            
+            with open(upload_path, 'wb+') as destination:
+                for chunk in csv_file.chunks():
+                    destination.write(chunk)
 
             try:
+                decoded_file = open(upload_path, 'r').read().splitlines()
+                reader = csv.reader(decoded_file)
+
                 with transaction.atomic():
                     for row in reader:
                         if row[0] != "Treatment ID":  # Skip the header
@@ -971,6 +990,11 @@ def show_treatments(request, experiment_id):
                                 Replication_ID=int(replication_id),
                                 defaults={'Plot_ID': plot_id}
                             )
+                
+                # Save file name and path in session
+                request.session['uploaded_file_name'] = file_name
+                request.session['uploaded_file_path'] = f'/media/N_trail_folder/{file_name}'
+                
                 return JsonResponse({'success': True})
             except Exception as e:
                 logger.error(f"Error uploading plot data: {str(e)}", exc_info=True)
@@ -1080,4 +1104,16 @@ def show_treatments(request, experiment_id):
             new_treatment_id += 1
         treatments = Treatment.objects.filter(Experiment_ID=experiment)
 
-    return render(request, 'show_treatments.html', {'experiment': experiment, 'treatments': treatments, 'plot_data': plot_data})
+    uploaded_file_name = request.session.get('uploaded_file_name')
+    uploaded_file_path = request.session.get('uploaded_file_path')
+
+    return render(request, 'show_treatments.html', {
+        'experiment': experiment,
+        'treatments': treatments,
+        'plot_data': plot_data,
+        'uploaded_file_name': uploaded_file_name,
+        'uploaded_file_path': uploaded_file_path
+    })
+
+
+
