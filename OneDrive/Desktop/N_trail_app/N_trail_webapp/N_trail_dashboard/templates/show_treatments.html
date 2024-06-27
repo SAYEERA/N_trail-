@@ -65,7 +65,16 @@
   Treatments added successfully!
 </div>
 
-<div id="plot-tables-section" class="flex-container">
+<div class="view-options">
+  <label for="view-select">Plots View:</label>
+  <select id="view-select" onchange="toggleView()">
+    <option value="consolidated">Consolidated View</option>
+    <option value="distributed">Distributed View</option>
+  </select>
+  <button type="button" onclick="toggleView()">Apply View</button>
+</div>
+
+<div id="plot-tables-section" class="flex-container" style="display: none;">
   {% for treatment in treatments %}
   <div id="plot-table-{{ treatment.Treatment_ID }}" class="card">
     <h3>Treatment-{{ treatment.Treatment_ID }}</h3>
@@ -108,7 +117,7 @@ function fetchPlotData(treatmentId) {
     fetch(`/treatment/${treatmentId}/get_plot_data/`)
     .then(response => response.json())
     .then(data => {
-      console.log("Plot data", data);
+        console.log("Plot data", data);
         if (data.success) {
             console.log(`Plot data retrieved for treatment ID ${treatmentId}:`, data.plot_data);
             for (let replicationId in data.plot_data) {
@@ -325,6 +334,16 @@ function savePlotTable(treatmentId) {
         alert('Error saving plot data. Please try again.');
     });
 }
+
+function toggleView() {
+    const viewSelect = document.getElementById('view-select').value;
+    const plotTablesSection = document.getElementById('plot-tables-section');
+    if (viewSelect === 'distributed') {
+        plotTablesSection.style.display = 'flex';
+    } else {
+        plotTablesSection.style.display = 'none';
+    }
+}
 </script>
 
 <style>
@@ -340,6 +359,7 @@ function savePlotTable(treatmentId) {
     border-radius: 5px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     width: 300px;
+    flex: 1 1 auto;
   }
 
   .card h3 {

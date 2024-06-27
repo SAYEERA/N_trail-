@@ -44,23 +44,53 @@ def home(request):
     return render(request, 'home.html', {'projects': projects})
 
 
-@csrf_exempt
-def project_database(request):
-    filter_value = request.GET.get('filter', '')
-    print(f"Filter value: {filter_value}")  # Debugging statement
-    if filter_value:
-        projects = Project.objects.filter(Project_ID__icontains=filter_value)
-    else:
-        projects = Project.objects.all()
-    print(f"Projects: {projects}")  # Debugging statement
-    return render(request, 'project_database.html', {'projects': projects})
+# @csrf_exempt
+# def project_database(request):
+#     filter_value = request.GET.get('filter', '')
+#     print(f"Filter value: {filter_value}")  # Debugging statement
+#     if filter_value:
+#         projects = Project.objects.filter(Project_ID__icontains=filter_value)
+#     else:
+#         projects = Project.objects.all()
+#     print(f"Projects: {projects}")  # Debugging statement
+#     return render(request, 'project_database.html', {'projects': projects})
 
 
 
 def browse(request):
     return render(request, 'browse.html')
+@csrf_exempt
+def project_database(request):
+    filter_type = request.GET.get('filter_type', '')
+    project_column = request.GET.get('project_column', '')
+    project_value = request.GET.get('project_value', '')
+    experiment_column = request.GET.get('experiment_column', '')
+    experiment_value = request.GET.get('experiment_value', '')
+    
+    projects = Project.objects.all()
+    experiments = Experiment.objects.all()
 
+    if filter_type == 'projects' and project_column and project_value:
+        filter_kwargs = {f'{project_column}__icontains': project_value}
+        projects = projects.filter(**filter_kwargs)
+    elif filter_type == 'experiments' and experiment_column and experiment_value:
+        filter_kwargs = {f'{experiment_column}__icontains': experiment_value}
+        experiments = experiments.filter(**filter_kwargs)
 
+    return render(request, 'project_database.html', {'projects': projects, 'experiments': experiments, 'filter_type': filter_type})
+
+def get_column_values(request):
+    column = request.GET.get('column', '')
+    filter_type = request.GET.get('type', '')
+    values = []
+    
+    if filter_type == 'project' and column:
+        values = Project.objects.values_list(column, flat=True).distinct()
+    elif filter_type == 'experiment' and column:
+        values = Experiment.objects.values_list(column, flat=True).distinct()
+    
+    return JsonResponse({'values': list(values)})
+    
 @login_required
 def my_projects(request):
     crop_choices = Project.CROP_CHOICES
@@ -557,8 +587,6 @@ def save_plot_data(request, treatment_id):
             logger.error(f"Error saving plot data: {str(e)}", exc_info=True)
             return JsonResponse({'success': False, 'error': str(e)})
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
-
-
 
 
 # @login_required

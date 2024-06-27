@@ -1,58 +1,220 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 
 {% block title %}Project Database{% endblock %}
 
 {% block content %}
-
-<h1 class="text-center">Projects</h1>
+<!-- 
+<h1 class="text-center">Projects</h1> -->
 
 <!-- Filter Form -->
-<form method="GET" action="">
-  <label for="filter">Filter by Project ID:</label>
-  <input type="text" id="filter" name="filter" value="{{ request.GET.filter }}">
+<form method="GET" action="" id="filter-form">
+  <label for="filter-type">Filter by:</label>
+  <select id="filter-type" name="filter_type" onchange="updateFilterOptions()">
+    <option value="">Select</option>
+    <option value="projects">Projects</option>
+    <option value="experiments">Experiments</option>
+  </select>
+
+  <div id="project-filter" style="display: none;">
+    <label for="project-column">Column:</label>
+    <select id="project-column" name="project_column" onchange="updateColumnValues('project')">
+      <option value="">Select</option>
+      <option value="Project_ID">Project ID</option>
+      <option value="User_ID">User ID</option>
+      <option value="Interactions_count">Interactions Count</option>
+      <option value="Interaction_1">Interaction 1</option>
+      <option value="Interaction_2">Interaction 2</option>
+      <option value="Interaction_3">Interaction 3</option>
+      <option value="Crop">Crop</option>
+      <option value="Project_Editors">Project Editors</option>
+      <option value="Funding_Source">Funding Source</option>
+    </select>
+
+    <label for="project-value">Value:</label>
+    <select id="project-value" name="project_value">
+      <option value="">Select</option>
+      <!-- Options will be dynamically added here -->
+    </select>
+  </div>
+
+  <div id="experiment-filter" style="display: none;">
+    <label for="experiment-column">Column:</label>
+    <select id="experiment-column" name="experiment_column" onchange="updateColumnValues('experiment')">
+      <option value="">Select</option>
+      <option value="Experiment_ID">Experiment ID</option>
+      <option value="Project_ID">Project ID</option>
+      <option value="Location_ID">Location ID</option>
+      <option value="Year">Year</option>
+      <option value="Interaction_1_count">Interaction 1 Count</option>
+      <option value="Interaction_1_value">Interaction 1 Value</option>
+      <option value="Interaction_2_count">Interaction 2 Count</option>
+      <option value="Interaction_2_value">Interaction 2 Value</option>
+      <option value="Interaction_3_count">Interaction 3 Count</option>
+      <option value="Interaction_3_value">Interaction 3 Value</option>
+      <option value="MetaData">Metadata</option>
+    </select>
+
+    <label for="experiment-value">Value:</label>
+    <select id="experiment-value" name="experiment_value">
+      <option value="">Select</option>
+      <!-- Options will be dynamically added here -->
+    </select>
+  </div>
+
   <button type="submit">Search</button>
 </form>
 
 <!-- Display Project Table -->
-<table border="1">
-  <tr>
-    <th>Project ID</th>
-    <th>User ID</th>
-    <!-- <th>Start Year</th> -->
-    <th>Interactions Count</th>
-    <th>Interactions_1</th>
-    <th>Interactions_2</th>
-    <th>Interactions_3</th>
-    <th>Crop</th>
-    <!-- <th>Number of Years</th> -->
-    <th>Project Editors</th>
-    <th>Funding Source</th>
-    <th>Metadata</th>
-    <th>experiments</th>
-  </tr>
-  {% for project in projects %}
-  <tr>
-    <td>{{ project.Project_ID }}</td>
-    <td>{{ project.User_ID }}</td>
-    <!-- <td>{{ project.Start_year }}</td> -->
-    <td>{{ project.Interactions_count }}</td>
-    <td>{{ project.Interaction_1 }}</td>
-    <td>{{ project.Interaction_2 }}</td>
-    <td>{{ project.Interaction_3 }}</td>
-    <td>{{ project.Crop }}</td>
-    <!-- <td>{{ project.No_of_Year }}</td> -->
-    <td>{{ project.Project_Editors }}</td>
-    <td>{{ project.Funding_Source }}</td>
-    <td>{{ project.MetaData }}</td>
-    <td>
-      {% if project.Project_ID %}
-        <a href="{% url 'project_experiments' project_id=project.Project_ID %}">Show</a>
-      {% else %}
-        No ID
-      {% endif %}
-    </td>
-  </tr>
-  {% endfor %}
-</table>
+<div id="project-table" style="display: {% if filter_type == 'projects' %}block{% else %}none{% endif %};">
+  <h1 class="text-center">Projects</h1>
+  <table border="1">
+    <tr>
+      <th>Project ID</th>
+      <th>User ID</th>
+      <th>Interactions Count</th>
+      <th>Interaction 1</th>
+      <th>Interaction 2</th>
+      <th>Interaction 3</th>
+      <th>Crop</th>
+      <th>Project Editors</th>
+      <th>Funding Source</th>
+      <th>Metadata</th>
+      <th>Experiments</th>
+    </tr>
+    {% for project in projects %}
+    <tr>
+      <td>{{ project.Project_ID }}</td>
+      <td>{{ project.User_ID }}</td>
+      <td>{{ project.Interactions_count }}</td>
+      <td>{{ project.Interaction_1 }}</td>
+      <td>{{ project.Interaction_2 }}</td>
+      <td>{{ project.Interaction_3 }}</td>
+      <td>{{ project.Crop }}</td>
+      <td>{{ project.Project_Editors }}</td>
+      <td>{{ project.Funding_Source }}</td>
+      <td>{{ project.MetaData }}</td>
+      <td>
+        {% if project.Project_ID %}
+          <a href="{% url 'project_experiments' project_id=project.Project_ID %}">Show</a>
+        {% else %}
+          No ID
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+<!-- Display Experiment Table -->
+<div id="experiment-table" style="display: {% if filter_type == 'experiments' %}block{% else %}none{% endif %};">
+  <h1 class="text-center">Experiments</h1>
+  <div class="table-container">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Experiment ID</th>
+          <th>Project ID</th>
+          <th>Location ID</th>
+          <th>Year</th>
+          <th>Interaction 1 Count</th>
+          <th>Interaction 1 Value</th>
+          <th>Interaction 2 Count</th>
+          <th>Interaction 2 Value</th>
+          <th>Interaction 3 Count</th>
+          <th>Interaction 3 Value</th>
+          <th>Metadata</th>
+          <th>Treatments</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for experiment in experiments %}
+        <tr id="experiment-row-{{ experiment.Experiment_ID }}">
+          <td>{{ experiment.Experiment_ID }}</td>
+          <td>{{ experiment.Project_ID }}</td>
+          <td>{{ experiment.Location_ID }}</td>
+          <td>{{ experiment.Year }}</td>
+          <td>{{ experiment.Interaction_1_count }}</td>
+          <td>{{ experiment.Interaction_1_value }}</td>
+          <td>{{ experiment.Interaction_2_count }}</td>
+          <td>{{ experiment.Interaction_2_value }}</td>
+          <td>{{ experiment.Interaction_3_count }}</td>
+          <td>{{ experiment.Interaction_3_value }}</td>
+          <td>{{ experiment.MetaData }}</td>
+          <td><a href="{% url 'show_treatments_and_plots' experiment_id=experiment.Experiment_ID %}">Show</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+function updateFilterOptions() {
+    var filterType = document.getElementById('filter-type').value;
+    var projectFilter = document.getElementById('project-filter');
+    var experimentFilter = document.getElementById('experiment-filter');
+    if (filterType === 'projects') {
+        projectFilter.style.display = 'block';
+        experimentFilter.style.display = 'none';
+    } else if (filterType === 'experiments') {
+        projectFilter.style.display = 'none';
+        experimentFilter.style.display = 'block';
+    } else {
+        projectFilter.style.display = 'none';
+        experimentFilter.style.display = 'none';
+    }
+}
+
+function updateColumnValues(type) {
+    var column = document.getElementById(type + '-column').value;
+    var valueSelect = document.getElementById(type + '-value');
+    valueSelect.innerHTML = '<option value="">Select</option>'; // Clear previous options
+
+    if (column) {
+        fetch(`/get_column_values/?type=${type}&column=${column}`)
+            .then(response => response.json())
+            .then(data => {
+                data.values.forEach(value => {
+                    var option = document.createElement('option');
+                    option.value = value;
+                    option.text = value;
+                    valueSelect.appendChild(option);
+                });
+            });
+    }
+}
+</script>
+
+<style>
+.table-container {
+  overflow-x: auto;
+  margin: 20px 0;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9em;
+}
+
+.table th, .table td {
+  padding: 8px;
+  border: 1px solid #ccc;
+  text-align: left;
+}
+
+.table th {
+  background-color: #f2f2f2;
+}
+
+.table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.table tr:hover {
+  background-color: #f1f1f1;
+}
+</style>
 
 {% endblock %}
