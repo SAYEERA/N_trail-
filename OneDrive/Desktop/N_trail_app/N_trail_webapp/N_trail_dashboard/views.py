@@ -209,19 +209,7 @@ def all_locations(request):
     return render(request, 'locations.html', {'locations': locations, 'form': form})
 
 
-# def project_database(request):
-#     return render(request, 'project_database.html')
-# @csrf_exempt
-# def project_database(request):
-#     # projects = Project.objects.all()  # Fetch all project data
-#     # projects = Project.objects.select_related('User_ID').filter(View_Type='private')
-#     # return render(request, 'project_database.html', {'projects': projects})
-#     filter_value = request.GET.get('filter', '')
-#     if filter_value:
-#         projects = Project.objects.filter(Project_ID__icontains=filter_value)
-#     else:
-#         projects = Project.objects.all()
-#     return render(request, 'project_database.html', {'projects': projects})
+
 
 
 @csrf_exempt
@@ -404,55 +392,6 @@ def download_file(request, file_path):
         return HttpResponseNotFound("File not found")
 
 
-
-# @login_required
-# @csrf_exempt
-# def upload_experiment_file(request, experiment_id, file_field):
-#     if request.method == 'POST':
-#         experiment = get_object_or_404(Experiment, pk=experiment_id)
-#         files = request.FILES.getlist('files')
-#         if files:
-#             try:
-#                 project_dir = os.path.join(settings.MEDIA_ROOT, 'N_trail_folder', str(experiment.Project_ID.Project_ID))
-#                 experiment_dir = os.path.join(project_dir, str(experiment.Experiment_ID))
-#                 os.makedirs(experiment_dir, exist_ok=True)
-                
-#                 file_paths = []
-#                 for file in files:
-#                     file_path = os.path.join(experiment_dir, file.name)
-#                     with open(file_path, 'wb+') as destination:
-#                         for chunk in file.chunks():
-#                             destination.write(chunk)
-#                     file_paths.append(os.path.relpath(file_path, settings.MEDIA_ROOT))
-                
-#                 # Update the experiment model field
-#                 existing_files = getattr(experiment, file_field, [])
-#                 if isinstance(existing_files, str):
-#                     existing_files = [existing_files]
-#                 existing_files.extend(file_paths)
-#                 setattr(experiment, file_field, existing_files)
-#                 experiment.save()
-
-#                 return JsonResponse({'success': True})
-#             except Exception as e:
-#                 return JsonResponse({'success': False, 'error': str(e)})
-#         return JsonResponse({'success': False, 'error': 'No files uploaded'})
-#     return JsonResponse({'success': False, 'error': 'Invalid request method'})
-
-    
-# @login_required
-# def download_file(request, file_path):
-#     file_path = os.path.join(settings.MEDIA_ROOT, file_path)
-#     if os.path.exists(file_path):
-#         with open(file_path, 'rb') as file:
-#             response = HttpResponse(file.read(), content_type='application/force-download')
-#             response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
-#             return response
-#     else:
-#         return HttpResponseNotFound("File not found")
-
-
-
 @login_required
 def add_experiment(request):
     if request.method == 'POST':
@@ -564,47 +503,6 @@ def add_experiment(request):
         return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 
-# @login_required
-# @csrf_exempt
-# def save_plot_data(request, treatment_id):
-#     if request.method == 'POST':
-#         try:
-#             data = json.loads(request.body)
-#             plot_data = data.get('plot_data', [])
-
-#             with transaction.atomic():
-#                 # Delete existing plot data for this treatment
-#                 Plot.objects.filter(Treatment_ID=treatment_id).delete()
-
-#                 # Insert new plot data
-#                 for plot in plot_data:
-#                     Plot.objects.create(
-#                         Treatment_ID=Treatment.objects.get(Treatment_ID=treatment_id),
-#                         Replication_ID=plot['replication_id'],
-#                         Plot_ID=plot['plot_id']
-#                     )
-
-#             return JsonResponse({'success': True})
-#         except Exception as e:
-#             logger.error(f"Error saving plot data: {str(e)}", exc_info=True)
-#             return JsonResponse({'success': False, 'error': str(e)})
-#     return JsonResponse({'success': False, 'error': 'Invalid request method'})
-
-
-
-# @login_required
-# @csrf_exempt
-# def get_plot_data(request, treatment_id):
-#     try:
-#         plots = Plot.objects.filter(Treatment_ID=treatment_id)
-#         plot_data = {plot.Replication_ID: plot.Plot_ID for plot in plots}
-#         print(f"Retrieved plot data for treatment {treatment_id}: {plot_data}")  # Debugging
-#         return JsonResponse({'success': True, 'plot_data': plot_data})
-#     except Exception as e:
-#         logger.error(f"Error fetching plot data: {str(e)}", exc_info=True)
-#         return JsonResponse({'success': False, 'error': str(e)})
-
-
 @login_required
 def download_file(request, file_path):
     # Log the received file path for debugging
@@ -708,175 +606,6 @@ def download_csv(request, experiment_id):
 
 
 
-# @login_required
-# @csrf_exempt
-# def show_treatments(request, experiment_id):
-#     experiment = get_object_or_404(Experiment, pk=experiment_id)
-#     treatments = Treatment.objects.filter(Experiment_ID=experiment_id)
-
-#     interaction_1_values = experiment.Interaction_1_value.split(',')
-#     interaction_2_values = experiment.Interaction_2_value.split(',')
-#     interaction_3_values = experiment.Interaction_3_value.split(',') if experiment.Interaction_3_value else ['']
-
-#     # Collect plot data
-#     plot_data = {}
-#     for treatment in treatments:
-#         plots = Plot.objects.filter(Treatment_ID=treatment.Treatment_ID)
-#         for plot in plots:
-#             plot_data[(treatment.Treatment_ID, plot.Replication_ID)] = plot.Plot_ID
-
-#     if request.method == 'POST':
-#         if 'csv_file' in request.FILES:
-#             # Handle CSV upload
-#             csv_file = request.FILES['csv_file']
-#             file_name = csv_file.name
-#             upload_dir = os.path.join(settings.MEDIA_ROOT, 'N_trail_folder')
-#             os.makedirs(upload_dir, exist_ok=True)
-#             upload_path = os.path.join(upload_dir, file_name)
-            
-#             with open(upload_path, 'wb+') as destination:
-#                 for chunk in csv_file.chunks():
-#                     destination.write(chunk)
-
-#             try:
-#                 decoded_file = open(upload_path, 'r').read().splitlines()
-#                 reader = csv.reader(decoded_file)
-
-#                 with transaction.atomic():
-#                     for row in reader:
-#                         if row[0] != "Treatment ID":  # Skip the header
-#                             treatment_id, replication_id, plot_id = row
-#                             Plot.objects.update_or_create(
-#                                 Treatment_ID=Treatment.objects.get(Treatment_ID=treatment_id),
-#                                 Replication_ID=int(replication_id),
-#                                 defaults={'Plot_ID': plot_id}
-#                             )
-                
-#                 # Save file name and path in session
-#                 request.session['uploaded_file_name'] = file_name
-#                 request.session['uploaded_file_path'] = f'/media/N_trail_folder/{file_name}'
-                
-#                 return JsonResponse({'success': True})
-#             except Exception as e:
-#                 logger.error(f"Error uploading plot data: {str(e)}", exc_info=True)
-#                 return JsonResponse({'success': False, 'error': str(e)})
-
-#         try:
-#             data = json.loads(request.body)
-#             action = data.get('action')
-#             if action == 'submit_all':
-#                 treatments_data = data.get('treatments', [])
-#                 deleted_treatments = data.get('deleted_treatments', [])
-
-#                 with transaction.atomic():
-#                     # Delete treatments
-#                     for treatment_id in deleted_treatments:
-#                         Treatment.objects.filter(Treatment_ID=treatment_id).delete()
-
-#                     # Get the max numeric part of the Treatment_ID within this experiment
-#                     existing_ids = Treatment.objects.filter(Experiment_ID=experiment).values_list('Treatment_ID', flat=True)
-#                     max_numeric_id = 0
-#                     for id in existing_ids:
-#                         numeric_part = id.split('e')[0]
-#                         if numeric_part.isdigit():
-#                             numeric_part = int(numeric_part)
-#                             if numeric_part > max_numeric_id:
-#                                 max_numeric_id = numeric_part
-
-#                     # Update or create treatments
-#                     for treatment in treatments_data:
-#                         treatment_id = treatment.get('treatment_id')
-#                         interaction_1_value = treatment.get('interaction_1_value', '').strip()
-#                         interaction_2_value = treatment.get('interaction_2_value', '').strip()
-#                         interaction_3_value = treatment.get('interaction_3_value', '').strip()
-#                         no_of_replication = treatment.get('no_of_replication', '').strip()
-#                         metadata = treatment.get('metadata', '').strip()
-
-#                         # Ensure at least one interaction value is provided
-#                         if not interaction_1_value and not interaction_2_value and not interaction_3_value:
-#                             raise ValueError(f"At least one interaction value must be provided for treatment {treatment_id}")
-
-#                         # Ensure no_of_replication is provided
-#                         if not no_of_replication:
-#                             raise ValueError(f"No_of_Replication for treatment {treatment_id} cannot be empty")
-
-#                         # Generate new Treatment_ID if it's a new treatment
-#                         if treatment_id.isdigit():
-#                             max_numeric_id += 1
-#                             treatment_id = f"{max_numeric_id}e{experiment.Experiment_ID}"
-
-#                         # Update or create the treatment
-#                         Treatment.objects.update_or_create(
-#                             Treatment_ID=treatment_id,
-#                             Experiment_ID=experiment,
-#                             defaults={
-#                                 'Interaction_1_Value': interaction_1_value,
-#                                 'Interaction_2_Value': interaction_2_value,
-#                                 'Interaction_3_Value': interaction_3_value,
-#                                 'No_of_Replication': no_of_replication,
-#                                 'MetaData': metadata
-#                             }
-#                         )
-
-#                 return JsonResponse({'success': True})
-#         except Exception as e:
-#             logger.error(f"Error submitting treatments: {str(e)}", exc_info=True)
-#             return JsonResponse({'success': False, 'error': str(e)})
-
-#     if request.method == 'GET' and 'download' in request.GET:
-#         # Handle CSV download
-#         response = HttpResponse(content_type='text/csv')
-#         response['Content-Disposition'] = f'attachment; filename="plot_table_{experiment_id}.csv"'
-
-#         writer = csv.writer(response)
-#         writer.writerow(['Treatment ID', 'Replication ID', 'Plot ID'])
-
-#         for treatment in treatments:
-#             for rep in range(1, int(treatment.No_of_Replication) + 1):
-#                 writer.writerow([str(treatment.Treatment_ID), str(rep), ''])
-
-#         return response
-
-#     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-#         html = render_to_string('show_treatments.html', {'experiment': experiment, 'treatments': treatments}, request)
-#         return JsonResponse({'html': html})
-
-#     no_of_replicates = request.GET.get('no_of_replicates', '1')
-
-#     combinations = list(product(interaction_1_values, interaction_2_values, interaction_3_values))
-#     num_combinations = len(combinations)
-
-#     if not treatments.exists():
-#         existing_ids = set(Treatment.objects.values_list('Treatment_ID', flat=True))
-#         new_treatment_id = max([int(id.split('e')[0]) for id in existing_ids if id.split('e')[0].isdigit()]) + 1 if existing_ids else 1
-
-#         for combination in combinations:
-#             while f"{new_treatment_id}e{experiment.Experiment_ID}" in existing_ids:
-#                 new_treatment_id += 1
-#             Treatment.objects.create(
-#                 Treatment_ID=f"{new_treatment_id}e{experiment.Experiment_ID}",
-#                 Experiment_ID=experiment,
-#                 Interaction_1_Value=combination[0],
-#                 Interaction_2_Value=combination[1],
-#                 Interaction_3_Value=combination[2],
-#                 No_of_Replication=no_of_replicates,
-#                 MetaData='Generated'
-#             )
-#             new_treatment_id += 1
-#         treatments = Treatment.objects.filter(Experiment_ID=experiment)
-
-#     uploaded_file_name = request.session.get('uploaded_file_name')
-#     uploaded_file_path = request.session.get('uploaded_file_path')
-
-#     return render(request, 'show_treatments.html', {
-#         'experiment': experiment,
-#         'treatments': treatments,
-#         'plot_data': plot_data,
-#         'uploaded_file_name': uploaded_file_name,
-#         'uploaded_file_path': uploaded_file_path
-#     })
-
-
 
 @login_required
 @csrf_exempt
@@ -932,15 +661,6 @@ def save_plot_data(request, treatment_id):
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 
-from django.shortcuts import get_object_or_404, render
-from django.http import JsonResponse, HttpResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth.decorators import login_required
-from django.db import transaction
-from .models import Experiment, Treatment, Plot
-import json, csv, os
-from itertools import product
-from django.conf import settings
 
 @login_required
 @csrf_exempt
