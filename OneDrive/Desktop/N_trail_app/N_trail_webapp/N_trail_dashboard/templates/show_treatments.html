@@ -48,12 +48,33 @@
   </table>
   <button type="button" onclick="addNewRow()">Add Row</button>
   <button type="button" onclick="submitTreatments()">Submit All</button>
-  <label for="units-select">Select Units:</label>
-  <select id="units-select" name="units-select">
-    <option value="u1">u1</option>
-    <option value="u2">u2</option>
-    <option value="u3">u3</option>
-  </select>
+  
+  <!-- Dummy table for selecting units -->
+  <table border="1" style="margin-top: 20px;">
+    <thead>
+      <tr>
+        <th>Treatment ID</th>
+        <th>Replication ID</th>
+        <th>Plot ID</th>
+        <th>Yield</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td>
+          <label for="units-select">Select Units:</label>
+          <select id="units-select" name="units-select">
+            <option value="u1">u1</option>
+            <option value="u2">u2</option>
+            <option value="u3">u3</option>
+          </select>
+        </td>
+      </tr>
+    </tbody>
+  </table>
   <button type="button" onclick="downloadCSV()">Download CSV</button>
 </form>
 
@@ -512,59 +533,262 @@ function sortTable(column) {
     rows.forEach(row => table.appendChild(row));
 }
 </script>
-
 <style>
- .flex-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    justify-content: space-around;
-}
+  body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background-color: #f7ede8;  /* Light Mint Green */
+  }
+  
+  .navbar-brand {
+      font-weight: bold;
+      color: whitesmoke !important; /* White color for N_trail */
+  }
+  
+  .navbar {
+      background-color: #475d21; /* Dark Green color */
+  }
+  
+  .navbar-nav .nav-link {
+      font-size: 1.1em;
+      color: white !important;
+  }
+  
+  .container {
+      background-color: #f2ece7;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(47, 79, 79, 0.1);
+      padding: 20px;
+      position: relative;
+  }
+  
+  .card-custom {
+      background-color: #A9b388 !important; /* Background color */
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(47, 79, 79, 0.1);
+      color: #212b0f !important; /* Text color */
+      margin-top: 20px;
+  }
+  
+  .dropdown-menu {
+      border-radius: 0;
+  }
+  
+  .btn-custom {
+      background-color: #5f6f52 !important; /* Custom button color */
+      color: #ffffff !important;  /* White text for better visibility */
+      border: 1px solid #000000 !important;  /* Black border */
+      padding: 5px 10px !important;  /* Smaller padding for smaller buttons */
+      font-size: 12px !important;  /* Smaller font size */
+  }
+  
+  .btn-custom:hover {
+      background-color: #475d21 !important; /* Slightly darker color on hover */
+      color: #ffffff !important;
+  }
+  
+  .card {
+      height: 70% !important;  /* Ensure cards take full height */
+  }
+  
+  .col-md-8 {
+      max-width: 60% !important;  /* Smaller width for the card before login */
+  }
+  
+  .col-md-6 {
+      max-width: 48% !important;
+      height: 70% !important; 
+      /* Adjust width for both cards to be the same after login */
+  }
+  
+  .para-green {
+      color: #212b0f!important;  /* Text color */
+  }
+  
+  .form-group {
+      margin-bottom: 15px;
+  }
+  
+  .table {
+      margin-top: 20px;
+  }
 
-.card {
-    border: 1px solid #ccc;
-    padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 400px; /* Adjust this as needed for your layout */
-    box-sizing: border-box;
-    margin: 10px;
-}
+  h1 {
+      font-size: 2em;
+      color: #333;
+      margin-bottom: 20px;
+  }
 
-.card h3 {
-    margin-top: 0;
-    font-size: 1.25em;
-    text-align: center;
-}
+  form {
+      max-width: 100%;
+      margin: 0 auto;
+  }
 
-.card table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-}
+  table {
+      width: 90%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      background-color: #f2ece7;
+      color: #212b0f;
+      border: 2px solid black;  /* Black border around the table */
+  }
 
-.card table th, .card table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-}
+  table, th, td {
+      border: 1px solid black;  /* Black border for table cells */
+  }
 
-.card table th {
-    background-color: #f2f2f2;
-    text-align: center;
-}
+  th, td {
+      padding: 8px;  /* Reduced padding to make the table smaller */
+      text-align: left;
+  }
 
-.card table td input {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 5px;
-}
+  th {
+      background-color: #A9b388;
+  }
 
-#uploaded-file-info {
-    margin-top: 10px;
-}
+  td input[type="text"] {
+      width: 100%;
+      padding: 6px;  /* Reduced padding for inputs */
+      box-sizing: border-box;
+  }
 
+  button {
+      background-color: #5f6f52;
+      color: white;
+      border: 1px solid black;
+      padding: 5px 10px;  /* Smaller padding for smaller buttons */
+      text-align: center;
+      font-size: 12px;  /* Smaller font size */
+      cursor: pointer;
+      border-radius: 5px;
+      margin-right: 10px;
+  }
+
+  button:hover {
+      background-color: #475d21;
+  }
+
+  .view-options {
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+  }
+
+  .view-options label {
+      font-weight: bold;
+  }
+
+  .view-options select {
+      padding: 8px;
+      font-size: 14px;
+  }
+
+  .view-options button {
+      margin-left: 10px;
+  }
+
+  #success-message {
+      color: green;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 20px;
+  }
+
+  .card {
+      border: 1px solid #ddd;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(47, 79, 79, 0.1);
+      color: #212b0f;
+      margin-top: 20px;
+  }
+
+  .card h3 {
+      margin-top: 0;
+      font-size: 1.25em;
+      text-align: center;
+  }
+
+  .card table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+  }
+
+  .card table th, .card table td {
+      border: 1px solid black;  /* Black border for card table cells */
+      padding: 8px;
+      text-align: left;
+  }
+
+  .card table th {
+      background-color: #A9b388;
+      text-align: center;
+  }
+
+  .card table td input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 5px;
+  }
+
+  #uploaded-file-info {
+      margin-top: 10px;
+  }
+
+  .flex-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: space-around;
+  }
+
+  .units-value {
+      font-weight: bold;
+      color: #555;
+  }
+
+  #treatments-form {
+      margin-bottom: 20px;
+  }
+
+  #upload-form {
+      margin-top: 20px;
+  }
+
+  .consolidated-view-section {
+      margin-top: 30px;
+  }
+
+  .consolidated-view-section table {
+      width: 90%;
+      border-collapse: collapse;
+  }
+
+  .consolidated-view-section th, .consolidated-view-section td {
+      border: 1px solid black;  /* Black border for consolidated view table cells */
+      padding: 8px;
+      text-align: left;
+  }
+
+  .consolidated-view-section th {
+      background-color: #A9b388;
+      text-align: center;
+  }
+
+  .consolidated-view-section td input {
+      width: 100%;
+      padding: 6px;  /* Reduced padding for inputs */
+      box-sizing: border-box;
+  }
+
+  .consolidated-view-section button {
+      margin-top: 10px;
+  }
+
+  .card button {
+      margin-top: 10px;
+  }
 </style>
 
 {% endblock %}
