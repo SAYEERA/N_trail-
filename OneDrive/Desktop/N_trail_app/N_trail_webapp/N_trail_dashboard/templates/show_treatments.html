@@ -48,35 +48,26 @@
   </table>
   <button type="button" onclick="addNewRow()">Add Row</button>
   <button type="button" onclick="submitTreatments()">Submit All</button>
-  
-  <!-- Dummy table for selecting units -->
-  <table border="1" style="margin-top: 20px;">
-    <thead>
-      <tr>
-        <th>Treatment ID</th>
-        <th>Replication ID</th>
-        <th>Plot ID</th>
-        <th>Yield</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td>
-          <label for="units-select">Select Units:</label>
-          <select id="units-select" name="units-select">
+
+    <!-- Dummy table for selecting units -->
+    <table border="1" style="margin-top: 20px;">
+      <thead>
+        <tr>
+          <th>Treatment ID</th>
+          <th>Replication ID</th>
+          <th>Plot ID</th>
+          <th>Yield - Select Units (Dropdown)
+             <select id="units-select" name="units-select">
             <option value="u1">u1</option>
             <option value="u2">u2</option>
             <option value="u3">u3</option>
           </select>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+          </th>
+        </tr>
+      </thead>
+    </table>
   <button type="button" onclick="downloadCSV()">Download CSV</button>
-</form>
+</form
 
 <form id="upload-form" method="post" enctype="multipart/form-data" action="{% url 'show_treatments' experiment.Experiment_ID %}">
   {% csrf_token %}
@@ -88,9 +79,8 @@
   </div>
 </form>
 
-<div id="success-message" style="color: green; display: none;">
-  Treatments added successfully!
-</div>
+<div id="success-message" style="display: none;"></div>
+<div id="error-message" style="display: none;"></div>
 
 <div class="view-options">
   <label for="view-select">Plots View:</label>
@@ -135,6 +125,7 @@
   <table border="1" id="consolidated-plot-table">
     <thead>
       <tr>
+        <th>Treatment ID <button onclick="sortTable('treatment_id')">Sort</button></th>
         <th>Replication ID <button onclick="sortTable('replication_id')">Sort</button></th>
         <th>Plot ID <button onclick="sortTable('plot_id')">Sort</button></th>
         <th>Yield</th>
@@ -146,6 +137,7 @@
       {% for treatment_id, plots in plot_data.items %}
         {% for plot in plots %}
         <tr>
+          <td><input type="text" name="treatment_id_{{ treatment_id }}" value="{{ treatment_id }}" readonly></td>
           <td><input type="text" name="replication_id_{{ treatment_id }}_{{ plot.replication_id }}" value="{{ plot.replication_id }}"></td>
           <td><input type="text" name="plot_id_{{ treatment_id }}_{{ plot.replication_id }}" value="{{ plot.plot_id }}"></td>
           <td><input type="text" name="yield_{{ treatment_id }}_{{ plot.replication_id }}" value="{{ plot.yield }}"></td>
@@ -325,18 +317,14 @@ function submitTreatments() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            document.getElementById('success-message').style.display = 'block';
-            setTimeout(() => {
-                document.getElementById('success-message').style.display = 'none';
-                window.location.reload();
-            }, 3000);
+            showSuccessMessage('Treatments submitted successfully!');
         } else {
-            alert('Error submitting treatments: ' + data.error);
+            showErrorMessage('Error submitting treatments: ' + data.error);
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error submitting treatments. Please try again.');
+        showErrorMessage('Error submitting treatments. Please try again.');
     });
 }
 
@@ -354,18 +342,14 @@ document.getElementById('upload-form').addEventListener('submit', function(event
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            document.getElementById('success-message').style.display = 'block';
-            setTimeout(() => {
-                document.getElementById('success-message').style.display = 'none';
-                window.location.reload();
-            }, 3000);
+            showSuccessMessage('CSV uploaded successfully!');
         } else {
-            alert('Error uploading CSV: ' + data.error);
+            showErrorMessage('Error uploading CSV: ' + data.error);
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error uploading CSV. Please try again.');
+        showErrorMessage('Error uploading CSV. Please try again.');
     });
 });
 
@@ -375,6 +359,29 @@ function handleFileUpload(event) {
     document.getElementById('uploaded-file-link').href = URL.createObjectURL(event.target.files[0]);
     document.getElementById('uploaded-file-info').style.display = 'block';
 }
+
+  function showSuccessMessage(message) {
+    const successMessageDiv = document.getElementById('success-message');
+    successMessageDiv.textContent = message;
+    successMessageDiv.style.display = 'block';
+    successMessageDiv.style.color = 'green';
+
+    setTimeout(() => {
+        successMessageDiv.style.display = 'none';
+    }, 3000);
+}
+
+  function showErrorMessage(message) {
+    const errorMessageDiv = document.getElementById('error-message');
+    errorMessageDiv.textContent = message;
+    errorMessageDiv.style.display = 'block';
+    errorMessageDiv.style.color = 'red';
+
+    setTimeout(() => {
+        errorMessageDiv.style.display = 'none';
+    }, 3000);
+}
+
 
 function savePlotTable(treatmentId) {
     const plotData = [];
@@ -407,17 +414,16 @@ function savePlotTable(treatmentId) {
     })
     .then(response => response.json())
     .then(data => {
-        if (data.success) {
-            alert('Plot data saved successfully!');
-            location.reload();  // Reload the page to display updated plot data
-        } else {
-            alert('Error saving plot data: ' + data.error);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error saving plot data. Please try again.');
-    });
+    if (data.success) {
+        showSuccessMessage('Plot data saved successfully!');
+    } else {
+        showErrorMessage('Error saving plot data: ' + data.error);
+    }
+})
+.catch(error => {
+    console.error('Error:', error);
+    showErrorMessage('Error saving plot data. Please try again.');
+});
 }
 
 function toggleView() {
@@ -460,6 +466,7 @@ function addPlotRow() {
     const tableBody = document.getElementById('consolidated-plot-body');
     const newRow = document.createElement('tr');
     newRow.innerHTML = `
+        <td><input type="text" name="treatment_id_new" value=""></td> <!-- Added Treatment ID column -->
         <td><input type="text" name="replication_id_new" value=""></td>
         <td><input type="text" name="plot_id_new" value=""></td>
         <td><input type="text" name="yield_new" value=""></td>
@@ -480,19 +487,30 @@ function saveConsolidatedPlots() {
     const units = document.getElementById('units-select').value;
 
     document.querySelectorAll('#consolidated-plot-body tr').forEach(row => {
-        const replicationId = row.querySelector('input[name^="replication_id"]').value.trim();
-        const plotId = row.querySelector('input[name^="plot_id"]').value.trim();
-        const yieldValue = row.querySelector('input[name^="yield"]').value.trim();
+        const treatmentIdInput = row.querySelector('input[name^="treatment_id"]');
+        const replicationIdInput = row.querySelector('input[name^="replication_id"]');
+        const plotIdInput = row.querySelector('input[name^="plot_id"]');
+        const yieldInput = row.querySelector('input[name^="yield"]');
 
-        plotData.push({
-            replication_id: replicationId,
-            plot_id: plotId,
-            yield: yieldValue,
-            units: units
-        });
+        if (treatmentIdInput && replicationIdInput && plotIdInput && yieldInput) {
+            const treatmentId = treatmentIdInput.value.trim();
+            const replicationId = replicationIdInput.value.trim();
+            const plotId = plotIdInput.value.trim();
+            const yieldValue = yieldInput.value.trim();
+
+            plotData.push({
+                treatment_id: treatmentId,
+                replication_id: replicationId,
+                plot_id: plotId,
+                yield: yieldValue,
+                units: units
+            });
+        } else {
+            console.error('Missing data for row:', row);
+        }
     });
 
-    fetch(`/save_consolidated_plots/`, {
+    fetch('/save_consolidated_plots/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -503,18 +521,17 @@ function saveConsolidatedPlots() {
         })
     })
     .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Consolidated plots saved successfully!');
-            location.reload();  // Reload the page to display updated plot data
-        } else {
-            alert('Error saving consolidated plots: ' + data.error);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error saving consolidated plots. Please try again.');
-    });
+ .then(data => {
+    if (data.success) {
+        showSuccessMessage('Consolidated plots saved successfully!');
+    } else {
+        showErrorMessage('Error saving consolidated plots: ' + data.error);
+    }
+})
+.catch(error => {
+    console.error('Error:', error);
+    showErrorMessage('Error saving consolidated plots. Please try again.');
+});
 }
 
 function sortTable(column) {
@@ -522,10 +539,12 @@ function sortTable(column) {
     const rows = Array.from(table.rows).slice(1);
     let compareFunction;
 
-    if (column === 'replication_id') {
-        compareFunction = (a, b) => a.cells[0].querySelector('input').value - b.cells[0].querySelector('input').value;
+    if (column === 'treatment_id') {
+        compareFunction = (a, b) => a.cells[0].querySelector('input').value.localeCompare(b.cells[0].querySelector('input').value); // Adjusted column index
+    } else if (column === 'replication_id') {
+        compareFunction = (a, b) => a.cells[1].querySelector('input').value - b.cells[1].querySelector('input').value; // Adjusted column index
     } else if (column === 'plot_id') {
-        compareFunction = (a, b) => a.cells[1].querySelector('input').value.localeCompare(b.cells[1].querySelector('input').value);
+        compareFunction = (a, b) => a.cells[2].querySelector('input').value.localeCompare(b.cells[2].querySelector('input').value); // Adjusted column index
     }
 
     rows.sort(compareFunction);
@@ -533,6 +552,7 @@ function sortTable(column) {
     rows.forEach(row => table.appendChild(row));
 }
 </script>
+
 <style>
   body {
       font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -689,6 +709,13 @@ function sortTable(column) {
 
   #success-message {
       color: green;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 20px;
+  }
+
+  #error-message {
+      color: red;
       font-weight: bold;
       text-align: center;
       margin-top: 20px;

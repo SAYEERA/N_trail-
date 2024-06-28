@@ -849,35 +849,35 @@ def show_treatments(request, experiment_id):
         'units': units  # Pass units to the context
     })
 
-@login_required
-@csrf_exempt
-def save_consolidated_plots(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            plot_data = data.get('plot_data', [])
+# @login_required
+# @csrf_exempt
+# def save_consolidated_plots(request):
+#     if request.method == 'POST':
+#         try:
+#             data = json.loads(request.body)
+#             plot_data = data.get('plot_data', [])
 
-            with transaction.atomic():
-                for plot in plot_data:
-                    treatment_id = plot.get('treatment_id')
-                    replication_id = plot.get('replication_id')
-                    plot_id = plot.get('plot_id')
-                    yield_value = plot.get('yield')
-                    units = plot.get('units')
+#             with transaction.atomic():
+#                 for plot in plot_data:
+#                     treatment_id = plot.get('treatment_id')
+#                     replication_id = plot.get('replication_id')
+#                     plot_id = plot.get('plot_id')
+#                     yield_value = plot.get('yield')
+#                     units = plot.get('units')
 
-                    # Update or create the plot
-                    Plot.objects.update_or_create(
-                        Treatment_ID=Treatment.objects.get(Treatment_ID=treatment_id),
-                        Replication_ID=int(replication_id),
-                        defaults={'Plot_ID': plot_id, 'Yield': yield_value, 'Units': units}
-                    )
+#                     # Update or create the plot
+#                     Plot.objects.update_or_create(
+#                         Treatment_ID=Treatment.objects.get(Treatment_ID=treatment_id),
+#                         Replication_ID=int(replication_id),
+#                         defaults={'Plot_ID': plot_id, 'Yield': yield_value, 'Units': units}
+#                     )
 
-            return JsonResponse({'success': True})
-        except Exception as e:
-            logger.error(f"Error saving consolidated plots: {str(e)}", exc_info=True)
-            return JsonResponse({'success': False, 'error': str(e)})
+#             return JsonResponse({'success': True})
+#         except Exception as e:
+#             logger.error(f"Error saving consolidated plots: {str(e)}", exc_info=True)
+#             return JsonResponse({'success': False, 'error': str(e)})
 
-    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+#     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 
 
@@ -950,3 +950,40 @@ def my_projects(request):
     }
 
     return render(request, 'my_projects.html', context)
+@login_required
+@csrf_exempt
+def save_consolidated_plots(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            plot_data = data.get('plot_data', [])
+
+            with transaction.atomic():
+                for plot in plot_data:
+                    treatment_id = plot.get('treatment_id')
+                    replication_id = plot.get('replication_id')
+                    plot_id = plot.get('plot_id')
+                    yield_value = plot.get('yield')
+                    units = plot.get('units')
+
+                    # Ensure the Treatment ID exists
+                    try:
+                        treatment = Treatment.objects.get(Treatment_ID=treatment_id)
+                    except Treatment.DoesNotExist:
+                        error_message = f"Treatment with ID {treatment_id} does not exist."
+                        logger.error(error_message)
+                        return JsonResponse({'success': False, 'error': error_message})
+
+                    # Update or create the plot
+                    Plot.objects.update_or_create(
+                        Treatment_ID=treatment,
+                        Replication_ID=int(replication_id),
+                        defaults={'Plot_ID': plot_id, 'Yield': yield_value, 'Units': units}
+                    )
+
+            return JsonResponse({'success': True})
+        except Exception as e:
+            logger.error(f"Error saving consolidated plots: {str(e)}", exc_info=True)
+            return JsonResponse({'success': False, 'error': str(e)})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
