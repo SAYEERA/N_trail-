@@ -924,6 +924,9 @@ def get_column_values(request):
 
     return JsonResponse({'values': list(values)})
 
+
+
+
 @login_required
 def my_projects(request):
     crop_choices = Project.CROP_CHOICES
@@ -987,3 +990,4 @@ def save_consolidated_plots(request):
             return JsonResponse({'success': False, 'error': str(e)})
 
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
