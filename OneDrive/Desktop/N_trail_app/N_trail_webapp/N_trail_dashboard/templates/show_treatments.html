@@ -48,7 +48,13 @@
   </table>
   <button type="button" onclick="addNewRow()">Add Row</button>
   <button type="button" onclick="submitTreatments()">Submit All</button>
-  <button type="button" onclick="window.location.href='{% url "show_treatments" experiment.Experiment_ID %}?download=true'">Download CSV</button>
+  <label for="units-select">Select Units:</label>
+  <select id="units-select" name="units-select">
+    <option value="u1">u1</option>
+    <option value="u2">u2</option>
+    <option value="u3">u3</option>
+  </select>
+  <button type="button" onclick="downloadCSV()">Download CSV</button>
 </form>
 
 <form id="upload-form" method="post" enctype="multipart/form-data" action="{% url 'show_treatments' experiment.Experiment_ID %}">
@@ -78,19 +84,22 @@
   {% for treatment in treatments %}
   <div id="plot-table-{{ treatment.Treatment_ID }}" class="card">
     <h3>Treatment-{{ treatment.Treatment_ID }}</h3>
-    <p>Interaction Values: {{ treatment.Interaction_1_Value }}, {{ treatment.Interaction_2_Value }}, {{ treatment.Interaction_3_Value }}</p>
+    <p>Interaction Values: {{ treatment.Interaction_1_Value }}, {{ treatment.Interaction_2_Value }}</p>
+    <p>Units: <span class="units-value">{{ units }}</span></p>
     <table border="1">
       <thead>
         <tr>
           <th>Replication ID</th>
           <th>Plot ID</th>
+          <th>Yield</th>
         </tr>
       </thead>
       <tbody>
         {% for i in treatment.No_of_Replication|range_filter %}
         <tr>
           <td>{{ forloop.counter }}</td>
-          <td><input type="text" name="plot_id_{{ treatment.Treatment_ID }}_{{ forloop.counter }}" value="{% if plot_data %}{{ plot_data.treatment_id.forloop.counter }}{% endif %}" id="plot_id_{{ treatment.Treatment_ID }}_{{ forloop.counter }}"></td>
+          <td><input type="text" name="plot_id_{{ treatment.Treatment_ID }}_{{ forloop.counter }}" value="{% if plot_data %}{{ plot_data.treatment_id.forloop.counter.plot_id }}{% endif %}" id="plot_id_{{ treatment.Treatment_ID }}_{{ forloop.counter }}"></td>
+          <td><input type="text" name="yield_{{ treatment.Treatment_ID }}_{{ forloop.counter }}" value="{% if plot_data %}{{ plot_data.treatment_id.forloop.counter.yield }}{% endif %}" id="yield_{{ treatment.Treatment_ID }}_{{ forloop.counter }}"></td>
         </tr>
         {% endfor %}
       </tbody>
@@ -98,6 +107,38 @@
     <button type="button" onclick="savePlotTable('{{ treatment.Treatment_ID }}')">Save</button>
   </div>
   {% endfor %}
+</div>
+
+<div id="consolidated-view-section" style="display: none;">
+  <h2>Consolidated Plots</h2>
+  <table border="1" id="consolidated-plot-table">
+    <thead>
+      <tr>
+        <th>Replication ID <button onclick="sortTable('replication_id')">Sort</button></th>
+        <th>Plot ID <button onclick="sortTable('plot_id')">Sort</button></th>
+        <th>Yield</th>
+        <th>Units</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="consolidated-plot-body">
+      {% for treatment_id, plots in plot_data.items %}
+        {% for plot in plots %}
+        <tr>
+          <td><input type="text" name="replication_id_{{ treatment_id }}_{{ plot.replication_id }}" value="{{ plot.replication_id }}"></td>
+          <td><input type="text" name="plot_id_{{ treatment_id }}_{{ plot.replication_id }}" value="{{ plot.plot_id }}"></td>
+          <td><input type="text" name="yield_{{ treatment_id }}_{{ plot.replication_id }}" value="{{ plot.yield }}"></td>
+          <td><span class="units-value">{{ plot.units }}</span></td>
+          <td>
+            <button type="button" onclick="deletePlotRow(this)">Delete</button>
+          </td>
+        </tr>
+        {% endfor %}
+      {% endfor %}
+    </tbody>
+  </table>
+  <button type="button" onclick="addPlotRow()">Add Plot</button>
+  <button type="button" onclick="saveConsolidatedPlots()">Save Plots</button>
 </div>
 
 <script>
@@ -110,6 +151,13 @@ document.addEventListener("DOMContentLoaded", function() {
         let treatmentId = card.id.split('-')[2];
         fetchPlotData(treatmentId);
     });
+
+    // Set initial units values in plot tables
+    const units = document.getElementById('units-select').value;
+    console.log("Initial units value:", units);
+    document.querySelectorAll('.units-value').forEach(function(element) {
+        element.textContent = units;
+    });
 });
 
 function fetchPlotData(treatmentId) {
@@ -121,9 +169,12 @@ function fetchPlotData(treatmentId) {
         if (data.success) {
             console.log(`Plot data retrieved for treatment ID ${treatmentId}:`, data.plot_data);
             for (let replicationId in data.plot_data) {
-                console.log(`Setting value for plot_id_${treatmentId}_${replicationId}: ${data.plot_data[replicationId]}`);
-                document.querySelector(`#plot_id_${treatmentId}_${replicationId}`).value = data.plot_data[replicationId];
+                let plotInfo = data.plot_data[replicationId];
+                console.log(`Setting values for plot_id_${treatmentId}_${replicationId}: ${plotInfo.plot_id}, yield: ${plotInfo.yield}`);
+                document.querySelector(`#plot_id_${treatmentId}_${replicationId}`).value = plotInfo.plot_id;
+                document.querySelector(`#yield_${treatmentId}_${replicationId}`).value = plotInfo.yield
             }
+
         } else {
             console.error('Error fetching plot data:', data.error);
         }
@@ -176,11 +227,13 @@ function addNewRow() {
     newPlotTable.innerHTML = `
       <h3>Treatment-${newTreatmentId}</h3>
       <p>Interaction Values: <span id="interaction-values-${newTreatmentId}"></span></p>
+      <p>Units: <span class="units-value"></span></p>
       <table border="1">
         <thead>
           <tr>
             <th>Replication ID</th>
             <th>Plot ID</th>
+            <th>Yield</th>
           </tr>
         </thead>
         <tbody>
@@ -188,16 +241,22 @@ function addNewRow() {
           <tr>
             <td>1</td>
             <td><input type="text" name="plot_id_${newTreatmentId}_1" value=""></td>
+            <td><input type="text" name="yield_${newTreatmentId}_1" value=""></td>
           </tr>
           <tr>
             <td>2</td>
             <td><input type="text" name="plot_id_${newTreatmentId}_2" value=""></td>
+            <td><input type="text" name="yield_${newTreatmentId}_2" value=""></td>
           </tr>
         </tbody>
       </table>
       <button type="button" onclick="savePlotTable('${newTreatmentId}')">Save</button>
     `;
     document.getElementById('plot-tables-section').appendChild(newPlotTable);
+
+    // Set units for the new plot table
+    const units = document.getElementById('units-select').value;
+    document.querySelector(`#plot-table-${newTreatmentId} .units-value`).textContent = units;
 }
 
 function enableAllInputs() {
@@ -299,14 +358,19 @@ function handleFileUpload(event) {
 function savePlotTable(treatmentId) {
     const plotData = [];
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const units = document.getElementById('units-select').value; // Get the selected units value
+    console.log("Units selected:", units); // Debugging print statement
 
     document.querySelectorAll(`#plot-table-${treatmentId} tbody tr`).forEach(row => {
         const replicationId = row.querySelector('td:first-child').innerText;
-        const plotId = row.querySelector('input').value.trim();
+        const plotId = row.querySelector('input[name^="plot_id_"]').value.trim();
+        const yieldValue = row.querySelector('input[name^="yield_"]').value.trim();
 
         plotData.push({
             replication_id: replicationId,
-            plot_id: plotId
+            plot_id: plotId,
+            yield: yieldValue,
+            units: units // Include the units in the plot data
         });
     });
 
@@ -338,41 +402,169 @@ function savePlotTable(treatmentId) {
 function toggleView() {
     const viewSelect = document.getElementById('view-select').value;
     const plotTablesSection = document.getElementById('plot-tables-section');
+    const consolidatedViewSection = document.getElementById('consolidated-view-section');
+    const units = document.getElementById('units-select').value;
+    console.log("Toggle view units value:", units); // Debugging print statement
+
     if (viewSelect === 'distributed') {
         plotTablesSection.style.display = 'flex';
+        consolidatedViewSection.style.display = 'none';
     } else {
         plotTablesSection.style.display = 'none';
+        consolidatedViewSection.style.display = 'block';
     }
+
+    // Update units value in plot tables when view is toggled
+    document.querySelectorAll('.units-value').forEach(function(element) {
+        element.textContent = units;
+    });
+}
+
+function downloadCSV() {
+    const units = document.getElementById('units-select').value;
+    console.log("Downloading CSV with units:", units); // Debugging print statement
+    window.location.href = `{% url "show_treatments" experiment.Experiment_ID %}?download=true&units=${units}`;
+}
+
+// Update plot table units based on the selected value
+document.getElementById('units-select').addEventListener('change', function() {
+    const units = this.value;
+    console.log("Units changed to:", units); // Debugging print statement
+    document.querySelectorAll('.units-value').forEach(function(element) {
+        element.textContent = units;
+    });
+});
+
+function addPlotRow() {
+    const tableBody = document.getElementById('consolidated-plot-body');
+    const newRow = document.createElement('tr');
+    newRow.innerHTML = `
+        <td><input type="text" name="replication_id_new" value=""></td>
+        <td><input type="text" name="plot_id_new" value=""></td>
+        <td><input type="text" name="yield_new" value=""></td>
+        <td><span class="units-value">${document.getElementById('units-select').value}</span></td>
+        <td><button type="button" onclick="deletePlotRow(this)">Delete</button></td>
+    `;
+    tableBody.appendChild(newRow);
+}
+
+function deletePlotRow(button) {
+    const row = button.closest('tr');
+    row.parentNode.removeChild(row);
+}
+
+function saveConsolidatedPlots() {
+    const plotData = [];
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const units = document.getElementById('units-select').value;
+
+    document.querySelectorAll('#consolidated-plot-body tr').forEach(row => {
+        const replicationId = row.querySelector('input[name^="replication_id"]').value.trim();
+        const plotId = row.querySelector('input[name^="plot_id"]').value.trim();
+        const yieldValue = row.querySelector('input[name^="yield"]').value.trim();
+
+        plotData.push({
+            replication_id: replicationId,
+            plot_id: plotId,
+            yield: yieldValue,
+            units: units
+        });
+    });
+
+    fetch(`/save_consolidated_plots/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            plot_data: plotData
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Consolidated plots saved successfully!');
+            location.reload();  // Reload the page to display updated plot data
+        } else {
+            alert('Error saving consolidated plots: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error saving consolidated plots. Please try again.');
+    });
+}
+
+function sortTable(column) {
+    const table = document.getElementById('consolidated-plot-table');
+    const rows = Array.from(table.rows).slice(1);
+    let compareFunction;
+
+    if (column === 'replication_id') {
+        compareFunction = (a, b) => a.cells[0].querySelector('input').value - b.cells[0].querySelector('input').value;
+    } else if (column === 'plot_id') {
+        compareFunction = (a, b) => a.cells[1].querySelector('input').value.localeCompare(b.cells[1].querySelector('input').value);
+    }
+
+    rows.sort(compareFunction);
+
+    rows.forEach(row => table.appendChild(row));
 }
 </script>
 
 <style>
-  .flex-container {
+ .flex-container {
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
-  }
+    justify-content: space-around;
+}
 
-  .card {
+.card {
     border: 1px solid #ccc;
     padding: 20px;
     border-radius: 5px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    width: 300px;
-    flex: 1 1 auto;
-  }
-
-  .card h3 {
-    margin-top: 0;
-  }
-
-  .card table {
     width: 100%;
-  }
+    max-width: 400px; /* Adjust this as needed for your layout */
+    box-sizing: border-box;
+    margin: 10px;
+}
 
-  #uploaded-file-info {
+.card h3 {
+    margin-top: 0;
+    font-size: 1.25em;
+    text-align: center;
+}
+
+.card table {
+    width: 100%;
+    border-collapse: collapse;
     margin-top: 10px;
-  }
+}
+
+.card table th, .card table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.card table th {
+    background-color: #f2f2f2;
+    text-align: center;
+}
+
+.card table td input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 5px;
+}
+
+#uploaded-file-info {
+    margin-top: 10px;
+}
+
 </style>
 
 {% endblock %}

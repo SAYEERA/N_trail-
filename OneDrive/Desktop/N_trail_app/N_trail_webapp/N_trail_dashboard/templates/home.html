@@ -3,7 +3,7 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<!-- <div class="container mt-4">
     <div class="row">
         <div class="col-12 d-flex justify-content-end mb-4">
             <form id="search-form" method="GET" action="{% url 'project_database' %}" class="form-inline">
@@ -19,7 +19,7 @@
                 <button type="submit" class="btn btn-sm btn-custom mb-2">Search</button>
             </form>
         </div>
-    </div>
+    </div> -->
 
     <div class="row justify-content-center">
         <div class="{% if user.is_authenticated %}col-md-6{% else %}col-md-8{% endif %}">

@@ -40,4 +40,4 @@ class TreatmentAdmin(admin.ModelAdmin):
 
 @admin.register(Plot)
 class PlotAdmin(admin.ModelAdmin):
-    list_display = ('Treatment_ID', 'Replication_ID', 'Plot_ID')
+    list_display = ('Treatment_ID', 'Replication_ID', 'Plot_ID','Yield','Units')

@@ -120,6 +120,8 @@ class Plot(models.Model):
     Treatment_ID = models.ForeignKey(Treatment, on_delete=models.CASCADE)
     Replication_ID = models.IntegerField()
     Plot_ID = models.CharField(max_length=120)
+    Yield = models.CharField(max_length=120)
+    Units = models.CharField('Units', max_length=120, blank=True, null=True)
 
     class Meta:
         unique_together = (('Treatment_ID', 'Replication_ID'),)

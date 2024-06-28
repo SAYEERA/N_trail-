@@ -2,15 +2,16 @@ from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import (home, browse, signup, my_projects, logout_view, import_experiment,download_csv, upload_csv,
+from .views import (home, signup, my_projects, logout_view, import_experiment,download_csv, upload_csv,
                     all_projects, all_locations, project_database, add_project, add_experiment, show_experiments,
-                    add_location, get_column_values, show_treatments,upload_experiment_file,download_file,save_plot_data,get_plot_data, project_experiments,  show_treatments_and_plots)
+                    add_location,save_consolidated_plots, get_column_values, show_treatments,upload_experiment_file,download_file,save_plot_data,get_plot_data, project_experiments,  show_treatments_and_plots)
 
 
 urlpatterns = [
     path('', home, name='home'),
-    path('browse/', browse, name='browse'),
+    # path('browse/', browse, name='browse'),
     path('accounts/', include('django.contrib.auth.urls')),
+    path('save_consolidated_plots/', save_consolidated_plots, name='save_consolidated_plots'),
     path('signup/', signup, name='signup'),
     path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
     path('locations/', all_locations, name='all_locations'),

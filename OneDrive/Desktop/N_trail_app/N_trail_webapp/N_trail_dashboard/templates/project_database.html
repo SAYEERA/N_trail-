@@ -1,13 +1,9 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
 
-{% block title %}Project Database{% endblock %}
+{% block title %}My Projects{% endblock %}
 
 {% block content %}
-<!-- 
-<h1 class="text-center">Projects</h1> -->
-
-<!-- Filter Form -->
 <form method="GET" action="" id="filter-form">
   <label for="filter-type">Filter by:</label>
   <select id="filter-type" name="filter_type" onchange="updateFilterOptions()">
@@ -23,19 +19,32 @@
       <option value="Project_ID">Project ID</option>
       <option value="User_ID">User ID</option>
       <option value="Interactions_count">Interactions Count</option>
-      <option value="Interaction_1">Interaction 1</option>
-      <option value="Interaction_2">Interaction 2</option>
-      <option value="Interaction_3">Interaction 3</option>
       <option value="Crop">Crop</option>
       <option value="Project_Editors">Project Editors</option>
       <option value="Funding_Source">Funding Source</option>
     </select>
 
     <label for="project-value">Value:</label>
-    <select id="project-value" name="project_value">
+    <select id="project-value" name="project_value" onchange="updateInteractionFilters()">
       <option value="">Select</option>
-      <!-- Options will be dynamically added here -->
     </select>
+
+    <div id="interaction-filters" style="display: none;">
+      <label for="interaction-1-value">Interaction 1 Value:</label>
+      <select id="interaction-1-value" name="interaction_1_value">
+        <option value="">Select</option>
+      </select>
+
+      <label for="interaction-2-value">Interaction 2 Value:</label>
+      <select id="interaction-2-value" name="interaction_2_value">
+        <option value="">Select</option>
+      </select>
+
+      <label for="interaction-3-value">Interaction 3 Value:</label>
+      <select id="interaction-3-value" name="interaction_3_value">
+        <option value="">Select</option>
+      </select>
+    </div>
   </div>
 
   <div id="experiment-filter" style="display: none;">
@@ -58,7 +67,6 @@
     <label for="experiment-value">Value:</label>
     <select id="experiment-value" name="experiment_value">
       <option value="">Select</option>
-      <!-- Options will be dynamically added here -->
     </select>
   </div>
 
@@ -183,6 +191,36 @@ function updateColumnValues(type) {
                 });
             });
     }
+}
+
+function updateInteractionFilters() {
+    var column = document.getElementById('project-column').value;
+    var projectValue = document.getElementById('project-value').value;
+
+    if (column === 'Interactions_count' && projectValue) {
+        document.getElementById('interaction-filters').style.display = 'block';
+        updateInteractionValues('interaction-1-value', 'Interaction_1');
+        updateInteractionValues('interaction-2-value', 'Interaction_2');
+        updateInteractionValues('interaction-3-value', 'Interaction_3');
+    } else {
+        document.getElementById('interaction-filters').style.display = 'none';
+    }
+}
+
+function updateInteractionValues(interactionSelectId, interactionColumn) {
+    var interactionValueSelect = document.getElementById(interactionSelectId);
+    interactionValueSelect.innerHTML = '<option value="">Select</option>'; // Clear previous options
+
+    fetch(`/get_column_values/?type=project&column=${interactionColumn}`)
+        .then(response => response.json())
+        .then(data => {
+            data.values.forEach(value => {
+                var option = document.createElement('option');
+                option.value = value;
+                option.text = value;
+                interactionValueSelect.appendChild(option);
+            });
+        });
 }
 </script>
 
