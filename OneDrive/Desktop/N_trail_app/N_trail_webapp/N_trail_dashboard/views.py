@@ -15,7 +15,9 @@ from django.contrib.auth import login
 from .forms import CustomUserCreationForm
 from django.contrib.auth import login, logout 
 from .forms import LocationForm
+# import itert
 import itertools
+
 import csv
 from django.db.models import Max
 import random
@@ -347,7 +349,8 @@ def add_project(request):
 
             # Create folder and save project details as a .txt file
             # base_dir = os.path.join(settings.BASE_DIR, 'N_trail_folder')
-            base_dir = os.path.join(r'C:\Users\sayee\OneDrive\Desktop', 'N_trail_folder')
+            # base_dir = os.path.join(r'C:\Users\sayee\OneDrive\Desktop', 'N_trail_folder')
+            base_dir = os.path.join(settings.MEDIA_ROOT, 'N_trail_folder')
 
 
             if not os.path.exists(base_dir):
@@ -444,8 +447,9 @@ def add_experiment(request):
             experiment.Interaction_3_value = ','.join(interaction_3_values)
 
             experiment.save()
+            base_dir = os.path.join(settings.MEDIA_ROOT, 'N_trail_folder')
 
-            base_dir = os.path.join(r'C:\Users\sayee\OneDrive\Desktop', 'N_trail_folder')
+            # base_dir = os.path.join(r'C:\Users\sayee\OneDrive\Desktop', 'N_trail_folder')
             project_folder = os.path.join(base_dir, project.Project_ID)
             experiment_folder = os.path.join(project_folder, experiment_id)
             os.makedirs(experiment_folder, exist_ok=True)
