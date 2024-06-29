@@ -1110,7 +1110,7 @@ def show_treatments(request, experiment_id):
                 request.session['uploaded_file_name'] = file_name
                 request.session['uploaded_file_path'] = f'/media/N_trail_folder/{experiment_id}/{file_name}'
 
-                return JsonResponse({'success': True})
+                return JsonResponse({'success': True, 'file_name': file_name, 'file_path': request.session['uploaded_file_path']})
             except Exception as e:
                 logger.error(f"Error uploading plot data: {str(e)}", exc_info=True)
                 return JsonResponse({'success': False, 'error': str(e)})

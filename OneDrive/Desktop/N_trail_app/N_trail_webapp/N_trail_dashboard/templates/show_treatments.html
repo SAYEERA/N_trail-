@@ -49,7 +49,8 @@
   <button type="button" onclick="addNewRow()">Add Row</button>
   <button type="button" onclick="submitTreatments()">Submit All</button>
 
-  <table border="1" style="margin-top: 20px;">
+    <!-- Dummy table for selecting units -->
+    <table border="1" style="margin-top: 20px;">
       <thead>
         <tr>
           <th>Treatment ID</th>
@@ -64,17 +65,17 @@
           </th>
         </tr>
       </thead>
-  </table>
+    </table>
   <button type="button" onclick="downloadCSV()">Download CSV</button>
 </form>
 
 <!-- Form for uploading CSV -->
-<form id="upload-form" method="post" enctype="multipart/form-data" action="{% url 'show_treatments' experiment.Experiment_ID %}">
+<form id="upload-form" method="post" enctype="multipart/form-data" action="{% url 'upload_treatment_csv' experiment.Experiment_ID %}">
   {% csrf_token %}
   <input type="file" name="csv_file" id="csv_file" accept=".csv" onchange="handleFileUpload(event)">
   <button type="submit">Upload CSV</button>
   <div id="uploaded-file-info" style="display: {% if uploaded_file_name %}block{% else %}none{% endif %};">
-    <p>Uploaded file: <a id="uploaded-file-link" href="{{ uploaded_file_path }}" download>{{ uploaded_file_name }}</a></p>
+    <!-- <p>Uploaded file: <a id="uploaded-file-link" href="{{ uploaded_file_path }}" download>{{ uploaded_file_name }}</a></p> -->
   </div>
 </form>
 
@@ -170,15 +171,6 @@ document.addEventListener("DOMContentLoaded", function() {
     document.querySelectorAll('.units-value').forEach(function(element) {
         element.textContent = units;
     });
-
-    // Display uploaded file info if available
-    const uploadedFileName = "{{ uploaded_file_name }}";
-    const uploadedFilePath = "{{ uploaded_file_path }}";
-    if (uploadedFileName && uploadedFilePath) {
-        document.getElementById('uploaded-file-name').textContent = uploadedFileName;
-        document.getElementById('uploaded-file-link').href = uploadedFilePath;
-        document.getElementById('uploaded-file-info').style.display = 'block';
-    }
 });
 
 function fetchPlotData(treatmentId) {
@@ -207,10 +199,10 @@ function fetchPlotData(treatmentId) {
 
 function enableEditing(treatmentId) {
     document.querySelector(`[name="interaction_1_value_${treatmentId}"]`).disabled = false;
-    document.queryselector(`[name="interaction_2_value_${treatmentId}"]`).disabled = false;
-    document.queryselector(`[name="interaction_3_value_${treatmentId}"]`).disabled = false;
-    document.queryselector(`[name="no_of_replication_${treatmentId}"]`).disabled = false;
-    document.queryselector(`[name="metadata_${treatmentId}"]`).disabled = false;
+    document.querySelector(`[name="interaction_2_value_${treatmentId}"]`).disabled = false;
+    document.querySelector(`[name="interaction_3_value_${treatmentId}"]`).disabled = false;
+    document.querySelector(`[name="no_of_replication_${treatmentId}"]`).disabled = false;
+    document.querySelector(`[name="metadata_${treatmentId}"]`).disabled = false;
 }
 
 function deleteTreatment(treatmentId) {
@@ -351,9 +343,10 @@ document.getElementById('upload-form').addEventListener('submit', function(event
     .then(data => {
         if (data.success) {
             showSuccessMessage('CSV uploaded successfully!');
-            document.getElementById('uploaded-file-name').textContent = data.file_name;
-            document.getElementById('uploaded-file-link').href = data.file_path;
-            document.getElementById('uploaded-file-info').style.display = 'block';
+            // Reload the page after successful upload
+            setTimeout(() => {
+                location.reload();
+            }, 2000); // Reload after 2 seconds
         } else {
             showErrorMessage('Error uploading CSV: ' + data.error);
         }
@@ -392,6 +385,7 @@ function showErrorMessage(message) {
         errorMessageDiv.style.display = 'none';
     }, 3000);
 }
+
 
 function savePlotTable(treatmentId) {
     const plotData = [];
