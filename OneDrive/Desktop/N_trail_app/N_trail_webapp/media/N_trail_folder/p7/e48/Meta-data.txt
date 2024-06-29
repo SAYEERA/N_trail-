@@ -1,0 +1,11 @@
+Experiment ID: e48
+Project ID: p7
+Location ID: BRC
+Year: 2022
+Interaction 1 Count: 2
+Interaction 1 Value: a,b
+Interaction 2 Count: 2
+Interaction 2 Value: c,d
+Interaction 3 Count: 0
+Interaction 3 Value: 
+Metadata: na

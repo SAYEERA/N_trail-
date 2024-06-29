@@ -112,6 +112,7 @@ class Treatment(models.Model):
     Interaction_3_Value = models.CharField('Interaction_3_Value', max_length=120, blank=False, null=False)
     No_of_Replication = models.CharField('No_of_Replication', max_length=120, blank=False, null=False)
     MetaData = models.TextField('MetaData', max_length=120, blank=False, null=False)
+    
 
     def __str__(self):
         return self.Treatment_ID
