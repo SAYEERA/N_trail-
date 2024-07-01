@@ -1,0 +1,11 @@
+Experiment ID: e570
+Project ID: project1
+Location ID: BRC
+Year: 2023
+Interaction 1 Count: 2
+Interaction 1 Value: a,b
+Interaction 2 Count: 2
+Interaction 2 Value: c,d
+Interaction 3 Count: 0
+Interaction 3 Value: 
+Metadata: na

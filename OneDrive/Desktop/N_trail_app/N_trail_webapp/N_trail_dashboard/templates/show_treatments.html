@@ -159,7 +159,21 @@ let deletedTreatments = [];
 let maxTreatmentId = Math.max(...Array.from(document.querySelectorAll('#treatments-table tr')).map(row => parseInt(row.querySelector('td:first-child').innerText.match(/\d+/)[0], 10))) || 0;
 
 document.addEventListener("DOMContentLoaded", function() {
-    console.log("DOM fully loaded and parsed. Fetching plot data...");
+     // Initialize maxTreatmentId based on existing treatments
+     const treatmentRows = document.querySelectorAll('#treatments-table tr');
+    maxTreatmentId = 0;
+
+    treatmentRows.forEach(row => {
+        const treatmentId = row.id.split('-')[2]; // Get the numeric part of the ID
+        const numericPart = parseInt(treatmentId.split('_T')[1], 10);
+        if (numericPart > maxTreatmentId) {
+            maxTreatmentId = numericPart;
+        }
+    });
+
+    console.log("Max Treatment ID initialized to:", maxTreatmentId);
+
+    // Fetch plot data for each treatment
     document.querySelectorAll('.card').forEach(function(card) {
         let treatmentId = card.id.split('-')[2];
         fetchPlotData(treatmentId);
@@ -210,17 +224,19 @@ function deleteTreatment(treatmentId) {
     row.parentNode.removeChild(row);
     deletedTreatments.push(treatmentId);
 }
-
 function addNewRow() {
-    const newTreatmentId = `t${maxTreatmentId + 1}e{{ experiment.Experiment_ID }}`; // Increment the maximum existing Treatment ID by 1
-    maxTreatmentId += 1; // Update the maxTreatmentId for subsequent new rows
+    const experimentId = '{{ experiment.Experiment_ID }}';
+
+    // Generate new Treatment ID following the correct pattern
+    const newTreatmentId = `${experimentId}_T${maxTreatmentId + 1}`; // Use the correct prefix and increment the maximum existing Treatment ID by 1
+    maxTreatmentId += 1; // Update the global maxTreatmentId for subsequent new rows
 
     const newRow = document.createElement('tr');
     newRow.id = `treatment-row-${newTreatmentId}`;
 
     newRow.innerHTML = `
       <td>${newTreatmentId}</td>
-      <td>{{ experiment.Experiment_ID }}</td>
+      <td>${experimentId}</td>
       <td><input type="text" name="interaction_1_value_${newTreatmentId}" value=""></td>
       <td><input type="text" name="interaction_2_value_${newTreatmentId}" value=""></td>
       <td><input type="text" name="interaction_3_value_${newTreatmentId}" value=""></td>

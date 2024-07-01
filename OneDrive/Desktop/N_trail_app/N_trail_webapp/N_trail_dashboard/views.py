@@ -95,32 +95,32 @@ def home(request):
     
 #     return JsonResponse({'values': list(values)})
     
-# @login_required
-# def my_projects(request):
-#     crop_choices = Project.CROP_CHOICES
-#     users = User.objects.all()  # Fetch all users to populate the project editors dropdown
-#     logged_in_user_email = request.user.email  # Get the logged-in user's email
+@login_required
+def my_projects(request):
+    crop_choices = Project.CROP_CHOICES
+    users = User.objects.all()  # Fetch all users to populate the project editors dropdown
+    logged_in_user_email = request.user.email  # Get the logged-in user's email
 
-#     if request.user.is_superuser:
-#         projects = Project.objects.all()
-#     else:
-#         projects = Project.objects.filter(Project_Editors__icontains=logged_in_user_email)
+    if request.user.is_superuser:
+        projects = Project.objects.all()
+    else:
+        projects = Project.objects.filter(Project_Editors__icontains=logged_in_user_email)
 
-#     # Filter out projects without a valid Project_ID and log them
-#     valid_projects = []
-#     for project in projects:
-#         if project.Project_ID:
-#             valid_projects.append(project)
-#         else:
-#             logger.error(f"Project with missing Project_ID: {project}")
+    # Filter out projects without a valid Project_ID and log them
+    valid_projects = []
+    for project in projects:
+        if project.Project_ID:
+            valid_projects.append(project)
+        else:
+            logger.error(f"Project with missing Project_ID: {project}")
 
-#     context = {
-#         'projects': valid_projects,
-#         'crop_choices': crop_choices,
-#         'users': users,
-#     }
+    context = {
+        'projects': valid_projects,
+        'crop_choices': crop_choices,
+        'users': users,
+    }
 
-#     return render(request, 'my_projects.html', context)
+    return render(request, 'my_projects.html', context)
 
 # def project_experiments(request, project_id):
 #     project = get_object_or_404(Project, Project_ID=project_id)
@@ -173,18 +173,25 @@ def show_experiments(request, project_id):
 
     return render(request, 'show_experiments.html',context )
 
+from django.shortcuts import get_object_or_404, render
+from .models import Experiment, Treatment, Plot
+
 def show_treatments_and_plots(request, experiment_id):
     experiment = get_object_or_404(Experiment, pk=experiment_id)
     treatments = Treatment.objects.filter(Experiment_ID=experiment)
+    
+    # Sort treatments by numeric part of Treatment_ID
+    sorted_treatments = sorted(treatments, key=lambda t: int(t.Treatment_ID.split('_T')[1]))
+
     plot_data = {}
-    for treatment in treatments:
+    for treatment in sorted_treatments:  # Use sorted_treatments here
         plots = Plot.objects.filter(Treatment_ID=treatment.Treatment_ID)
         for plot in plots:
             plot_data[(treatment.Treatment_ID, plot.Replication_ID)] = plot.Plot_ID
 
     context = {
         'experiment': experiment,
-        'treatments': treatments,
+        'treatments': sorted_treatments,  # Pass sorted_treatments to the context
         'plot_data': plot_data
     }
     return render(request, 'treatments_and_plots.html', context)
@@ -496,7 +503,8 @@ def add_experiment(request):
                     No_of_Replication=no_of_replicates,
                     MetaData=metadata
                 ))
-
+             # Sort treatments by the numeric part of the Treatment_ID
+            treatments.sort(key=lambda x: int(x.Treatment_ID.split('_T')[1]))
             # Bulk Create Treatments
             Treatment.objects.bulk_create(treatments)
 
@@ -901,77 +909,78 @@ def save_plot_data(request, treatment_id):
 
 
 
-@csrf_exempt
-def project_database(request):
-    filter_type = request.GET.get('filter_type', '')
-    project_column = request.GET.get('project_column', '')
-    project_value = request.GET.get('project_value', '')
-    interaction_1_value = request.GET.get('interaction_1_value', '')
-    interaction_2_value = request.GET.get('interaction_2_value', '')
-    interaction_3_value = request.GET.get('interaction_3_value', '')
-    experiment_column = request.GET.get('experiment_column', '')
-    experiment_value = request.GET.get('experiment_value', '')
+# @csrf_exempt
+# def project_database(request):
+#     filter_type = request.GET.get('filter_type', '')
+#     project_column = request.GET.get('project_column', '')
+#     project_value = request.GET.get('project_value', '')
+#     interaction_1_value = request.GET.get('interaction_1_value', '')
+#     interaction_2_value = request.GET.get('interaction_2_value', '')
+#     interaction_3_value = request.GET.get('interaction_3_value', '')
+#     experiment_column = request.GET.get('experiment_column', '')
+#     experiment_value = request.GET.get('experiment_value', '')
     
-    projects = Project.objects.all()
-    experiments = Experiment.objects.all()
+#     projects = Project.objects.all()
+#     experiments = Experiment.objects.all()
 
-    if filter_type == 'projects':
-        if project_column and project_value:
-            filter_kwargs = {f'{project_column}__icontains': project_value}
-            projects = projects.filter(**filter_kwargs)
-        if interaction_1_value:
-            projects = projects.filter(Interaction_1__icontains=interaction_1_value)
-        if interaction_2_value:
-            projects = projects.filter(Interaction_2__icontains=interaction_2_value)
-        if interaction_3_value:
-            projects = projects.filter(Interaction_3__icontains=interaction_3_value)
-    elif filter_type == 'experiments' and experiment_column and experiment_value:
-        filter_kwargs = {f'{experiment_column}__icontains': experiment_value}
-        experiments = experiments.filter(**filter_kwargs)
+#     if filter_type == 'projects':
+#         if project_column and project_value:
+#             filter_kwargs = {f'{project_column}__icontains': project_value}
+#             projects = projects.filter(**filter_kwargs)
+#         if interaction_1_value:
+#             projects = projects.filter(Interaction_1__icontains=interaction_1_value)
+#         if interaction_2_value:
+#             projects = projects.filter(Interaction_2__icontains=interaction_2_value)
+#         if interaction_3_value:
+#             projects = projects.filter(Interaction_3__icontains=interaction_3_value)
+#     elif filter_type == 'experiments' and experiment_column and experiment_value:
+#         filter_kwargs = {f'{experiment_column}__icontains': experiment_value}
+#         experiments = experiments.filter(**filter_kwargs)
 
-    return render(request, 'project_database.html', {'projects': projects, 'experiments': experiments, 'filter_type': filter_type})
+#     return render(request, 'project_database.html', {'projects': projects, 'experiments': experiments, 'filter_type': filter_type})
 
-def get_column_values(request):
-    column = request.GET.get('column', '')
-    filter_type = request.GET.get('type', '')
-    values = []
+# def get_column_values(request):
+#     column = request.GET.get('column', '')
+#     filter_type = request.GET.get('type', '')
+#     values = []
 
-    if filter_type == 'project' and column:
-        values = Project.objects.values_list(column, flat=True).distinct()
-    elif filter_type == 'experiment' and column:
-        values = Experiment.objects.values_list(column, flat=True).distinct()
+#     if filter_type == 'project' and column:
+#         values = Project.objects.values_list(column, flat=True).distinct()
+#     elif filter_type == 'experiment' and column:
+#         values = Experiment.objects.values_list(column, flat=True).distinct()
 
-    return JsonResponse({'values': list(values)})
-
-
+#     return JsonResponse({'values': list(values)})
 
 
-@login_required
-def my_projects(request):
-    crop_choices = Project.CROP_CHOICES
-    users = User.objects.all()  # Fetch all users to populate the project editors dropdown
-    logged_in_user_email = request.user.email  # Get the logged-in user's email
 
-    if request.user.is_superuser:
-        projects = Project.objects.all()
-    else:
-        projects = Project.objects.filter(Project_Editors__icontains=logged_in_user_email)
 
-    # Filter out projects without a valid Project_ID and log them
-    valid_projects = []
-    for project in projects:
-        if project.Project_ID:
-            valid_projects.append(project)
-        else:
-            logger.error(f"Project with missing Project_ID: {project}")
+# @login_required
+# def my_projects(request):
+#     crop_choices = Project.CROP_CHOICES
+#     users = User.objects.all()  # Fetch all users to populate the project editors dropdown
+#     logged_in_user_email = request.user.email  # Get the logged-in user's email
 
-    context = {
-        'projects': valid_projects,
-        'crop_choices': crop_choices,
-        'users': users,
-    }
+#     if request.user.is_superuser:
+#         projects = Project.objects.all()
+#     else:
+#         projects = Project.objects.filter(Project_Editors__icontains=logged_in_user_email)
 
-    return render(request, 'my_projects.html', context)
+#     # Filter out projects without a valid Project_ID and log them
+#     valid_projects = []
+#     for project in projects:
+#         if project.Project_ID:
+#             valid_projects.append(project)
+#         else:
+#             logger.error(f"Project with missing Project_ID: {project}")
+
+#     context = {
+#         'projects': valid_projects,
+#         'crop_choices': crop_choices,
+#         'users': users,
+#     }
+
+#     return render(request, 'my_projects.html', context)
+
 @login_required
 @csrf_exempt
 def save_consolidated_plots(request):
@@ -1054,12 +1063,500 @@ def upload_treatment_csv(request, experiment_id):
         return JsonResponse({'success': False, 'error': 'No file uploaded'})
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
+# @login_required
+# @csrf_exempt
+# def show_treatments(request, experiment_id):
+#     print(f"Experiment ID: {experiment_id}")  # Debugging print statement
+#     experiment = get_object_or_404(Experiment, pk=experiment_id)
+    
+#     treatments = Treatment.objects.filter(Experiment_ID=experiment_id)
+#      # Sort treatments by numeric part of Treatment_ID
+#     treatments = sorted(treatments, key=lambda t: int(t.Treatment_ID.split('_T')[1]))
+
+#     interaction_1_values = experiment.Interaction_1_value.split(',')
+#     interaction_2_values = experiment.Interaction_2_value.split(',')
+#     interaction_3_values = experiment.Interaction_3_value.split(',') if experiment.Interaction_3_value else ['']
+
+#     # Collect plot data
+#     plot_data = {}
+#     for treatment in treatments:
+#         plots = Plot.objects.filter(Treatment_ID=treatment.Treatment_ID)
+#         for plot in plots:
+#             if treatment.Treatment_ID not in plot_data:
+#                 plot_data[treatment.Treatment_ID] = []
+#             plot_data[treatment.Treatment_ID].append({
+#                 'replication_id': plot.Replication_ID,
+#                 'plot_id': plot.Plot_ID,
+#                 'yield': plot.Yield,
+#                 'units': plot.Units
+#             })
+
+#     if request.method == 'POST':
+#         if 'csv_file' in request.FILES:
+#             # Handle CSV upload
+#             csv_file = request.FILES['csv_file']
+#             file_name = csv_file.name
+#             experiment_dir = os.path.join(settings.MEDIA_ROOT, 'N_trail_folder', str(experiment_id))
+#             os.makedirs(experiment_dir, exist_ok=True)
+#             upload_path = os.path.join(experiment_dir, file_name)
+            
+#             try:
+#                 with open(upload_path, 'wb+') as destination:
+#                     for chunk in csv_file.chunks():
+#                         destination.write(chunk)
+
+#                 decoded_file = open(upload_path, 'r').read().splitlines()
+#                 reader = csv.reader(decoded_file)
+
+#                 with transaction.atomic():
+#                     for row in reader:
+#                         if row[0] != "Treatment ID":  # Skip the header
+#                             treatment_id, replication_id, plot_id, yield_value, units = row
+#                             Plot.objects.update_or_create(
+#                                 Treatment_ID=Treatment.objects.get(Treatment_ID=treatment_id),
+#                                 Replication_ID=int(replication_id),
+#                                 defaults={'Plot_ID': plot_id, 'Yield': yield_value, 'Units': units}
+#                             )
+
+#                 # Save file name and path in session
+#                 request.session['uploaded_file_name'] = file_name
+#                 request.session['uploaded_file_path'] = f'/media/N_trail_folder/{experiment_id}/{file_name}'
+
+#                 return JsonResponse({'success': True, 'file_name': file_name, 'file_path': request.session['uploaded_file_path']})
+#             except Exception as e:
+#                 logger.error(f"Error uploading plot data: {str(e)}", exc_info=True)
+#                 return JsonResponse({'success': False, 'error': str(e)})
+
+#         try:
+#             data = json.loads(request.body)
+#             action = data.get('action')
+#             if action == 'submit_all':
+#                 treatments_data = data.get('treatments', [])
+#                 deleted_treatments = data.get('deleted_treatments', [])
+
+#                 with transaction.atomic():
+#                     # Delete treatments
+#                     for treatment_id in deleted_treatments:
+#                         Treatment.objects.filter(Treatment_ID=treatment_id).delete()
+
+#                     # Get the max numeric part of the Treatment_ID within this experiment
+#                     existing_ids = Treatment.objects.filter(Experiment_ID=experiment).values_list('Treatment_ID', flat=True)
+#                     max_numeric_id = 0
+#                     for id in existing_ids:
+#                         numeric_part = id.split('e')[0]
+#                         if numeric_part.isdigit():
+#                             numeric_part = int(numeric_part)
+#                             if numeric_part > max_numeric_id:
+#                                 max_numeric_id = numeric_part
+
+#                     # Update or create treatments
+#                     for treatment in treatments_data:
+#                         treatment_id = treatment.get('treatment_id')
+#                         interaction_1_value = treatment.get('interaction_1_value', '').strip()
+#                         interaction_2_value = treatment.get('interaction_2_value', '').strip()
+#                         interaction_3_value = treatment.get('interaction_3_value', '').strip()
+#                         no_of_replication = treatment.get('no_of_replication', '').strip()
+#                         metadata = treatment.get('metadata', '').strip()
+
+#                         # Ensure at least one interaction value is provided
+#                         if not interaction_1_value and not interaction_2_value and not interaction_3_value:
+#                             raise ValueError(f"At least one interaction value must be provided for treatment {treatment_id}")
+
+#                         # Ensure no_of_replication is provided
+#                         if not no_of_replication:
+#                             raise ValueError(f"No_of_Replication for treatment {treatment_id} cannot be empty")
+
+#                         # Generate new Treatment_ID if it's a new treatment
+#                         if treatment_id.isdigit():
+#                             max_numeric_id += 1
+#                             treatment_id = f"{max_numeric_id}e{experiment.Experiment_ID}"
+
+#                         # Update or create the treatment
+#                         Treatment.objects.update_or_create(
+#                             Treatment_ID=treatment_id,
+#                             Experiment_ID=experiment,
+#                             defaults={
+#                                 'Interaction_1_Value': interaction_1_value,
+#                                 'Interaction_2_Value': interaction_2_value,
+#                                 'Interaction_3_Value': interaction_3_value,
+#                                 'No_of_Replication': no_of_replication,
+#                                 'MetaData': metadata
+#                             }
+#                         )
+
+#                 return JsonResponse({'success': True})
+#         except Exception as e:
+#             logger.error(f"Error submitting treatments: {str(e)}", exc_info=True)
+#             return JsonResponse({'success': False, 'error': str(e)})
+
+#     if request.method == 'GET' and 'download' in request.GET:
+#         units = request.GET.get('units', 'u1')
+#         print(f"Downloading CSV with units: {units}")  # Debugging print statement
+#         # Handle CSV download
+#         response = HttpResponse(content_type='text/csv')
+#         response['Content-Disposition'] = f'attachment; filename="plot_table_{experiment_id}.csv"'
+
+#         writer = csv.writer(response)
+#         writer.writerow(['Treatment ID', 'Replication ID', 'Plot ID', 'Yield', 'Units'])
+
+#         for treatment in treatments:
+#             for rep in range(1, int(treatment.No_of_Replication) + 1):
+#                 writer.writerow([str(treatment.Treatment_ID), str(rep), '', '', units])
+
+#         return response
+
+#     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+#         html = render_to_string('show_treatments.html', {'experiment': experiment, 'treatments': treatments, 'units': 'u1'}, request)
+#         return JsonResponse({'html': html})
+
+#     no_of_replicates = request.GET.get('no_of_replicates', '1')
+
+#     combinations = list(product(interaction_1_values, interaction_2_values, interaction_3_values))
+#     num_combinations = len(combinations)
+
+#     if not treatments.exists():
+#         existing_ids = set(Treatment.objects.values_list('Treatment_ID', flat=True))
+#         new_treatment_id = max([int(id.split('e')[0]) for id in existing_ids if id.split('e')[0].isdigit()]) + 1 if existing_ids else 1
+
+#         for combination in combinations:
+#             while f"{new_treatment_id}e{experiment.Experiment_ID}" in existing_ids:
+#                 new_treatment_id += 1
+#             Treatment.objects.create(
+#                 Treatment_ID=f"{new_treatment_id}e{experiment.Experiment_ID}",
+#                 Experiment_ID=experiment,
+#                 Interaction_1_Value=combination[0],
+#                 Interaction_2_Value=combination[1],
+#                 Interaction_3_Value=combination[2],
+#                 No_of_Replication=no_of_replicates,
+#                 MetaData='Generated'
+#             )
+#             new_treatment_id += 1
+#         treatments = Treatment.objects.filter(Experiment_ID=experiment)
+
+#     uploaded_file_name = request.session.get('uploaded_file_name')
+#     uploaded_file_path = request.session.get('uploaded_file_path')
+
+#     # Capture units from GET parameters or set default
+#     units = request.GET.get('units', 'na')  # Default to 'na' if not specified
+#     print(f"Units parameter passed to context: {units}")  # Debugging print statement
+
+#     return render(request, 'show_treatments.html', {
+#         'experiment': experiment,
+#         'treatments': treatments,
+#         'plot_data': plot_data,
+#         'uploaded_file_name': uploaded_file_name,
+#         'uploaded_file_path': uploaded_file_path,
+#         'units': units  # Pass units to the context
+#     })
+
+
+
+# @login_required
+# @csrf_exempt
+# def show_treatments(request, experiment_id):
+#     print(f"Experiment ID: {experiment_id}")  # Debugging print statement
+#     experiment = get_object_or_404(Experiment, pk=experiment_id)
+    
+#     treatments = Treatment.objects.filter(Experiment_ID=experiment_id)
+    
+#     # Sort treatments by numeric part of Treatment_ID
+#     sorted_treatments = sorted(treatments, key=lambda t: int(t.Treatment_ID.split('_T')[1]))
+
+#     interaction_1_values = experiment.Interaction_1_value.split(',')
+#     interaction_2_values = experiment.Interaction_2_value.split(',')
+#     interaction_3_values = experiment.Interaction_3_value.split(',') if experiment.Interaction_3_value else ['']
+
+#     # Collect plot data
+#     plot_data = {}
+#     for treatment in sorted_treatments:
+#         plots = Plot.objects.filter(Treatment_ID=treatment.Treatment_ID)
+#         for plot in plots:
+#             if treatment.Treatment_ID not in plot_data:
+#                 plot_data[treatment.Treatment_ID] = []
+#             plot_data[treatment.Treatment_ID].append({
+#                 'replication_id': plot.Replication_ID,
+#                 'plot_id': plot.Plot_ID,
+#                 'yield': plot.Yield,
+#                 'units': plot.Units
+#             })
+
+#     if request.method == 'POST':
+#         if 'csv_file' in request.FILES:
+#             # Handle CSV upload
+#             csv_file = request.FILES['csv_file']
+#             file_name = csv_file.name
+#             experiment_dir = os.path.join(settings.MEDIA_ROOT, 'N_trail_folder', str(experiment_id))
+#             os.makedirs(experiment_dir, exist_ok=True)
+#             upload_path = os.path.join(experiment_dir, file_name)
+            
+#             try:
+#                 with open(upload_path, 'wb+') as destination:
+#                     for chunk in csv_file.chunks():
+#                         destination.write(chunk)
+
+#                 decoded_file = open(upload_path, 'r').read().splitlines()
+#                 reader = csv.reader(decoded_file)
+
+#                 with transaction.atomic():
+#                     for row in reader:
+#                         if row[0] != "Treatment ID":  # Skip the header
+#                             treatment_id, replication_id, plot_id, yield_value, units = row
+#                             Plot.objects.update_or_create(
+#                                 Treatment_ID=Treatment.objects.get(Treatment_ID=treatment_id),
+#                                 Replication_ID=int(replication_id),
+#                                 defaults={'Plot_ID': plot_id, 'Yield': yield_value, 'Units': units}
+#                             )
+
+#                 # Save file name and path in session
+#                 request.session['uploaded_file_name'] = file_name
+#                 request.session['uploaded_file_path'] = f'/media/N_trail_folder/{experiment_id}/{file_name}'
+
+#                 return JsonResponse({'success': True, 'file_name': file_name, 'file_path': request.session['uploaded_file_path']})
+#             except Exception as e:
+#                 logger.error(f"Error uploading plot data: {str(e)}", exc_info=True)
+#                 return JsonResponse({'success': False, 'error': str(e)})
+
+#         try:
+#             data = json.loads(request.body)
+#             action = data.get('action')
+#             if action == 'submit_all':
+#                 treatments_data = data.get('treatments', [])
+#                 deleted_treatments = data.get('deleted_treatments', [])
+
+#                 with transaction.atomic():
+#                     # Delete treatments
+#                     for treatment_id in deleted_treatments:
+#                         Treatment.objects.filter(Treatment_ID=treatment_id).delete()
+
+#                     # Get the max numeric part of the Treatment_ID within this experiment
+#                     existing_ids = Treatment.objects.filter(Experiment_ID=experiment).values_list('Treatment_ID', flat=True)
+#                     max_numeric_id = 0
+#                     for id in existing_ids:
+#                         numeric_part = id.split('_T')[1]
+#                         if numeric_part.isdigit():
+#                             numeric_part = int(numeric_part)
+#                             if numeric_part > max_numeric_id:
+#                                 max_numeric_id = numeric_part
+
+#                     # Update or create treatments
+#                     for treatment in treatments_data:
+#                         treatment_id = treatment.get('treatment_id')
+#                         interaction_1_value = treatment.get('interaction_1_value', '').strip()
+#                         interaction_2_value = treatment.get('interaction_2_value', '').strip()
+#                         interaction_3_value = treatment.get('interaction_3_value', '').strip()
+#                         no_of_replication = treatment.get('no_of_replication', '').strip()
+#                         metadata = treatment.get('metadata', '').strip()
+
+#                         # Ensure at least one interaction value is provided
+#                         if not interaction_1_value and not interaction_2_value and not interaction_3_value:
+#                             raise ValueError(f"At least one interaction value must be provided for treatment {treatment_id}")
+
+#                         # Ensure no_of_replication is provided
+#                         if not no_of_replication:
+#                             raise ValueError(f"No_of_Replication for treatment {treatment_id} cannot be empty")
+
+#                         # Generate new Treatment_ID if it's a new treatment
+#                         if treatment_id.isdigit():
+#                             max_numeric_id += 1
+#                             treatment_id = f"{max_numeric_id}_T{experiment.Experiment_ID}"
+
+#                         # Update or create the treatment
+#                         Treatment.objects.update_or_create(
+#                             Treatment_ID=treatment_id,
+#                             Experiment_ID=experiment,
+#                             defaults={
+#                                 'Interaction_1_Value': interaction_1_value,
+#                                 'Interaction_2_Value': interaction_2_value,
+#                                 'Interaction_3_Value': interaction_3_value,
+#                                 'No_of_Replication': no_of_replication,
+#                                 'MetaData': metadata
+#                             }
+#                         )
+
+#                 return JsonResponse({'success': True})
+#         except Exception as e:
+#             logger.error(f"Error submitting treatments: {str(e)}", exc_info=True)
+#             return JsonResponse({'success': False, 'error': str(e)})
+
+#     if request.method == 'GET' and 'download' in request.GET:
+#         units = request.GET.get('units', 'u1')
+#         print(f"Downloading CSV with units: {units}")  # Debugging print statement
+#         # Handle CSV download
+#         response = HttpResponse(content_type='text/csv')
+#         response['Content-Disposition'] = f'attachment; filename="plot_table_{experiment_id}.csv"'
+
+#         writer = csv.writer(response)
+#         writer.writerow(['Treatment ID', 'Replication ID', 'Plot ID', 'Yield', 'Units'])
+
+#         for treatment in sorted_treatments:
+#             for rep in range(1, int(treatment.No_of_Replication) + 1):
+#                 writer.writerow([str(treatment.Treatment_ID), str(rep), '', '', units])
+
+#         return response
+
+#     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+#         html = render_to_string('show_treatments.html', {'experiment': experiment, 'treatments': sorted_treatments, 'units': 'u1'}, request)
+#         return JsonResponse({'html': html})
+
+#     no_of_replicates = request.GET.get('no_of_replicates', '1')
+
+#     combinations = list(product(interaction_1_values, interaction_2_values, interaction_3_values))
+#     num_combinations = len(combinations)
+
+#     if not treatments.exists():
+#         existing_ids = Treatment.objects.values_list('Treatment_ID', flat=True)
+#         new_treatment_id = max([int(id.split('_T')[1]) for id in existing_ids if id.split('_T')[1].isdigit()]) + 1 if existing_ids else 1
+
+#         for combination in combinations:
+#             while f"{new_treatment_id}_T{experiment.Experiment_ID}" in existing_ids:
+#                 new_treatment_id += 1
+#             Treatment.objects.create(
+#                 Treatment_ID=f"{new_treatment_id}_T{experiment.Experiment_ID}",
+#                 Experiment_ID=experiment,
+#                 Interaction_1_Value=combination[0],
+#                 Interaction_2_Value=combination[1],
+#                 Interaction_3_Value=combination[2],
+#                 No_of_Replication=no_of_replicates,
+#                 MetaData='Generated'
+#             )
+#             new_treatment_id += 1
+#         treatments = Treatment.objects.filter(Experiment_ID=experiment)
+
+#     uploaded_file_name = request.session.get('uploaded_file_name')
+#     uploaded_file_path = request.session.get('uploaded_file_path')
+
+#     # Capture units from GET parameters or set default
+#     units = request.GET.get('units', 'na')  # Default to 'na' if not specified
+#     print(f"Units parameter passed to context: {units}")  # Debugging print statement
+
+#     return render(request, 'show_treatments.html', {
+#         'experiment': experiment,
+#         'treatments': sorted_treatments,
+#         'plot_data': plot_data,
+#         'uploaded_file_name': uploaded_file_name,
+#         'uploaded_file_path': uploaded_file_path,
+#         'units': units  # Pass units to the context
+#     })
+
+
+
+
+# @csrf_exempt
+# def project_database(request):
+#     filter_type = request.GET.get('filter_type', '')
+#     project_column = request.GET.get('project_column', '')
+#     project_value = request.GET.get('project_value', '')
+#     interaction_1_value = request.GET.get('interaction_1_value', '')
+#     interaction_2_value = request.GET.get('interaction_2_value', '')
+#     interaction_3_value = request.GET.get('interaction_3_value', '')
+#     experiment_column = request.GET.get('experiment_column', '')
+#     experiment_value = request.GET.get('experiment_value', '')
+#     interaction_values = []
+
+#     projects = Project.objects.all()
+#     experiments = Experiment.objects.all()
+
+#     if filter_type == 'projects':
+#         if project_column and project_value:
+#             filter_kwargs = {f'{project_column}__icontains': project_value}
+#             projects = projects.filter(**filter_kwargs)
+#         if interaction_1_value:
+#             projects = projects.filter(Interaction_1__icontains=interaction_1_value)
+#         if interaction_2_value:
+#             projects = projects.filter(Interaction_2__icontains=interaction_2_value)
+#         if interaction_3_value:
+#             projects = projects.filter(Interaction_3__icontains=interaction_3_value)
+#     elif filter_type == 'experiments':
+#         if experiment_column and experiment_value:
+#             filter_kwargs = {f'{experiment_column}__icontains': experiment_value}
+#             experiments = experiments.filter(**filter_kwargs)
+#         if experiment_column == 'Interaction':
+#             interaction_values = [
+#                 request.GET.get('Interaction_1_value', ''),
+#                 request.GET.get('Interaction_2_value', ''),
+#                 request.GET.get('Interaction_3_value', '')
+#             ]
+#             if interaction_values[0]:
+#                 experiments = experiments.filter(Interaction_1_value__icontains=interaction_values[0])
+#             if interaction_values[1]:
+#                 experiments = experiments.filter(Interaction_2_value__icontains=interaction_values[1])
+#             if interaction_values[2]:
+#                 experiments = experiments.filter(Interaction_3_value__icontains=interaction_values[2])
+
+#     return render(request, 'project_database.html', {
+#         'projects': projects,
+#         'experiments': experiments,
+#         'filter_type': filter_type
+#     })
+
+# def get_column_values(request):
+#     column = request.GET.get('column', '')
+#     filter_type = request.GET.get('type', '')
+#     values = []
+
+#     if filter_type == 'project' and column:
+#         values = Project.objects.values_list(column, flat=True).distinct()
+#     elif filter_type == 'experiment' and column:
+#         values = Experiment.objects.values_list(column, flat=True).distinct()
+
+#     return JsonResponse({'values': list(values)})
+
+@login_required
+def my_projects(request):
+    crop_choices = Project.CROP_CHOICES
+    users = User.objects.all()  # Fetch all users to populate the project editors dropdown
+    logged_in_user_email = request.user.email  # Get the logged-in user's email
+
+    if request.user.is_superuser:
+        projects = Project.objects.all()
+    else:
+        projects = Project.objects.filter(Project_Editors__icontains=logged_in_user_email)
+
+    # Filter out projects without a valid Project_ID and log them
+    valid_projects = []
+    for project in projects:
+        if project.Project_ID:
+            valid_projects.append(project)
+        else:
+            logger.error(f"Project with missing Project_ID: {project}")
+
+    context = {
+        'projects': valid_projects,
+        'crop_choices': crop_choices,
+        'users': users,
+    }
+
+    return render(request, 'my_projects.html', context)
+
+
+
+from django.shortcuts import get_object_or_404, render
+from django.http import JsonResponse, HttpResponse
+from django.template.loader import render_to_string
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+import csv
+import os
+from itertools import product
+from django.conf import settings
+from .models import Experiment, Treatment, Plot
+from django.db import transaction
+import logging
+import json
+
+# Ensure logging is configured
+logger = logging.getLogger(__name__)
+
 @login_required
 @csrf_exempt
 def show_treatments(request, experiment_id):
     print(f"Experiment ID: {experiment_id}")  # Debugging print statement
     experiment = get_object_or_404(Experiment, pk=experiment_id)
+    
     treatments = Treatment.objects.filter(Experiment_ID=experiment_id)
+    
+    # Sort treatments by numeric part of Treatment_ID
+    sorted_treatments = sorted(treatments, key=lambda t: int(t.Treatment_ID.split('_T')[1]))
 
     interaction_1_values = experiment.Interaction_1_value.split(',')
     interaction_2_values = experiment.Interaction_2_value.split(',')
@@ -1067,7 +1564,7 @@ def show_treatments(request, experiment_id):
 
     # Collect plot data
     plot_data = {}
-    for treatment in treatments:
+    for treatment in sorted_treatments:
         plots = Plot.objects.filter(Treatment_ID=treatment.Treatment_ID)
         for plot in plots:
             if treatment.Treatment_ID not in plot_data:
@@ -1131,7 +1628,7 @@ def show_treatments(request, experiment_id):
                     existing_ids = Treatment.objects.filter(Experiment_ID=experiment).values_list('Treatment_ID', flat=True)
                     max_numeric_id = 0
                     for id in existing_ids:
-                        numeric_part = id.split('e')[0]
+                        numeric_part = id.split('_T')[1]
                         if numeric_part.isdigit():
                             numeric_part = int(numeric_part)
                             if numeric_part > max_numeric_id:
@@ -1155,9 +1652,9 @@ def show_treatments(request, experiment_id):
                             raise ValueError(f"No_of_Replication for treatment {treatment_id} cannot be empty")
 
                         # Generate new Treatment_ID if it's a new treatment
-                        if treatment_id.isdigit():
+                        if not treatment_id.startswith(f"{experiment_id}_T"):
                             max_numeric_id += 1
-                            treatment_id = f"{max_numeric_id}e{experiment.Experiment_ID}"
+                            treatment_id = f"{experiment_id}_T{max_numeric_id}"
 
                         # Update or create the treatment
                         Treatment.objects.update_or_create(
@@ -1171,6 +1668,10 @@ def show_treatments(request, experiment_id):
                                 'MetaData': metadata
                             }
                         )
+
+                # Re-fetch and sort treatments after updates
+                treatments = Treatment.objects.filter(Experiment_ID=experiment_id)
+                sorted_treatments = sorted(treatments, key=lambda t: int(t.Treatment_ID.split('_T')[1]))
 
                 return JsonResponse({'success': True})
         except Exception as e:
@@ -1187,14 +1688,14 @@ def show_treatments(request, experiment_id):
         writer = csv.writer(response)
         writer.writerow(['Treatment ID', 'Replication ID', 'Plot ID', 'Yield', 'Units'])
 
-        for treatment in treatments:
+        for treatment in sorted_treatments:
             for rep in range(1, int(treatment.No_of_Replication) + 1):
                 writer.writerow([str(treatment.Treatment_ID), str(rep), '', '', units])
 
         return response
 
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        html = render_to_string('show_treatments.html', {'experiment': experiment, 'treatments': treatments, 'units': 'u1'}, request)
+        html = render_to_string('show_treatments.html', {'experiment': experiment, 'treatments': sorted_treatments, 'units': 'u1'}, request)
         return JsonResponse({'html': html})
 
     no_of_replicates = request.GET.get('no_of_replicates', '1')
@@ -1203,14 +1704,14 @@ def show_treatments(request, experiment_id):
     num_combinations = len(combinations)
 
     if not treatments.exists():
-        existing_ids = set(Treatment.objects.values_list('Treatment_ID', flat=True))
-        new_treatment_id = max([int(id.split('e')[0]) for id in existing_ids if id.split('e')[0].isdigit()]) + 1 if existing_ids else 1
+        existing_ids = Treatment.objects.values_list('Treatment_ID', flat=True)
+        new_treatment_id = max([int(id.split('_T')[1]) for id in existing_ids if id.split('_T')[1].isdigit()]) + 1 if existing_ids else 1
 
         for combination in combinations:
-            while f"{new_treatment_id}e{experiment.Experiment_ID}" in existing_ids:
+            while f"{experiment_id}_T{new_treatment_id}" in existing_ids:
                 new_treatment_id += 1
             Treatment.objects.create(
-                Treatment_ID=f"{new_treatment_id}e{experiment.Experiment_ID}",
+                Treatment_ID=f"{experiment_id}_T{new_treatment_id}",
                 Experiment_ID=experiment,
                 Interaction_1_Value=combination[0],
                 Interaction_2_Value=combination[1],
@@ -1219,7 +1720,9 @@ def show_treatments(request, experiment_id):
                 MetaData='Generated'
             )
             new_treatment_id += 1
-        treatments = Treatment.objects.filter(Experiment_ID=experiment)
+        treatments = Treatment.objects.filter(Experiment_ID=experiment_id)
+        # Ensure treatments are sorted after generation
+        sorted_treatments = sorted(treatments, key=lambda t: int(t.Treatment_ID.split('_T')[1]))
 
     uploaded_file_name = request.session.get('uploaded_file_name')
     uploaded_file_path = request.session.get('uploaded_file_path')
@@ -1230,9 +1733,80 @@ def show_treatments(request, experiment_id):
 
     return render(request, 'show_treatments.html', {
         'experiment': experiment,
-        'treatments': treatments,
+        'treatments': sorted_treatments,
         'plot_data': plot_data,
         'uploaded_file_name': uploaded_file_name,
         'uploaded_file_path': uploaded_file_path,
         'units': units  # Pass units to the context
     })
+
+
+
+
+
+@csrf_exempt
+def project_database(request):
+    filter_type = request.GET.get('filter_type', '')
+    project_column = request.GET.get('project_column', '')
+    project_value = request.GET.get('project_value', '')
+    interaction_1_value = request.GET.get('interaction_1_value', '')
+    interaction_2_value = request.GET.get('interaction_2_value', '')
+    interaction_3_value = request.GET.get('interaction_3_value', '')
+    experiment_column = request.GET.get('experiment_column', '')
+    experiment_value = request.GET.get('experiment_value', '')
+    interaction_values = []
+
+    projects = Project.objects.all()
+    experiments = Experiment.objects.all()
+
+    if filter_type == 'projects':
+        if project_column and project_value:
+            if project_column in ['Project_ID', 'User_ID', 'Interactions_count', 'Crop', 'Project_Editors', 'Funding_Source']:
+                filter_kwargs = {f'{project_column}__exact': project_value}
+            else:
+                filter_kwargs = {f'{project_column}__icontains': project_value}
+            projects = projects.filter(**filter_kwargs)
+        if interaction_1_value:
+            projects = projects.filter(Interaction_1__icontains=interaction_1_value)
+        if interaction_2_value:
+            projects = projects.filter(Interaction_2__icontains=interaction_2_value)
+        if interaction_3_value:
+            projects = projects.filter(Interaction_3__icontains=interaction_3_value)
+    elif filter_type == 'experiments':
+        if experiment_column and experiment_value:
+            if experiment_column in ['Experiment_ID', 'Project_ID', 'Location_ID', 'Year']:
+                filter_kwargs = {f'{experiment_column}__exact': experiment_value}
+            else:
+                filter_kwargs = {f'{experiment_column}__icontains': experiment_value}
+            experiments = experiments.filter(**filter_kwargs)
+        if experiment_column == 'Interaction':
+            interaction_values = [
+                request.GET.get('Interaction_1_value', ''),
+                request.GET.get('Interaction_2_value', ''),
+                request.GET.get('Interaction_3_value', '')
+            ]
+            if interaction_values[0]:
+                experiments = experiments.filter(Interaction_1_value__icontains=interaction_values[0])
+            if interaction_values[1]:
+                experiments = experiments.filter(Interaction_2_value__icontains=interaction_values[1])
+            if interaction_values[2]:
+                experiments = experiments.filter(Interaction_3_value__icontains=interaction_values[2])
+
+    return render(request, 'project_database.html', {
+        'projects': projects,
+        'experiments': experiments,
+        'filter_type': filter_type
+    })
+
+def get_column_values(request):
+    column = request.GET.get('column', '')
+    filter_type = request.GET.get('type', '')
+    values = []
+
+    if filter_type == 'project' and column:
+        values = Project.objects.values_list(column, flat=True).distinct()
+    elif filter_type == 'experiment' and column:
+        values = Experiment.objects.values_list(column, flat=True).distinct()
+
+    return JsonResponse({'values': list(values)})
+
