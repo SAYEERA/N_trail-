@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<h1 class="text-center">Experiments for Project: {{ project.Project_ID }}</h1>
+
+<!-- Filter Form -->
+<form method="GET" action="">
+  <label for="experiment-filter">Filter by Experiment ID:</label>
+  <input type="text" id="experiment-filter" name="experiment_filter" value="{{ request.GET.experiment_filter }}">
+  <button type="submit">Search</button>
+</form>
+
+<!-- Display Experiment Table -->
+<div class="table-container">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Experiment ID</th>
+        <th>Project ID</th>
+        <th>Location ID</th>
+        <th>Year</th>
+        <th>Interaction 1 Count</th>
+        <th>Interaction 1 Value</th>
+        <th>Interaction 2 Count</th>
+        <th>Interaction 2 Value</th>
+        <th>Interaction 3 Count</th>
+        <th>Interaction 3 Value</th>
+        <th>Yield Map</th>
+        <th>Soil Sample</th>
+        <th>Sonic Sensor</th>
+        <th>GCP</th>
+        <th>RAW UAV</th>
+        <th>Orthomosic UAV</th>
+        <th>DSM UAV</th>
+        <th>Orthomosic SAT</th>
+        <th>DSM SAT</th>
+        <th>VI 1</th>
+        <th>VI 2</th>
+        <th>VI 3</th>
+        <th>Metadata</th>
+        <th>Treatments</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for experiment in experiments %}
+      <tr id="experiment-row-{{ experiment.Experiment_ID }}">
+        <td>{{ experiment.Experiment_ID }}</td>
+        <td>{{ experiment.Project_ID }}</td>
+        <td>{{ experiment.Location_ID }}</td>
+        <td>{{ experiment.Year }}</td>
+        <td>{{ experiment.Interaction_1_count }}</td>
+        <td>{{ experiment.Interaction_1_value }}</td>
+        <td>{{ experiment.Interaction_2_count }}</td>
+        <td>{{ experiment.Interaction_2_value }}</td>
+        <td>{{ experiment.Interaction_3_count }}</td>
+        <td>{{ experiment.Interaction_3_value }}</td>
+        <td>
+          {% for file in experiment.Yield_Map %}
+          <a href="{{ MEDIA_URL }}{{ file }}" download>{{ file|basename }}</a><br>
+          {% endfor %}
+        </td>
+        <td>
+          {% for file in experiment.Soil_Sample %}
+          <a href="{{ MEDIA_URL }}{{ file }}" download>{{ file|basename }}</a><br>
+          {% endfor %}
+        </td>
+        <td>
+          {% for file in experiment.Sonic_sensor %}
+          <a href="{{ MEDIA_URL }}{{ file }}" download>{{ file|basename }}</a><br>
+          {% endfor %}
+        </td>
+        <td>
+          {% for file in experiment.GCP %}
+          <a href="{{ MEDIA_URL }}{{ file }}" download>{{ file|basename }}</a><br>
+          {% endfor %}
+        </td>
+        <td>
+          {% for file in experiment.RAWUAV %}
+          <a href="{{ MEDIA_URL }}{{ file }}" download>{{ file|basename }}</a><br>
+          {% endfor %}
+        </td>
+        <td>
+          {% for file in experiment.Orthomosic_UAV %}
+          <a href="{{ MEDIA_URL }}{{ file }}" download>{{ file|basename }}</a><br>
+          {% endfor %}
+        </td>
+        <td>
+          {% for file in experiment.DSM_UAV %}
+          <a href="{{ MEDIA_URL }}{{ file }}" download>{{ file|basename }}</a><br>
+          {% endfor %}
+        </td>
+        <td>
+          {% for file in experiment.Orthomosic_SAT %}
+          <a href="{{ MEDIA_URL }}{{ file }}" download>{{ file|basename }}</a><br>
+          {% endfor %}
+        </td>
+        <td>
+          {% for file in experiment.DSM_SAT %}
+          <a href="{{ MEDIA_URL }}{{ file }}" download>{{ file|basename }}</a><br>
+          {% endfor %}
+        </td>
+        <td>
+          {% for file in experiment.VI_1 %}
+          <a href="{{ MEDIA_URL }}{{ file }}" download>{{ file|basename }}</a><br>
+          {% endfor %}
+        </td>
+        <td>
+          {% for file in experiment.VI_2 %}
+          <a href="{{ MEDIA_URL }}{{ file }}" download>{{ file|basename }}</a><br>
+          {% endfor %}
+        </td>
+        <td>
+          {% for file in experiment.VI_3 %}
+          <a href="{{ MEDIA_URL }}{{ file }}" download>{{ file|basename }}</a><br>
+          {% endfor %}
+        </td>
+        <td>{{ experiment.MetaData }}</td>
+        <td><a href="{% url 'show_treatments_and_plots' experiment_id=experiment.Experiment_ID %}">Show</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<style>
+.table-container {
+  overflow-x: auto;
+  margin: 20px 0;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9em;
+}
+
+.table th, .table td {
+  padding: 8px;
+  border: 1px solid #ccc;
+  text-align: left;
+}
+
+.table th {
+  background-color: #f2f2f2;
+}
+
+.table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.table tr:hover {
+  background-color: #f1f1f1;
+}
+</style>
+
+{% endblock %}

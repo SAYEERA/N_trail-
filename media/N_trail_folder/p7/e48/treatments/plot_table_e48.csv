@@ -1,0 +1,13 @@
+Treatment ID,Replication ID,Plot ID,Yield,Units
+e48_T1,1,100,12,bushels/acre
+e48_T1,2,101,13,bushels/acre
+e48_T1,3,102,14,bushels/acre
+e48_T2,1,103,15,bushels/acre
+e48_T2,2,104,16,bushels/acre
+e48_T2,3,105,17,bushels/acre
+e48_T3,1,106,18,bushels/acre
+e48_T3,2,107,19,bushels/acre
+e48_T3,3,108,20,bushels/acre
+e48_T4,1,109,21,bushels/acre
+e48_T4,2,110,22,bushels/acre
+e48_T4,3,111,23,bushels/acre

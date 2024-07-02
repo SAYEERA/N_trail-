@@ -1,0 +1,429 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<h1 class="text-center">My Projects</h1>
+
+<!-- Display Project Table -->
+<div class="table-responsive">
+    <table class="table table-bordered table-striped" id="project-table">
+        <thead>
+            <tr>
+                <th>Project ID</th>
+                <th>User ID</th>
+                <!-- <th>Start Year</th> -->
+                <th>Interactions Count</th>
+                <th>Interactions_1</th>
+                <th>Interactions_2</th>
+                <th>Interactions_3</th>
+                <th>Crop</th>
+                <!-- <th>Number of Years</th> -->
+                <th>Project Editors</th>
+                <th>Funding Source</th>
+                <th>Metadata</th>
+                <th>View Type</th>
+                <th>Experiments</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for project in projects %}
+            <tr>
+                <td>{{ project.Project_ID }}</td>
+                <td>{{ project.User_ID }}</td>
+                <!-- <td>{{ project.Start_year }}</td> -->
+                <td>{{ project.Interactions_count }}</td>
+                <td>{{ project.Interaction_1 }}</td>
+                <td>{{ project.Interaction_2 }}</td>
+                <td>{{ project.Interaction_3 }}</td>
+                <td>{{ project.Crop }}</td>
+                <!-- <td>{{ project.No_of_Year }}</td> -->
+                <td>{{ project.Project_Editors }}</td>
+                <td>{{ project.Funding_Source }}</td>
+                <td>{{ project.MetaData }}</td>
+                <td>{{ project.View_Type }}</td>
+                <td><a href="{% url 'show_experiments' project_id=project.Project_ID %}" class="btn btn-orange">Show</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Add Project Button -->
+{% if user.is_superuser %}
+<button id="add-project-button" class="btn btn-orange mt-3">Add Project</button>
+{% endif %}
+
+<!-- Add Project Form -->
+<div id="add-project-form" class="mt-4" style="display: none; background-color: #dde1ce; padding: 20px;">
+    <h2 class="text-center">Add New Project Details</h2>
+    <form method="post" id="project-form" class="form-horizontal">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="Project_ID" class="col-sm-2 control-label">Project ID:</label>
+            <div class="col-sm-10">
+                <input type="text" id="Project_ID" name="Project_ID" class="form-control form-control-sm" required>
+            </div>
+        </div>
+
+        <!-- <div class="form-group">
+            <label for="Start_year" class="col-sm-2 control-label">Start Year:</label>
+            <div class="col-sm-10">
+                <input type="number" id="Start_year" name="Start_year" class="form-control form-control-sm" required>
+            </div>
+        </div> -->
+
+        <div class="form-group">
+            <label for="Interactions_count" class="col-sm-2 control-label">Interactions Count:</label>
+            <div class="col-sm-10">
+                <input type="number" id="Interactions_count" name="Interactions_count" class="form-control form-control-sm" required>
+            </div>
+        </div>
+
+        <div id="interaction-fields" class="form-group">
+            <!-- Interaction fields will be added here dynamically -->
+        </div>
+
+        <div class="form-group">
+            <label for="Crop" class="col-sm-2 control-label">Crop:</label>
+            <div class="col-sm-10">
+                <select id="Crop" name="Crop" class="form-control form-control-sm" required>
+                    {% for choice in crop_choices %}
+                    <option value="{{ choice.0 }}">{{ choice.1 }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+<!-- 
+        <div style="display: none;">
+            <label for="No_of_Year" class="col-sm-2 control-label">Number of Years:</label>
+            <div class="col-sm-10">
+                <input type="hidden" id="No_of_Year" name="No_of_Year" class="form-control form-control-sm" required readonly>
+            </div>
+        </div> -->
+
+        {% if user.is_superuser %}
+        <div class="form-group">
+            <label for="Project_Editors" class="col-sm-2 control-label">Project Editors:</label>
+            <div class="col-sm-10" id="project-editors-container">
+                <select id="Project_Editors_Select" class="form-control form-control-sm">
+                    {% for user in users %}
+                    <option value="{{ user.email }}">{{ user.email }}</option>
+                    {% endfor %}
+                </select>
+                <button type="button" id="add-project-editor" class="btn btn-orange mt-2">Add</button>
+                <ul id="project-editors-list" class="mt-2"></ul>
+                <input type="hidden" id="Project_Editors" name="Project_Editors">
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="Funding_Source" class="col-sm-2 control-label">Funding Source:</label>
+            <div class="col-sm-10" id="funding-source-container">
+                <input type="text" id="Funding_Source_Input" class="form-control form-control-sm">
+                <button type="button" id="add-funding-source" class="btn btn-orange mt-2">Add</button>
+                <ul id="funding-source-list" class="mt-2"></ul>
+                <input type="hidden" id="Funding_Source" name="Funding_Source">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="MetaData" class="col-sm-2 control-label">Metadata:</label>
+            <div class="col-sm-10">
+                <textarea id="MetaData" name="MetaData" class="form-control form-control-sm" rows="4" required></textarea>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="View_Type" class="col-sm-2 control-label">View Type:</label>
+            <div class="col-sm-10">
+                <select id="View_Type" name="View_Type" class="form-control form-control-sm" required>
+                    <option value="public">Public</option>
+                    <option value="protected">Protected</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-10">
+                <button type="submit" id="submit-button" class="btn btn-orange">Submit</button>
+                <span id="success-message" class="text-success" style="display: none;">Project added successfully!</span>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const interactionChoices = [
+        'Select', 'Timing', 'Inhibitor', 'N_rate', 'Landscape', 'Biological',
+        'Cover_Crop', 'Crop_Rotation', 'Fall_N_Rate', 'Previous_N_Rate',
+        'Grazing', 'Spring_N_Rate', 'other'
+    ];
+
+    let fundingSources = [];
+    let projectEditors = [];
+
+    // Show the add project form when the button is clicked
+    document.querySelector('#add-project-button').addEventListener('click', function() {
+        document.querySelector('#add-project-form').style.display = 'block';
+    });
+
+    // Handle form submission via AJAX
+    document.querySelector('#project-form').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        // Client-side validation: Ensure all required fields are filled
+        const requiredFields = document.querySelectorAll('#project-form [required]');
+        let allFieldsFilled = true;
+
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                allFieldsFilled = false;
+                field.style.border = '2px solid red';
+            } else {
+                field.style.border = '';
+            }
+        });
+
+        if (projectEditors.length === 0 || fundingSources.length === 0) {
+            alert('Please fill list values required fields.');
+            return;
+        }
+
+        if (!allFieldsFilled) {
+            alert('Please fill all required fields.');
+            return;
+        }
+
+        // Update hidden fields with concatenated values
+        const projectEditorsField = document.querySelector('#Project_Editors');
+        projectEditorsField.value = projectEditors.join(',');
+        const fundingSourceField = document.querySelector('#Funding_Source');
+        fundingSourceField.value = fundingSources.join(',');
+
+        const formData = new FormData(this);
+        // Send a POST request to the server-side URL
+        fetch('{% url "add_project" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.querySelector('#success-message').style.display = 'inline';
+                document.querySelector('#project-form').reset(); // Reset the form fields
+                document.querySelector('#add-project-form').style.display = 'none'; // Hide the form
+
+                // Reset the fundingSources and projectEditors arrays
+                fundingSources = [];
+                projectEditors = [];
+                document.querySelector('#funding-source-list').innerHTML = '';
+                document.querySelector('#project-editors-list').innerHTML = '';
+
+                // Refresh the page
+                window.location.reload();
+            } else {
+                alert('Failed to add project: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to add project. Please try again.');
+        });
+    });
+
+    // Update interaction fields dynamically based on Interactions Count
+    document.querySelector('#Interactions_count').addEventListener('change', function() {
+        const count = parseInt(this.value);
+        const interactionFieldsContainer = document.querySelector('#interaction-fields');
+        interactionFieldsContainer.innerHTML = ''; // Clear existing fields
+
+        for (let i = 1; i <= count; i++) {
+            const label = document.createElement('label');
+            label.setAttribute('for', `Interaction_${i}`);
+            label.textContent = `Interaction ${i}:`;
+            interactionFieldsContainer.appendChild(label);
+
+            const select = document.createElement('select');
+            select.setAttribute('id', `Interaction_${i}`);
+            select.setAttribute('name', `Interaction_${i}`);
+            select.classList.add('form-control', 'form-control-sm');
+            select.required = true;
+
+            // Add the default empty option
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Select an option';
+            select.appendChild(defaultOption);
+
+            interactionChoices.forEach(choice => {
+                const option = document.createElement('option');
+                option.value = choice;
+                option.textContent = choice;
+                select.appendChild(option);
+            });
+            interactionFieldsContainer.appendChild(select);
+
+            // Create an input field for entering details when "other" is selected
+            const otherInput = document.createElement('input');
+            otherInput.setAttribute('type', 'text');
+            otherInput.setAttribute('id', `Interaction_${i}_other`);
+            otherInput.setAttribute('name', `Interaction_${i}_other`);
+            otherInput.setAttribute('style', 'display:none;');
+            otherInput.classList.add('form-control', 'form-control-sm', 'mt-2');
+            interactionFieldsContainer.appendChild(otherInput);
+
+            // Event listener to show/hide the other input field
+            select.addEventListener('change', function() {
+                if (this.value === 'other') {
+                    otherInput.style.display = 'block';
+                } else {
+                    otherInput.style.display = 'none';
+                }
+            });
+
+            interactionFieldsContainer.appendChild(document.createElement('br'));
+        }
+    });
+
+    // // Update number of years based on start year
+    // document.querySelector('#Start_year').addEventListener('input', function() {
+    //     const startYear = parseInt(this.value);
+    //     const currentYear = new Date().getFullYear();
+    //     const numberOfYears = currentYear - startYear + 1; // Calculate number of years
+    //     document.querySelector('#No_of_Year').value = numberOfYears > 0 ? numberOfYears : 0;
+    // });
+
+    // Add funding source
+    document.querySelector('#add-funding-source').addEventListener('click', function() {
+        const fundingSourceInput = document.querySelector('#Funding_Source_Input');
+        const fundingSource = fundingSourceInput.value.trim();
+        if (fundingSource) {
+            fundingSources.push(fundingSource);
+            const listItem = document.createElement('li');
+            listItem.textContent = fundingSource;
+            const removeButton = document.createElement('button');
+            removeButton.textContent = 'Remove';
+            removeButton.type = 'button';
+            removeButton.classList.add('btn', 'btn-danger', 'ml-2');
+            removeButton.addEventListener('click', function() {
+                const index = fundingSources.indexOf(fundingSource);
+                if (index > -1) {
+                    fundingSources.splice(index, 1);
+                }
+                listItem.remove();
+            });
+            listItem.appendChild(removeButton);
+            document.querySelector('#funding-source-list').appendChild(listItem);
+            fundingSourceInput.value = ''; // Clear the input field
+        }
+        // Log funding sources for debugging
+        console.log('Funding Sources Array:', fundingSources);
+    });
+
+    {% if user.is_superuser %}
+    // Add project editor
+    document.querySelector('#add-project-editor').addEventListener('click', function() {
+        const projectEditorSelect = document.querySelector('#Project_Editors_Select');
+        const projectEditor = projectEditorSelect.value.trim();
+        if (projectEditor && !projectEditors.includes(projectEditor)) {
+            projectEditors.push(projectEditor);
+            const listItem = document.createElement('li');
+            listItem.textContent = projectEditor;
+            const removeButton = document.createElement('button');
+            removeButton.textContent = 'Remove';
+            removeButton.type = 'button';
+            removeButton.classList.add('btn', 'btn-danger', 'ml-2');
+            removeButton.addEventListener('click', function() {
+                const index = projectEditors.indexOf(projectEditor);
+                if (index > -1) {
+                    projectEditors.splice(index, 1);
+                }
+                listItem.remove();
+            });
+            listItem.appendChild(removeButton);
+            document.querySelector('#project-editors-list').appendChild(listItem);
+        }
+        // Log project editors for debugging
+        console.log('Project Editors Array:', projectEditors);
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}
+
+{% block extra_styles %}
+<style>
+    #project-table {
+        width: 40%;
+        max-height: 20px;
+        overflow-y: auto;
+    }
+
+    #project-table th, #project-table td {
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    #add-project-form {
+        margin-top: 20px;
+        background-color: #F5FFFA;
+        padding: 20px;
+        border: 1px solid #000000;
+    }
+
+    .form-horizontal .form-group {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    .form-horizontal .form-group label {
+        text-align: left;
+    }
+
+    .form-control-sm {
+        height: 25px;
+        font-size: 14px;
+    }
+
+    .btn-orange {
+        background-color: #5f6f52;
+        color: whitesmoke;
+        border: 1px solid black;
+    }
+
+    .btn-orange:hover {
+        background-color: #5f6f52;
+        color: whitesmoke;
+    }
+
+    #interaction-fields .form-control,
+    #project-editors-container .form-control,
+    #funding-source-container .form-control {
+        display: inline-block;
+        width: auto;
+        margin-right: 10px;
+    }
+
+    #project-editors-container ul, #funding-source-container ul {
+        list-style-type: none;
+        padding-left: 0;
+    }
+
+    #project-editors-container li, #funding-source-container li {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    #project-editors-container li button,
+    #funding-source-container li button {
+        margin-left: 10px;
+    }
+</style>
+{% endblock %}

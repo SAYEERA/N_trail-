@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 class="text-center">Treatments and plots for Experiment: {{ experiment.Experiment_ID }}</h1>
+
+<table class="treatments-table">
+    <thead>
+        <tr>
+            <th>Treatment ID</th>
+            <th>Experiment ID</th>
+            <th>Interaction 1 Value</th>
+            <th>Interaction 2 Value</th>
+            <th>Interaction 3 Value</th>
+            <th>No of Replications</th>
+            <th>Metadata</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for treatment in treatments %}
+        <tr>
+            <td>{{ treatment.Treatment_ID }}</td>
+            <td>{{ treatment.Experiment_ID.Experiment_ID }}</td>
+            <td>{{ treatment.Interaction_1_Value }}</td>
+            <td>{{ treatment.Interaction_2_Value }}</td>
+            <td>{{ treatment.Interaction_3_Value }}</td>
+            <td>{{ treatment.No_of_Replication }}</td>
+            <td>{{ treatment.MetaData }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div id="plot-tables-section" class="flex-container">
+    {% for treatment in treatments %}
+    <div id="plot-table-{{ treatment.Treatment_ID }}" class="card">
+        <h3>Treatment-{{ treatment.Treatment_ID }}</h3>
+        <p>Interaction Values: {{ treatment.Interaction_1_Value }}, {{ treatment.Interaction_2_Value }}, {{ treatment.Interaction_3_Value }}</p>
+        <table class="plots-table">
+            <thead>
+                <tr>
+                    <th>Replication ID</th>
+                    <th>Plot ID</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for replication_id, plot_id in plot_data.items %}
+                    {% if replication_id.0 == treatment.Treatment_ID %}
+                    <tr>
+                        <td>{{ replication_id.1 }}</td>
+                        <td>{{ plot_id }}</td>
+                    </tr>
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+  .flex-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: space-between;
+  }
+
+  .card {
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    width: 250px;
+    margin: 10px;
+  }
+
+  .card h3 {
+    font-size: 1.2em;
+    margin-top: 0;
+  }
+
+  .card p {
+    font-size: 0.9em;
+  }
+
+  .card table {
+    width: 100%;
+    font-size: 0.9em;
+    border-collapse: collapse;
+  }
+
+  .card th, .card td {
+    padding: 5px;
+    border: 1px solid #ccc;
+    text-align: left;
+  }
+
+  .treatments-table {
+    width: 100%;
+    margin-bottom: 20px;
+    border-collapse: collapse;
+    font-size: 0.9em;
+  }
+
+  .treatments-table th, .treatments-table td {
+    padding: 8px;
+    border: 1px solid #ccc;
+    text-align: left;
+  }
+
+  .treatments-table th {
+    background-color: #f2f2f2;
+  }
+
+  .treatments-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+
+  .treatments-table tr:hover {
+    background-color: #f1f1f1;
+  }
+</style>
+
+{% endblock %}
