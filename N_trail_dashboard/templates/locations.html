@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 class="text-center">All Locations</h1>
+
+<!-- Display Locations Table -->
+<table border="1" id="locations-table">
+  <thead>
+    <tr>
+      <th>Location ID</th>
+      <th>State</th>
+      <th>County</th>
+      <th>Owner</th>
+      <th>Latitude</th>
+      <th>Longitude</th>
+      <th>Contact</th>
+      <th>Metadata</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for location in locations %}
+    <tr>
+      <td>{{ location.Location_ID }}</td>
+      <td>{{ location.State }}</td>
+      <td>{{ location.County }}</td>
+      <td>{{ location.Owner }}</td>
+      <td>{{ location.Latitude }}</td>
+      <td>{{ location.Longitude }}</td>
+      <td>{{ location.Contact }}</td>
+      <td>{{ location.MetaData }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- Add Location Button -->
+<button id="add-location-button" onclick="document.getElementById('add-location-form').style.display='block';">Add Location</button>
+
+<!-- Add Location Form -->
+<div id="add-location-form" style="display: none;">
+  <h2>Add Location Details</h2>
+  <form method="post" id="location-form">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Submit</button>
+  </form>
+  {% if messages %}
+    {% for message in messages %}
+    <span style="color: green;">{{ message }}</span>
+    {% endfor %}
+  {% endif %}
+</div>
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+  }
+
+  .text-center {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  #locations-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+
+  #locations-table th, #locations-table td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: left;
+  }
+
+  #locations-table th {
+    background-color: #f4f4f4;
+  }
+
+  #locations-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+
+  #locations-table tr:hover {
+    background-color: #f1f1f1;
+  }
+
+  #add-location-button {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    background-color: #5f6f52;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  #add-location-button:hover {
+    background-color: #171817;
+  }
+
+  #add-location-form {
+    background-color: #f4f4f4;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    width: 50%;
+    margin: 20px auto;
+  }
+
+  #add-location-form h2 {
+    text-align: center;
+  }
+
+  #add-location-form form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  #add-location-form button[type="submit"] {
+    padding: 10px 20px;
+    background-color: #5f6f52;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    align-self: center;
+  }
+
+  #add-location-form button[type="submit"]:hover {
+    background-color: #45a049;
+  }
+
+  .messages {
+    text-align: center;
+    margin-top: 10px;
+    color: green;
+  }
+</style>
+
+{% endblock %}

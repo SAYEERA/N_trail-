@@ -1,0 +1,49 @@
+<!-- N_trail_dashboard/templates/all_projects.html -->
+{% extends 'base.html' %}
+
+{% block title %}All Projects{% endblock %}
+
+{% block content %}
+<h1>All Projects</h1>
+
+
+
+<!-- Display Project Table -->
+<table border="1">
+  <tr>
+    <th>Project ID</th>
+    <th>User ID</th>
+    <th>Start Year</th>
+    <th>Interactions Count</th>
+    <th>Interactions_1</th>
+    <th>Interactions_2</th>
+    <th>Interactions_3</th>
+    <th>Crop</th>
+    <th>Number of Years</th>
+    <th>Project Editors</th>
+    <th>Funding Source</th>
+    <th>Metadata</th>
+   
+  </tr>
+  {% for project in projects %}
+  <tr>
+    <td>{{ project.Project_ID }}</td>
+    <td>{{ project.User_ID }}</td>
+    <td>{{ project.Start_year }}</td>
+    <td>{{ project.Interactions_count }}</td>
+    <td>{{ project.Interaction_1 }}</td>
+    <td>{{ project.Interaction_2 }}</td>
+    <td>{{ project.Interaction_3 }}</td>
+    <td>{{ project.Crop }}</td>
+    <td>{{ project.No_of_Year }}</td>
+    <td>{{ project.Project_Editors }}</td>
+    <td>{{ project.Funding_Source }}</td>
+    <td>{{ project.MetaData }}</td>
+
+  </tr>
+  {% endfor %}
+</table>
+
+{% endblock %}
+
+

@@ -1,0 +1,720 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<h1 class="text-center">Experiments for Project: {{ project.Project_ID }}</h1>
+
+<!-- Display Project Table -->
+<div class="table-responsive">
+    <table class="table table-bordered table-striped" id="experiment-table">
+        <thead>
+            <tr>
+                <th>Experiment ID</th>
+                <th>Project ID</th>
+                <th>Location ID</th>
+                <th>Year</th>
+                <th>Interaction 1 Count</th>
+                <th>Interaction 1 Value</th>
+                <th>Interaction 2 Count</th>
+                <th>Interaction 2 Value</th>
+                <th>Interaction 3 Count</th>
+                <th>Interaction 3 Value</th>
+                <th>Yield Map</th>
+                <th>Soil Sample</th>
+                <th>Sonic Sensor</th>
+                <th>GCP</th>
+                <th>RAW UAV</th>
+                <th>Orthomosaic UAV</th>
+                <th>DSM UAV</th>
+                <th>Orthomosaic SAT</th>
+                <th>DSM SAT</th>
+                <th>VI 1</th>
+                <th>VI 2</th>
+                <th>VI 3</th>
+                <th>Metadata</th>
+                <th>Treatments</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for experiment in experiments %}
+            <tr id="experiment-row-{{ experiment.Experiment_ID }}">
+                <td>{{ experiment.Experiment_ID }}</td>
+                <td>{{ experiment.Project_ID }}</td>
+                <td>{{ experiment.Location_ID }}</td>
+                <td>{{ experiment.Year }}</td>
+                <td>{{ experiment.Interaction_1_count }}</td>
+                <td>{{ experiment.Interaction_1_value }}</td>
+                <td>{{ experiment.Interaction_2_count }}</td>
+                <td>{{ experiment.Interaction_2_value }}</td>
+                <td>{{ experiment.Interaction_3_count }}</td>
+                <td>{{ experiment.Interaction_3_value }}</td>
+                
+                {% for file_type in file_types %}
+                <td>
+                    {% for file in experiment|get_attribute:file_type %}
+                    <a href="{% url 'download_file' file %}" target="_blank">{{ file|basename }}</a><br>
+                    
+                    {% endfor %}
+                    <!-- <button onclick="uploadFiles('{{ experiment.Experiment_ID }}', '{{ file_type }}')" class="btn btn-orange"><i class="fas fa-arrow-up fa-sm"></i></button> -->
+
+                    <button onclick="uploadFiles('{{ experiment.Experiment_ID }}', '{{ file_type }}')" class="btn btn-orange">Upload</button>
+                </td>
+                {% endfor %}
+                
+                <td>{{ experiment.MetaData }}</td>
+                <td><a href="{% url 'show_treatments' experiment_id=experiment.Experiment_ID %}" class="btn btn-orange">Show</a></td>
+                <td>
+                    <button type="button" onclick="duplicateExperiment('{{ experiment.Experiment_ID }}')" class="btn btn-orange">Duplicate</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Add experiment Button -->
+ <div>
+
+  <button id="add-experiment-button" class="btn btn-orange mt-3">Add Experiment</button>
+ </div>
+
+
+<div id="experiment-actions" style="display: none; margin-top: 10px ;">
+    <select id="experiment-action-select" class="form-control form-control-sm">
+        <option value="none">Select</option>
+        <option value="add">Add New Experiment</option>
+        <option value="import">Import Experiment</option>
+    </select>
+</div>
+
+<!-- Add Experiment Form -->
+<div id="add-experiment-form" style="display: none; background-color: #dde1ce; padding: 20px; margin-top: 20px;">
+    <h2 class="text-center">Add Experiment Details</h2>
+    <form method="post" id="experiment-form" action="{% url 'add_experiment' %}">
+        {% csrf_token %}
+        <div style="display: none;">
+            <label for="Project_ID">Project ID:</label>
+            <input type="hidden" id="Project_ID" name="Project_ID" value="{{ project.Project_ID }}" required>
+        </div><br>
+        <label for="Experiment_ID">Experiment ID:</label>
+        <input type="text" id="Experiment_ID" name="Experiment_ID" class="form-control form-control-sm input-sm" required><br>
+
+        <label for="Year">Year:</label>
+        <input type="text" id="Year" name="Year" class="form-control form-control-sm input-sm" required><br>
+
+        <label for="Location_ID">Location ID:</label>
+        <select id="Location_ID" name="Location_ID" class="form-control form-control-sm input-sm">
+            {% for location in location_choices %}
+            <option value="{{ location.Location_ID }}">{{ location.Location_ID }}</option>
+            {% endfor %}
+            <option value="other">Other</option>
+        </select><br>
+
+        <label for="No_of_Replicates">No of Replicates:</label>
+        <input type="number" id="No_of_Replicates" name="No_of_Replicates" class="form-control form-control-sm input-sm" required><br>
+
+        <!-- New Location Modal -->
+        <div id="new-location-modal" class="modal">
+            <div class="modal-content small-modal" style="background-color:  #dae0c3; color: white;">
+                <span class="close-button">&times;</span>
+                <h3>Add New Location</h3>
+                <label for="New_Location_ID">New Location ID:</label>
+                <input type="text" id="New_Location_ID" name="New_Location_ID"><br>
+
+                <label for="New_State">State:</label>
+                <input type="text" id="New_State" name="New_State"><br>
+
+                <label for="New_County">County:</label>
+                <input type="text" id="New_County" name="New_County"><br>
+
+                <label for="New_Owner">Owner:</label>
+                <input type="text" id="New_Owner" name="New_Owner"><br>
+
+                <label for="New_Latitude">Latitude:</label>
+                <input type="text" id="New_Latitude" name="New_Latitude"><br>
+
+                <label for="New_Longitude">Longitude:</label>
+                <input type="text" id="New_Longitude" name="New_Longitude"><br>
+
+                <label for="New_Contact">Contact:</label>
+                <input type="text" id="New_Contact" name="New_Contact"><br>
+
+                <label for="New_MetaData">Metadata:</label>
+                <textarea id="New_MetaData" name="New_MetaData" rows="4" cols="50"></textarea><br>
+
+                <button type="button" id="save-location-button" class="btn btn-orange">Save Location</button>
+            </div>
+        </div>
+
+        {% if project.Interaction_1 %}
+        <label for="Interaction_1_count">Interaction 1 Count ({{ project.Interaction_1 }}):</label>
+        <input type="number" id="Interaction_1_count" name="Interaction_1_count" class="form-control form-control-sm input-sm"><br>
+        <div>
+            <input type="radio" id="interaction_1_class" name="interaction_1_type" value="class">
+            <label for="interaction_1_class">Class</label>
+            <input type="radio" id="interaction_1_continuous" name="interaction_1_type" value="continuous">
+            <label for="interaction_1_continuous">Continuous</label>
+        </div>
+        <div id="interaction_1-fields"></div>
+        {% endif %}
+
+        {% if project.Interaction_2 %}
+        <label for="Interaction_2_count">Interaction 2 Count ({{ project.Interaction_2 }}):</label>
+        <input type="number" id="Interaction_2_count" name="Interaction_2_count" class="form-control form-control-sm input-sm"><br>
+        <div>
+            <input type="radio" id="interaction_2_class" name="interaction_2_type" value="class">
+            <label for="interaction_2_class">Class</label>
+            <input type="radio" id="interaction_2_continuous" name="interaction_2_type" value="continuous">
+            <label for="interaction_2_continuous">Continuous</label>
+        </div>
+        <div id="interaction_2-fields"></div>
+        {% endif %}
+
+        {% if project.Interaction_3 %}
+        <label for="Interaction_3_count">Interaction 3 Count ({{ project.Interaction_3 }}):</label>
+        <input type="number" id="Interaction_3_count" name="Interaction_3_count" class="form-control form-control-sm input-sm"><br>
+        <div>
+            <input type="radio" id="interaction_3_class" name="interaction_3_type" value="class">
+            <label for="interaction_3_class">Class</label>
+            <input type="radio" id="interaction_3_continuous" name="interaction_3_type" value="continuous">
+            <label for="interaction_3_continuous">Continuous</label>
+        </div>
+        <div id="interaction_3-fields"></div>
+        {% endif %}
+
+        <label for="MetaData">Metadata:</label>
+        <textarea id="MetaData" name="MetaData" rows="4" cols="50" class="form-control form-control-sm input-sm"></textarea><br>
+
+        <label for="ManualSubmit">Manual Submit</label>
+        <input type="checkbox" id="ManualSubmit">
+
+        <button type="submit" id="submit-button" class="btn btn-orange">Generate Treatments</button>
+        <span id="success-message" style="color: #376413; display: none;">Experiment added successfully!</span>
+    </form>
+</div>
+
+<!-- Import Experiment Form -->
+<div id="import-experiment-form" style="display: none; background-color: #dde1ce; padding: 20px; margin-top: 20px;">
+    <h2 class="text-center">Import Experiments</h2>
+    <form method="post" id="import-form" enctype="multipart/form-data">
+        {% csrf_token %}
+        <label for="csv_file">Upload CSV file:</label>
+        <input type="file" id="csv_file" name="csv_file" accept=".csv" required class="form-control form-control-sm input-sm"><br>
+        <button type="submit" class="btn btn-orange">Import</button>
+    </form>
+</div>
+
+<style>
+/* Modal styling */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0, 0, 0); /* Fallback color */
+    background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 50%; /* Smaller width */
+    max-width: 600px; /* Ensure it doesn't get too large */
+}
+
+.small-modal {
+    width: 30%;
+}
+
+.close-button {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Form styling */
+#add-experiment-form,
+#import-experiment-form {
+    margin-top: 20px;
+    background-color: #dde1ce;
+    padding: 20px;
+    border: 1px solid black;
+}
+
+#new-location-modal .modal-content {
+    background-color: rgb(208, 225, 171);
+    color: white;
+    padding: 20px;
+}
+
+#experiment-table {
+    width: 100%;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+#experiment-table th, #experiment-table td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.btn-orange {
+    background-color: #5f6f52;
+    color: whitesmoke;
+ 
+}
+
+
+.btn-orange:hover {
+    background-color: #5f6f52;
+    color: whitesmoke;
+}
+
+.btn-no-border {
+    background: none;
+    border: none;
+    color: green;
+    cursor: pointer;
+    padding: 0;
+    display: inline-block;
+    text-align: center;
+}
+
+
+
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const unitOptions = ['u1', 'u2', 'u3', 'na'];
+
+    function updateInteractionFields(countId, fieldsContainerId, fieldPrefix, fieldType, values) {
+        const countValue = parseInt(document.getElementById(countId).value);
+        const fieldsContainer = document.getElementById(fieldsContainerId);
+        fieldsContainer.innerHTML = ''; // Clear existing fields
+
+        if (fieldType === 'continuous') {
+            const unitSelect = document.createElement('select');
+            unitSelect.name = `${fieldPrefix}_unit`;
+            unitSelect.id = `${fieldPrefix}_unit`;
+            unitOptions.forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.value = option;
+                optionElement.textContent = option;
+                unitSelect.appendChild(optionElement);
+            });
+            fieldsContainer.appendChild(unitSelect);
+            fieldsContainer.appendChild(document.createElement('br'));
+        }
+
+        for (let i = 1; i <= countValue; i++) {
+            const label = document.createElement('label');
+            label.textContent = `${fieldPrefix.replace('_', ' ')} ${i}: `;
+            fieldsContainer.appendChild(label);
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.name = `${fieldPrefix}_${i}`;
+            input.id = `${fieldPrefix}_${i}`;
+            input.value = values ? values[i - 1] : '';
+            fieldsContainer.appendChild(input);
+
+            fieldsContainer.appendChild(document.createElement('br'));
+        }
+    }
+
+    document.querySelector('#add-experiment-button').addEventListener('click', function() {
+        document.querySelector('#experiment-actions').style.display = 'block';
+    });
+
+    document.querySelector('#experiment-action-select').addEventListener('change', function() {
+        const action = this.value;
+        if (action === 'add') {
+            document.querySelector('#add-experiment-form').style.display = 'block';
+        } else {
+            document.querySelector('#add-experiment-form').style.display = 'none';
+        }
+
+        if (action === 'import') {
+            document.querySelector('#import-experiment-form').style.display = 'block';
+        } else {
+            document.querySelector('#import-experiment-form').style.display = 'none';
+        }
+    });
+
+    document.querySelector('#experiment-form').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        const formData = new FormData(this);
+
+        const interaction1Values = [];
+        const interaction1Units = document.getElementById('Interaction_1_unit')?.value;
+        if (interaction1Units) formData.set('Interaction_1_unit', interaction1Units);
+        document.querySelectorAll('#interaction_1-fields input').forEach(input => {
+            interaction1Values.push(input.value);
+        });
+        formData.set('Interaction_1_value', interaction1Values.join(','));
+
+        const interaction2Values = [];
+        const interaction2Units = document.getElementById('Interaction_2_unit')?.value;
+        if (interaction2Units) formData.set('Interaction_2_unit', interaction2Units);
+        document.querySelectorAll('#interaction_2-fields input').forEach(input => {
+            interaction2Values.push(input.value);
+        });
+        formData.set('Interaction_2_value', interaction2Values.join(','));
+
+        const interaction3Values = [];
+        const interaction3Units = document.getElementById('Interaction_3_unit')?.value;
+        if (interaction3Units) formData.set('Interaction_3_unit', interaction3Units);
+        document.querySelectorAll('#interaction_3-fields input').forEach(input => {
+            interaction3Values.push(input.value);
+        });
+        formData.set('Interaction_3_value', interaction3Values.join(','));
+
+        // Check if 'other' is selected and validate new location fields
+        if (document.getElementById('Location_ID').value === 'other') {
+            // Add required attribute to new location fields
+            document.getElementById('New_Location_ID').setAttribute('required', true);
+            document.getElementById('New_State').setAttribute('required', true);
+            document.getElementById('New_County').setAttribute('required', true);
+            document.getElementById('New_Owner').setAttribute('required', true);
+            document.getElementById('New_Latitude').setAttribute('required', true);
+            document.getElementById('New_Longitude').setAttribute('required', true);
+            document.getElementById('New_Contact').setAttribute('required', true);
+            document.getElementById('New_MetaData').setAttribute('required', true);
+        } else {
+            // Remove required attribute from new location fields
+            document.getElementById('New_Location_ID').removeAttribute('required');
+            document.getElementById('New_State').removeAttribute('required');
+            document.getElementById('New_County').removeAttribute('required');
+            document.getElementById('New_Owner').removeAttribute('required');
+            document.getElementById('New_Latitude').removeAttribute('required');
+            document.getElementById('New_Longitude').removeAttribute('required');
+            document.getElementById('New_Contact').removeAttribute('required');
+            document.getElementById('New_MetaData').removeAttribute('required');
+        }
+
+        fetch('{% url "add_experiment" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const experimentID = formData.get('Experiment_ID');
+                const noOfReplicates = formData.get('No_of_Replicates');
+                window.location.href = `{% url 'show_treatments' experiment_id='EXPERIMENT_ID_PLACEHOLDER' %}?no_of_replicates=${noOfReplicates}`.replace('EXPERIMENT_ID_PLACEHOLDER', experimentID);
+            } else {
+                alert('Failed to add experiment: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to add experiment. Please try again.');
+        });
+    });
+
+    document.getElementById('import-form').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        const formData = new FormData(this);
+        fetch('{% url "import_experiment" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Experiments imported successfully!');
+                window.location.reload(); // Reload the page to reflect changes
+            } else {
+                alert('Failed to import experiments: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to import experiments. Please try again.');
+        });
+    });
+
+    // Get the modal
+    const modal = document.getElementById('new-location-modal');
+
+    // Get the button that opens the modal
+    const locationSelect = document.getElementById('Location_ID');
+
+    // Get the <span> element that closes the modal
+    const span = document.getElementsByClassName('close-button')[0];
+
+    // When the user selects 'other', open the modal
+    locationSelect.addEventListener('change', function() {
+        if (this.value === 'other') {
+            modal.style.display = 'block';
+        }
+    });
+
+    // When the user clicks on <span> (x), close the modal
+    span.addEventListener('click', function() {
+        modal.style.display = 'none';
+    });
+
+    // When the user clicks anywhere outside of the modal, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    });
+
+    document.getElementById('save-location-button').addEventListener('click', function() {
+        const newLocationFormData = new FormData();
+        newLocationFormData.append('Location_ID', document.getElementById('New_Location_ID').value);
+        newLocationFormData.append('State', document.getElementById('New_State').value);
+        newLocationFormData.append('County', document.getElementById('New_County').value);
+        newLocationFormData.append('Owner', document.getElementById('New_Owner').value);
+        newLocationFormData.append('Latitude', document.getElementById('New_Latitude').value);
+        newLocationFormData.append('Longitude', document.getElementById('New_Longitude').value);
+        newLocationFormData.append('Contact', document.getElementById('New_Contact').value);
+        newLocationFormData.append('MetaData', document.getElementById('New_MetaData').value);
+
+        fetch('{% url "add_location" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': newLocationFormData.get('csrfmiddlewaretoken')
+            },
+            body: newLocationFormData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const newLocationID = document.getElementById('New_Location_ID').value;
+                const locationSelect = document.getElementById('Location_ID');
+                const newOption = document.createElement('option');
+                newOption.value = newLocationID;
+                newOption.textContent = newLocationID;
+                locationSelect.appendChild(newOption);
+                locationSelect.value = newLocationID;
+                modal.style.display = 'none';
+            } else {
+                alert('Failed to add location: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to add location. Please try again.');
+        });
+    });
+
+    document.querySelectorAll('input[name="interaction_1_type"]').forEach(element => {
+        element.addEventListener('change', function() {
+            const fieldType = this.value;
+            const countValue = parseInt(document.getElementById('Interaction_1_count').value);
+            if (countValue) {
+                updateInteractionFields('Interaction_1_count', 'interaction_1-fields', 'Interaction_1', fieldType);
+            }
+        });
+    });
+
+    document.querySelectorAll('input[name="interaction_2_type"]').forEach(element => {
+        element.addEventListener('change', function() {
+            const fieldType = this.value;
+            const countValue = parseInt(document.getElementById('Interaction_2_count').value);
+            if (countValue) {
+                updateInteractionFields('Interaction_2_count', 'interaction_2-fields', 'Interaction_2', fieldType);
+            }
+        });
+    });
+
+    document.querySelectorAll('input[name="interaction_3_type"]').forEach(element => {
+        element.addEventListener('change', function() {
+            const fieldType = this.value;
+            const countValue = parseInt(document.getElementById('Interaction_3_count').value);
+            if (countValue) {
+                updateInteractionFields('Interaction_3_count', 'interaction_3-fields', 'Interaction_3', fieldType);
+            }
+        });
+    });
+
+    window.duplicateExperiment = function(experimentId) {
+    console.log(`Duplicating experiment with ID: ${experimentId}`);
+    
+    const row = document.getElementById(`experiment-row-${experimentId}`);
+    if (!row) {
+        console.error(`Row with ID experiment-row-${experimentId} not found!`);
+        return;
+    }
+
+    const newRow = row.cloneNode(true);
+
+    // Duplicate the existing Experiment ID
+    const experimentIdField = newRow.querySelector('td:first-child');
+    if (experimentIdField) {
+        experimentIdField.textContent = `${experimentId}_copy`;
+        newRow.id = `experiment-row-${experimentId}_copy`;
+    } else {
+        console.error('Experiment ID field not found!');
+        return;
+    }
+
+    // Add the new row to the table
+    row.parentNode.insertBefore(newRow, row.nextSibling);
+    console.log(`New row added with ID: ${newRow.id}`);
+
+    // Show the add experiment form with existing row details
+    const addExperimentForm = document.querySelector('#add-experiment-form');
+    addExperimentForm.style.display = 'block';
+
+    // Function to set form values and log if an element is not found
+    const setFormValue = (selector, value) => {
+        const element = addExperimentForm.querySelector(selector);
+        if (element) {
+            element.value = value;
+        } else {
+            console.error(`Form element with selector ${selector} not found!`);
+        }
+    };
+
+    setFormValue('#Experiment_ID', `${experimentId}_copy`);
+    setFormValue('#Year', row.querySelector('td:nth-child(4)').textContent);
+    setFormValue('#Location_ID', row.querySelector('td:nth-child(3)').textContent);
+    setFormValue('#No_of_Replicates', row.querySelector('td:nth-child(6)').textContent);
+    setFormValue('#Interaction_1_count', row.querySelector('td:nth-child(5)').textContent);
+    setFormValue('#Interaction_2_count', row.querySelector('td:nth-child(7)').textContent);
+    setFormValue('#Interaction_3_count', row.querySelector('td:nth-child(9)').textContent);
+
+    // List of file-related fields and their respective cell indices
+    const fileFields = [
+        { name: 'Yield_Map', index: 11 },
+        { name: 'Soil_Sample', index: 12 },
+        { name: 'Sonic_sensor', index: 13 },
+        { name: 'GCP', index: 14 },
+        { name: 'RAWUAV', index: 15 },
+        { name: 'Orthomosaic_UAV', index: 16 },
+        { name: 'DSM_UAV', index: 17 },
+        { name: 'Orthomosaic_SAT', index: 18 },
+        { name: 'DSM_SAT', index: 19 },
+        { name: 'VI_1', index: 20 },
+        { name: 'VI_2', index: 21 },
+        { name: 'VI_3', index: 22 }
+    ];
+
+    // Clear the file-related fields and show upload button in the new row
+    fileFields.forEach(field => {
+        console.log(`Processing field: ${field.name}, Cell index: ${field.index}`);
+        
+        const cell = newRow.querySelector(`td:nth-child(${field.index})`);
+        if (cell) {
+           
+          console.log(`Clearing and adding upload button for cell at index ${field.index}`);
+          cell.innerHTML = `<button onclick="uploadFiles('${experimentId}_copy', '${field.name}')" class="btn-no-border" title="Upload"><i class="fas fa-arrow-up fa-sm"></i></button>`;
+            // cell.innerHTML = `<button onclick="uploadFiles('${experimentId}_copy', '${field.name}')" class="btn-no-border" title="Upload"><i class="fas fa-arrow-up fa-sm"></i></button>`;
+        } else {
+            console.error(`Cell at index ${field.index} not found!`);
+        }
+    });
+
+    // Clear the file-related fields in the form
+    fileFields.forEach(field => {
+        const inputElement = addExperimentForm.querySelector(`#${field.name}`);
+        if (inputElement) {
+            console.log(`Clearing input field: ${field.name}`);
+            inputElement.value = '';
+        } else {
+            console.error(`Input field: ${field.name} not found!`);
+        }
+    });
+
+    // Update remaining fields
+    setFormValue('#Soil_Sample', row.querySelector('td:nth-child(12)').textContent);
+    setFormValue('#Sonic_sensor', row.querySelector('td:nth-child(13)').textContent);
+    setFormValue('#GCP', row.querySelector('td:nth-child(14)').textContent);
+    setFormValue('#RAWUAV', row.querySelector('td:nth-child(15)').textContent);
+    setFormValue('#Orthomosaic_UAV', row.querySelector('td:nth-child(16)').textContent);
+    setFormValue('#DSM_UAV', row.querySelector('td:nth-child(17)').textContent);
+    setFormValue('#Orthomosaic_SAT', row.querySelector('td:nth-child(18)').textContent);
+    setFormValue('#DSM_SAT', row.querySelector('td:nth-child(19)').textContent);
+    setFormValue('#VI_1', row.querySelector('td:nth-child(20)').textContent);
+    setFormValue('#VI_2', row.querySelector('td:nth-child(21)').textContent);
+    setFormValue('#VI_3', row.querySelector('td:nth-child(22)').textContent);
+    setFormValue('#MetaData', row.querySelector('td:nth-child(23)').textContent);
+
+    // Populate interaction values in the form
+    const interaction1Values = row.querySelector('td:nth-child(6)').textContent.split(',');
+    const interaction2Values = row.querySelector('td:nth-child(8)').textContent.split(',');
+    const interaction3Values = row.querySelector('td:nth-child(10)').textContent.split(',');
+
+    updateInteractionFields('Interaction_1_count', 'interaction_1-fields', 'Interaction_1', 'class', interaction1Values);
+    updateInteractionFields('Interaction_2_count', 'interaction_2-fields', 'Interaction_2', 'class', interaction2Values);
+    updateInteractionFields('Interaction_3_count', 'interaction_3-fields', 'Interaction_3', 'class', interaction3Values);
+};
+
+function uploadFiles(experimentId, fileType) {
+    // Implement your upload logic here
+    alert(`Upload ${fileType} files for experiment ${experimentId}`);
+}
+
+    window.uploadFiles = function(experimentId, fileField) {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '*/*'; // Accept any file type
+        input.multiple = true; // Allow multiple files to be selected
+        input.onchange = function(event) {
+            const files = event.target.files;
+            if (files.length > 0) {
+                const formData = new FormData();
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    const fileName = prompt("Please enter a name for the file:", file.name);
+                    if (fileName) {
+                        formData.append('files', file, fileName);
+                    } else {
+                        formData.append('files', file); // Use original file name if user cancels the prompt
+                    }
+                }
+                formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+                fetch(`/upload_experiment_file/${experimentId}/${fileField}/`, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Files uploaded successfully!');
+                        location.reload(); // Reload the page to reflect the changes
+                    } else {
+                        alert('Failed to upload files: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to upload files. Please try again.');
+                });
+            }
+        };
+        input.click();
+    };
+});
+</script>
+
+{% endblock %}

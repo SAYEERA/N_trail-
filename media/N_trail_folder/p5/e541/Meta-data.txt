@@ -1,0 +1,11 @@
+Experiment ID: e541
+Project ID: p5
+Location ID: GRC
+Year: 2022
+Interaction 1 Count: 2
+Interaction 1 Value: a,b
+Interaction 2 Count: 3
+Interaction 2 Value: a1,b1,c1
+Interaction 3 Count: 0
+Interaction 3 Value: 
+Metadata: na
