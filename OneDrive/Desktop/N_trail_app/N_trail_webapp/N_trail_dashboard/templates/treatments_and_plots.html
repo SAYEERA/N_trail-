@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1 class="text-center">Treatments and plots for Experiment: {{ experiment.Experiment_ID }}</h1>
+<h1 class="text-center">Treatments and Plots for Experiment: {{ experiment.Experiment_ID }}</h1>
 
 <table class="treatments-table">
     <thead>
@@ -30,7 +30,16 @@
     </tbody>
 </table>
 
-<div id="plot-tables-section" class="flex-container">
+<div class="view-options">
+    <label for="view-select">Plots View:</label>
+    <select id="view-select" onchange="toggleView()">
+        <option value="consolidated">Consolidated View</option>
+        <option value="distributed">Distributed View</option>
+    </select>
+    <button type="button" onclick="toggleView()">Apply View</button>
+</div>
+
+<div id="plot-tables-section" class="flex-container" style="display: none;">
     {% for treatment in treatments %}
     <div id="plot-table-{{ treatment.Treatment_ID }}" class="card">
         <h3>Treatment-{{ treatment.Treatment_ID }}</h3>
@@ -57,68 +66,175 @@
     {% endfor %}
 </div>
 
+<div id="consolidated-view-section" style="display: none;">
+    <h2>Consolidated Plots</h2>
+    <table border="1" id="consolidated-plot-table">
+        <thead>
+            <tr>
+                <th>Treatment ID <button onclick="sortTable('treatment_id')">Sort</button></th>
+                <th>Replication ID <button onclick="sortTable('replication_id')">Sort</button></th>
+                <th>Plot ID <button onclick="sortTable('plot_id')">Sort</button></th>
+            </tr>
+        </thead>
+        <tbody id="consolidated-plot-body">
+            {% for replication_id, plot_id in plot_data.items %}
+            <tr>
+                <td>{{ replication_id.0 }}</td>
+                <td>{{ replication_id.1 }}</td>
+                <td>{{ plot_id }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+function toggleView() {
+    const viewSelect = document.getElementById('view-select').value;
+    const plotTablesSection = document.getElementById('plot-tables-section');
+    const consolidatedViewSection = document.getElementById('consolidated-view-section');
+
+    if (viewSelect === 'distributed') {
+        plotTablesSection.style.display = 'flex';
+        consolidatedViewSection.style.display = 'none';
+    } else {
+        plotTablesSection.style.display = 'none';
+        consolidatedViewSection.style.display = 'block';
+    }
+}
+
+function sortTable(column) {
+    const table = document.getElementById('consolidated-plot-table');
+    const rows = Array.from(table.rows).slice(1);
+    let compareFunction;
+
+    if (column === 'treatment_id') {
+        compareFunction = (a, b) => a.cells[0].innerText.localeCompare(b.cells[0].innerText);
+    } else if (column === 'replication_id') {
+        compareFunction = (a, b) => a.cells[1].innerText - b.cells[1].innerText;
+    } else if (column === 'plot_id') {
+        compareFunction = (a, b) => a.cells[2].innerText.localeCompare(b.cells[2].innerText);
+    }
+
+    rows.sort(compareFunction);
+
+    rows.forEach(row => table.appendChild(row));
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    toggleView();
+});
+</script>
+
 <style>
-  .flex-container {
+.flex-container {
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
     justify-content: space-between;
-  }
+}
 
-  .card {
+.card {
     border: 1px solid #ccc;
     padding: 10px;
     border-radius: 5px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     width: 250px;
     margin: 10px;
-  }
+}
 
-  .card h3 {
+.card h3 {
     font-size: 1.2em;
     margin-top: 0;
-  }
+}
 
-  .card p {
+.card p {
     font-size: 0.9em;
-  }
+}
 
-  .card table {
+.card table {
     width: 100%;
     font-size: 0.9em;
     border-collapse: collapse;
-  }
+}
 
-  .card th, .card td {
+.card th, .card td {
     padding: 5px;
     border: 1px solid #ccc;
     text-align: left;
-  }
+}
 
-  .treatments-table {
+.treatments-table {
     width: 100%;
     margin-bottom: 20px;
     border-collapse: collapse;
     font-size: 0.9em;
-  }
+}
 
-  .treatments-table th, .treatments-table td {
+.treatments-table th, .treatments-table td {
     padding: 8px;
     border: 1px solid #ccc;
     text-align: left;
-  }
+}
 
-  .treatments-table th {
+.treatments-table th {
     background-color: #f2f2f2;
-  }
+}
 
-  .treatments-table tr:nth-child(even) {
+.treatments-table tr:nth-child(even) {
     background-color: #f9f9f9;
-  }
+}
 
-  .treatments-table tr:hover {
+.treatments-table tr:hover {
     background-color: #f1f1f1;
-  }
+}
+
+.view-options {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.view-options label {
+    font-weight: bold;
+}
+
+.view-options select {
+    padding: 8px;
+    font-size: 14px;
+}
+
+.view-options button {
+    margin-left: 10px;
+}
+
+.consolidated-view-section {
+    margin-top: 30px;
+}
+
+.consolidated-view-section table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+}
+
+.consolidated-view-section th, .consolidated-view-section td {
+    padding: 8px;
+    border: 1px solid #ccc;
+    text-align: left;
+}
+
+.consolidated-view-section th {
+    background-color: #f2f2f2;
+    text-align: center;
+}
+
+.consolidated-view-section td input {
+    width: 100%;
+    padding: 6px;
+    box-sizing: border-box;
+}
 </style>
 
 {% endblock %}

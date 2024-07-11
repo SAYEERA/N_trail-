@@ -1530,22 +1530,6 @@ def my_projects(request):
 
 
 
-from django.shortcuts import get_object_or_404, render
-from django.http import JsonResponse, HttpResponse
-from django.template.loader import render_to_string
-from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth.decorators import login_required
-import csv
-import os
-from itertools import product
-from django.conf import settings
-from .models import Experiment, Treatment, Plot
-from django.db import transaction
-import logging
-import json
-
-# Ensure logging is configured
-logger = logging.getLogger(__name__)
 
 @login_required
 @csrf_exempt

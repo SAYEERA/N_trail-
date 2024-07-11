@@ -1,0 +1,11 @@
+Project ID: project134
+User ID: 5
+Interactions Count: 3
+Interaction 1: Timing
+Interaction 2: N_rate
+Interaction 3: Crop_Rotation
+Crop: Corn
+Project Editors: sayeera@gmail.com,sai@gmail.com
+Funding Source: na,sa
+Metadata: ja
+View Type: public
