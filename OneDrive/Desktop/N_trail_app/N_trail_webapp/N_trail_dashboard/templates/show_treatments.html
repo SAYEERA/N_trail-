@@ -50,23 +50,23 @@
   <button type="button" onclick="addNewRow()">Add Row</button>
   <button type="button" onclick="submitTreatments()">Submit All</button>
 
-    <!-- Dummy table for selecting units -->
-    <table border="1" style="margin-top: 20px;">
-      <thead>
-        <tr>
-          <th>Treatment ID</th>
-          <th>Replication ID</th>
-          <th>Plot ID</th>
-          <th>Yield - Select Units (Dropdown)
-             <select id="units-select" name="units-select">
-            <option value="u1">u1</option>
-            <option value="bushels/acre">bushels/acre</option>
-            <option value="u3">u3</option>
-          </select>
-          </th>
-        </tr>
-      </thead>
-    </table>
+  <!-- Dummy table for selecting units -->
+  <table border="1" style="margin-top: 20px;">
+    <thead>
+      <tr>
+        <th>Treatment ID</th>
+        <th>Replication ID</th>
+        <th>Plot ID</th>
+        <th>Yield - Select Units (Dropdown)
+           <select id="units-select" name="units-select">
+          <option value="u1">u1</option>
+          <option value="bushels/acre">bushels/acre</option>
+          <option value="u3">u3</option>
+        </select>
+        </th>
+      </tr>
+    </thead>
+  </table>
   <button type="button" onclick="downloadCSV()">Download CSV</button>
 </form>
 
@@ -155,13 +155,29 @@
   <button type="button" onclick="saveConsolidatedPlots()">Save Plots</button>
 </div>
 
+<div class="view-options">
+  <button type="button" onclick="showGraphOptions()">Show Treatments Graph</button>
+</div>
+
+<div id="graph-options" style="display: none;">
+  <label for="graph-type-select">Graph Type:</label>
+  <select id="graph-type-select">
+    <option value="individual">Individual Yields</option>
+    <option value="average">Average Yield</option>
+  </select>
+  <button type="button" onclick="generateGraph()">Generate Graph</button>
+</div>
+
+<div id="graph-container" style="display: none;">
+  <img id="generated-graph" alt="Generated Graph" />
+</div>
+
 <script>
 let deletedTreatments = [];
 let maxTreatmentId = Math.max(...Array.from(document.querySelectorAll('#treatments-table tr')).map(row => parseInt(row.querySelector('td:first-child').innerText.match(/\d+/)[0], 10))) || 0;
 
 document.addEventListener("DOMContentLoaded", function() {
-     // Initialize maxTreatmentId based on existing treatments
-     const treatmentRows = document.querySelectorAll('#treatments-table tr');
+    const treatmentRows = document.querySelectorAll('#treatments-table tr');
     maxTreatmentId = 0;
 
     treatmentRows.forEach(row => {
@@ -174,13 +190,11 @@ document.addEventListener("DOMContentLoaded", function() {
 
     console.log("Max Treatment ID initialized to:", maxTreatmentId);
 
-    // Fetch plot data for each treatment
     document.querySelectorAll('.card').forEach(function(card) {
         let treatmentId = card.id.split('-')[2];
         fetchPlotData(treatmentId);
     });
 
-    // Set initial units values in plot tables
     const units = document.getElementById('units-select').value;
     console.log("Initial units value:", units);
     document.querySelectorAll('.units-value').forEach(function(element) {
@@ -202,7 +216,6 @@ function fetchPlotData(treatmentId) {
                 document.querySelector(`#plot_id_${treatmentId}_${replicationId}`).value = plotInfo.plot_id;
                 document.querySelector(`#yield_${treatmentId}_${replicationId}`).value = plotInfo.yield
             }
-
         } else {
             console.error('Error fetching plot data:', data.error);
         }
@@ -225,12 +238,12 @@ function deleteTreatment(treatmentId) {
     row.parentNode.removeChild(row);
     deletedTreatments.push(treatmentId);
 }
+
 function addNewRow() {
     const experimentId = '{{ experiment.Experiment_ID }}';
 
-    // Generate new Treatment ID following the correct pattern
     const newTreatmentId = `${experimentId}_T${maxTreatmentId + 1}`; // Use the correct prefix and increment the maximum existing Treatment ID by 1
-    maxTreatmentId += 1; // Update the global maxTreatmentId for subsequent new rows
+    maxTreatmentId += 1;
 
     const newRow = document.createElement('tr');
     newRow.id = `treatment-row-${newTreatmentId}`;
@@ -284,7 +297,6 @@ function addNewRow() {
     `;
     document.getElementById('plot-tables-section').appendChild(newPlotTable);
 
-    // Set units for the new plot table
     const units = document.getElementById('units-select').value;
     document.querySelector(`#plot-table-${newTreatmentId} .units-value`).textContent = units;
 }
@@ -360,10 +372,9 @@ document.getElementById('upload-form').addEventListener('submit', function(event
     .then(data => {
         if (data.success) {
             showSuccessMessage('CSV uploaded successfully!');
-            // Reload the page after successful upload
             setTimeout(() => {
                 location.reload();
-            }, 2000); // Reload after 2 seconds
+            }, 2000);
         } else {
             showErrorMessage('Error uploading CSV: ' + data.error);
         }
@@ -403,12 +414,11 @@ function showErrorMessage(message) {
     }, 3000);
 }
 
-
 function savePlotTable(treatmentId) {
     const plotData = [];
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    const units = document.getElementById('units-select').value; // Get the selected units value
-    console.log("Units selected:", units); // Debugging print statement
+    const units = document.getElementById('units-select').value;
+    console.log("Units selected:", units);
 
     document.querySelectorAll(`#plot-table-${treatmentId} tbody tr`).forEach(row => {
         const replicationId = row.querySelector('td:first-child').innerText;
@@ -419,7 +429,7 @@ function savePlotTable(treatmentId) {
             replication_id: replicationId,
             plot_id: plotId,
             yield: yieldValue,
-            units: units // Include the units in the plot data
+            units: units
         });
     });
 
@@ -452,7 +462,7 @@ function toggleView() {
     const plotTablesSection = document.getElementById('plot-tables-section');
     const consolidatedViewSection = document.getElementById('consolidated-view-section');
     const units = document.getElementById('units-select').value;
-    console.log("Toggle view units value:", units); // Debugging print statement
+    console.log("Toggle view units value:", units);
 
     if (viewSelect === 'distributed') {
         plotTablesSection.style.display = 'flex';
@@ -462,7 +472,6 @@ function toggleView() {
         consolidatedViewSection.style.display = 'block';
     }
 
-    // Update units value in plot tables when view is toggled
     document.querySelectorAll('.units-value').forEach(function(element) {
         element.textContent = units;
     });
@@ -470,14 +479,13 @@ function toggleView() {
 
 function downloadCSV() {
     const units = document.getElementById('units-select').value;
-    console.log("Downloading CSV with units:", units); // Debugging print statement
+    console.log("Downloading CSV with units:", units);
     window.location.href = `{% url "show_treatments" experiment.Experiment_ID %}?download=true&units=${units}`;
 }
 
-// Update plot table units based on the selected value
 document.getElementById('units-select').addEventListener('change', function() {
     const units = this.value;
-    console.log("Units changed to:", units); // Debugging print statement
+    console.log("Units changed to:", units);
     document.querySelectorAll('.units-value').forEach(function(element) {
         element.textContent = units;
     });
@@ -487,7 +495,7 @@ function addPlotRow() {
     const tableBody = document.getElementById('consolidated-plot-body');
     const newRow = document.createElement('tr');
     newRow.innerHTML = `
-        <td><input type="text" name="treatment_id_new" value=""></td> <!-- Added Treatment ID column -->
+        <td><input type="text" name="treatment_id_new" value=""></td>
         <td><input type="text" name="replication_id_new" value=""></td>
         <td><input type="text" name="plot_id_new" value=""></td>
         <td><input type="text" name="yield_new" value=""></td>
@@ -561,39 +569,85 @@ function sortTable(column) {
     let compareFunction;
 
     if (column === 'treatment_id') {
-        compareFunction = (a, b) => a.cells[0].querySelector('input').value.localeCompare(b.cells[0].querySelector('input').value); // Adjusted column index
+        compareFunction = (a, b) => a.cells[0].querySelector('input').value.localeCompare(b.cells[0].querySelector('input').value);
     } else if (column === 'replication_id') {
-        compareFunction = (a, b) => a.cells[1].querySelector('input').value - b.cells[1].querySelector('input').value; // Adjusted column index
+        compareFunction = (a, b) => a.cells[1].querySelector('input').value - b.cells[1].querySelector('input').value;
     } else if (column === 'plot_id') {
-        compareFunction = (a, b) => a.cells[2].querySelector('input').value.localeCompare(b.cells[2].querySelector('input').value); // Adjusted column index
+        compareFunction = (a, b) => a.cells[2].querySelector('input').value.localeCompare(b.cells[2].querySelector('input').value);
     }
 
     rows.sort(compareFunction);
 
     rows.forEach(row => table.appendChild(row));
 }
+
+function showGraphOptions() {
+    console.log("showGraphOptions called");
+    const graphOptions = document.getElementById('graph-options');
+    if (graphOptions) {
+        graphOptions.style.display = graphOptions.style.display === 'none' ? 'block' : 'none';
+        console.log("Graph options visibility toggled");
+    } else {
+        console.error("Graph options element not found");
+    }
+}
+
+const experimentId = '{{ experiment.Experiment_ID }}';
+
+function generateGraph() {
+    console.log("generateGraph called");
+    const graphType = document.getElementById('graph-type-select').value;
+    let url = '';
+
+    console.log("Graph type:", graphType);
+
+    if (graphType === 'average') {
+        url = `/generate_average_yield_graph/${experimentId}/`;
+    } else {
+        url = `/generate_individual_yield_graph/${experimentId}/`;
+    }
+
+    console.log("URL:", url);
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            console.log("Graph data received:", data);
+            if (data.graph) {
+                const graphContainer = document.getElementById('graph-container');
+                const img = document.getElementById('generated-graph');
+                img.src = `data:image/png;base64,${data.graph}`;
+                graphContainer.style.display = 'block';
+            } else {
+                console.error('Error generating graph:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error generating graph:', error);
+        });
+}
 </script>
 
 <style>
   body {
       font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-      background-color: #f7ede8;  /* Light Mint Green */
+      background-color: #f7ede8;
   }
-  
+
   .navbar-brand {
       font-weight: bold;
-      color: whitesmoke !important; /* White color for N_trail */
+      color: whitesmoke !important;
   }
-  
+
   .navbar {
-      background-color: #475d21; /* Dark Green color */
+      background-color: #475d21;
   }
-  
+
   .navbar-nav .nav-link {
       font-size: 1.1em;
       color: white !important;
   }
-  
+
   .container {
       background-color: #f2ece7;
       border-radius: 8px;
@@ -601,54 +655,53 @@ function sortTable(column) {
       padding: 20px;
       position: relative;
   }
-  
+
   .card-custom {
-      background-color: #A9b388 !important; /* Background color */
+      background-color: #A9b388 !important;
       border-radius: 8px;
       box-shadow: 0 2px 5px rgba(47, 79, 79, 0.1);
-      color: #212b0f !important; /* Text color */
+      color: #212b0f !important;
       margin-top: 20px;
   }
-  
+
   .dropdown-menu {
       border-radius: 0;
   }
-  
+
   .btn-custom {
-      background-color: #5f6f52 !important; /* Custom button color */
-      color: #ffffff !important;  /* White text for better visibility */
-      border: 1px solid #000000 !important;  /* Black border */
-      padding: 5px 10px !important;  /* Smaller padding for smaller buttons */
-      font-size: 12px !important;  /* Smaller font size */
+      background-color: #5f6f52 !important;
+      color: #ffffff !important;
+      border: 1px solid #000000 !important;
+      padding: 5px 10px !important;
+      font-size: 12px !important;
   }
-  
+
   .btn-custom:hover {
-      background-color: #475d21 !important; /* Slightly darker color on hover */
+      background-color: #475d21 !important;
       color: #ffffff !important;
   }
-  
+
   .card {
-      height: 70% !important;  /* Ensure cards take full height */
+      height: 70% !important;
   }
-  
+
   .col-md-8 {
-      max-width: 60% !important;  /* Smaller width for the card before login */
+      max-width: 60% !important;
   }
-  
+
   .col-md-6 {
       max-width: 48% !important;
-      height: 70% !important; 
-      /* Adjust width for both cards to be the same after login */
+      height: 70% !important;
   }
-  
+
   .para-green {
-      color: #212b0f!important;  /* Text color */
+      color: #212b0f!important;
   }
-  
+
   .form-group {
       margin-bottom: 15px;
   }
-  
+
   .table {
       margin-top: 20px;
   }
@@ -670,15 +723,15 @@ function sortTable(column) {
       margin-bottom: 20px;
       background-color: #f2ece7;
       color: #212b0f;
-      border: 2px solid black;  /* Black border around the table */
+      border: 2px solid black;
   }
 
   table, th, td {
-      border: 1px solid black;  /* Black border for table cells */
+      border: 1px solid black;
   }
 
   th, td {
-      padding: 8px;  /* Reduced padding to make the table smaller */
+      padding: 8px;
       text-align: left;
   }
 
@@ -688,7 +741,7 @@ function sortTable(column) {
 
   td input[type="text"] {
       width: 100%;
-      padding: 6px;  /* Reduced padding for inputs */
+      padding: 6px;
       box-sizing: border-box;
   }
 
@@ -696,9 +749,9 @@ function sortTable(column) {
       background-color: #5f6f52;
       color: white;
       border: 1px solid black;
-      padding: 5px 10px;  /* Smaller padding for smaller buttons */
+      padding: 5px 10px;
       text-align: center;
-      font-size: 12px;  /* Smaller font size */
+      font-size: 12px;
       cursor: pointer;
       border-radius: 5px;
       margin-right: 10px;
@@ -764,7 +817,7 @@ function sortTable(column) {
   }
 
   .card table th, .card table td {
-      border: 1px solid black;  /* Black border for card table cells */
+      border: 1px solid black;
       padding: 8px;
       text-align: left;
   }
@@ -814,7 +867,7 @@ function sortTable(column) {
   }
 
   .consolidated-view-section th, .consolidated-view-section td {
-      border: 1px solid black;  /* Black border for consolidated view table cells */
+      border: 1px solid black;
       padding: 8px;
       text-align: left;
   }
@@ -826,7 +879,7 @@ function sortTable(column) {
 
   .consolidated-view-section td input {
       width: 100%;
-      padding: 6px;  /* Reduced padding for inputs */
+      padding: 6px;
       box-sizing: border-box;
   }
 

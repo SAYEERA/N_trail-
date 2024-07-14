@@ -2,8 +2,8 @@ from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import (home, signup, my_projects, logout_view, import_experiment,download_csv, upload_csv,
-                    all_projects, all_locations,upload_treatment_csv, project_database, add_project, add_experiment, show_experiments,
+from .views import (home, signup, my_projects, logout_view, import_experiment,download_csv, upload_csv, generate_individual_yield_graph,
+                     generate_average_yield_graph, all_projects, all_locations,upload_treatment_csv, project_database, add_project, add_experiment, show_experiments,
                     add_location,save_consolidated_plots, get_column_values, show_treatments,upload_experiment_file,download_file,save_plot_data,get_plot_data, project_experiments,  show_treatments_and_plots)
 
 
@@ -39,6 +39,8 @@ urlpatterns = [
     path('treatment/<str:treatment_id>/download_csv/', download_csv, name='download_csv'),  # Updated URL for downloading CSV
     path('treatment/<str:treatment_id>/upload_csv/', upload_csv, name='upload_csv'),  # Updated URL for uploading CSV
     path('experiment/<str:experiment_id>/treatments_plots/', show_treatments_and_plots, name='show_treatments_and_plots'),
+    path('generate_individual_yield_graph/<str:experiment_id>/', generate_individual_yield_graph, name='generate_individual_yield_graph'),
+    path('generate_average_yield_graph/<str:experiment_id>/', generate_average_yield_graph, name='generate_average_yield_graph'),
 ]
 
 

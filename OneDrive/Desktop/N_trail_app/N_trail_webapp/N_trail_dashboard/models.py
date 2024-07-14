@@ -120,7 +120,7 @@ class Plot(models.Model):
     Treatment_ID = models.ForeignKey(Treatment, on_delete=models.CASCADE)
     Replication_ID = models.IntegerField()
     Plot_ID = models.CharField(max_length=120)
-    Yield = models.CharField(max_length=120)
+    Yield = models.FloatField() 
     Units = models.CharField('Units', max_length=120, blank=True, null=True)
 
     class Meta:
