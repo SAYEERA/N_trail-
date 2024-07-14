@@ -50,7 +50,6 @@
   <button type="button" onclick="addNewRow()">Add Row</button>
   <button type="button" onclick="submitTreatments()">Submit All</button>
 
-  <!-- Dummy table for selecting units -->
   <table border="1" style="margin-top: 20px;">
     <thead>
       <tr>
@@ -70,13 +69,11 @@
   <button type="button" onclick="downloadCSV()">Download CSV</button>
 </form>
 
-<!-- Form for uploading CSV -->
 <form id="upload-form" method="post" enctype="multipart/form-data" action="{% url 'upload_treatment_csv' experiment.Experiment_ID %}">
   {% csrf_token %}
   <input type="file" name="csv_file" id="csv_file" accept=".csv" onchange="handleFileUpload(event)">
   <button type="submit">Upload CSV</button>
   <div id="uploaded-file-info" style="display: {% if uploaded_file_name %}block{% else %}none{% endif %};">
-    <!-- <p>Uploaded file: <a id="uploaded-file-link" href="{{ uploaded_file_path }}" download>{{ uploaded_file_name }}</a></p> -->
   </div>
 </form>
 
@@ -171,6 +168,45 @@
 <div id="graph-container" style="display: none;">
   <img id="generated-graph" alt="Generated Graph" />
 </div>
+
+<!-- Filters for Interaction Values and Treatment after generating the graph -->
+<div id="filter-options" style="display: none;">
+    <h3>Filter Options</h3>
+    <label for="filter-treatment">Treatment:</label>
+    <select id="filter-treatment">
+      <option value="">All Treatments</option>
+      {% for treatment in treatments %}
+      <option value="{{ treatment.Treatment_ID }}">{{ treatment.Treatment_ID }}</option>
+      {% endfor %}
+    </select>
+  
+    <label for="interaction-1-filter">Interaction 1:</label>
+    <select id="interaction-1-filter">
+      <option value="">All</option>
+      {% for value in interaction_1_values %}
+      <option value="{{ value }}">{{ value }}</option>
+      {% endfor %}
+    </select>
+  
+    <label for="interaction-2-filter">Interaction 2:</label>
+    <select id="interaction-2-filter">
+      <option value="">All</option>
+      {% for value in interaction_2_values %}
+      <option value="{{ value }}">{{ value }}</option>
+      {% endfor %}
+    </select>
+  
+    <label for="interaction-3-filter">Interaction 3:</label>
+    <select id="interaction-3-filter">
+      <option value="">All</option>
+      {% for value in interaction_3_values %}
+      <option value="{{ value }}">{{ value }}</option>
+      {% endfor %}
+    </select>
+  
+    <button type="button" onclick="applyFilters()">Apply Filters</button>
+  </div>
+  
 
 <script>
 let deletedTreatments = [];
@@ -609,23 +645,82 @@ function generateGraph() {
 
     console.log("URL:", url);
 
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            console.log("Graph data received:", data);
-            if (data.graph) {
-                const graphContainer = document.getElementById('graph-container');
-                const img = document.getElementById('generated-graph');
-                img.src = `data:image/png;base64,${data.graph}`;
-                graphContainer.style.display = 'block';
-            } else {
-                console.error('Error generating graph:', data.error);
-            }
-        })
-        .catch(error => {
-            console.error('Error generating graph:', error);
-        });
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Graph data received:", data);
+        if (data.graph) {
+            const graphContainer = document.getElementById('graph-container');
+            const img = document.getElementById('generated-graph');
+            img.src = `data:image/png;base64,${data.graph}`;
+            graphContainer.style.display = 'block';
+            document.getElementById('filter-options').style.display = 'block';
+        } else {
+            console.error('Error generating graph:', data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error generating graph:', error);
+    });
 }
+
+function applyFilters() {
+    console.log("Applying filters:");
+    const treatmentFilter = document.getElementById('filter-treatment').value;
+    const interaction1Filter = document.getElementById('interaction-1-filter').value;
+    const interaction2Filter = document.getElementById('interaction-2-filter').value;
+    const interaction3Filter = document.getElementById('interaction-3-filter').value;
+
+    console.log("Treatment Filter:", treatmentFilter);
+    console.log("Interaction 1 Filter:", interaction1Filter);
+    console.log("Interaction 2 Filter:", interaction2Filter);
+    console.log("Interaction 3 Filter:", interaction3Filter);
+
+    const graphType = document.getElementById('graph-type-select').value;
+    let url = '';
+
+    if (graphType === 'average') {
+        url = `/generate_average_yield_graph/${experimentId}/`;
+    } else {
+        url = `/generate_individual_yield_graph/${experimentId}/`;
+    }
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            treatmentFilter: treatmentFilter,
+            interaction1: interaction1Filter,
+            interaction2: interaction2Filter,
+            interaction3: interaction3Filter
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Filtered graph data received:", data);
+        if (data.graph) {
+            const graphContainer = document.getElementById('graph-container');
+            const img = document.getElementById('generated-graph');
+            img.src = `data:image/png;base64,${data.graph}`;
+            graphContainer.style.display = 'block';
+        } else {
+            console.error('Error generating graph:', data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error generating graph:', error);
+    });
+}
+
 </script>
 
 <style>

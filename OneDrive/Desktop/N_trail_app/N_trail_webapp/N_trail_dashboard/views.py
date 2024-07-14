@@ -1008,7 +1008,6 @@ def get_column_values(request):
 
 
 
-
 @login_required
 @csrf_exempt
 def show_treatments(request, experiment_id):
@@ -1162,196 +1161,239 @@ def show_treatments(request, experiment_id):
         'plot_data': plot_data,
         'uploaded_file_name': uploaded_file_name,
         'uploaded_file_path': uploaded_file_path,
-        'units': units
+        'units': units,
+        'interaction_1_values': interaction_1_values,
+        'interaction_2_values': interaction_2_values,
+        'interaction_3_values': interaction_3_values
     })
 
 
-# import io
-# import base64
-# from django.http import JsonResponse
-# import matplotlib.pyplot as plt
-# from .models import Treatment, Plot
 
-# def generate_individual_yield_graph(request, experiment_id):
-#     try:
-#         treatments = Treatment.objects.filter(Experiment_ID=experiment_id)
-#         treatment_ids = []
-#         yields = []
-#         colors = []
-#         color_map = {}
-
-#         for i, treatment in enumerate(treatments):
-#             plots = Plot.objects.filter(Treatment_ID=treatment.Treatment_ID)
-#             color = plt.cm.tab20(i / len(treatments))
-#             color_map[treatment.Treatment_ID] = color
-#             for plot in plots:
-#                 treatment_ids.append(f"{treatment.Treatment_ID}_R{plot.Replication_ID}")
-#                 yields.append(plot.Yield)
-#                 colors.append(color)
-
-#         plt.figure(figsize=(12, 10))
-#         bars = plt.bar(treatment_ids, yields, color=colors, width=0.4)
-#         plt.xlabel('Treatment ID - Replication ID')
-#         plt.ylabel('Yield')
-#         plt.title('Individual Yield Values')
-#         plt.xticks(rotation=90)
-
-#         for bar in bars:
-#             yval = bar.get_height()
-#             plt.text(bar.get_x() + bar.get_width()/2, yval + 1, round(yval, 2), ha='center', va='bottom')
-
-#         buf = io.BytesIO()
-#         plt.savefig(buf, format='png')
-#         plt.close()
-#         buf.seek(0)
-#         image_png = buf.getvalue()
-#         buf.close()
-#         graph = base64.b64encode(image_png).decode('utf-8')
-#         return JsonResponse({'graph': graph})
-#     except Exception as e:
-#         return JsonResponse({'error': str(e)})
-
-# def generate_average_yield_graph(request, experiment_id):
-#     try:
-#         treatments = Treatment.objects.filter(Experiment_ID=experiment_id)
-#         treatment_ids = []
-#         avg_yields = []
-#         colors = []
-#         color_map = {}
-
-#         for i, treatment in enumerate(treatments):
-#             plots = Plot.objects.filter(Treatment_ID=treatment.Treatment_ID)
-#             color = plt.cm.tab20(i / len(treatments))
-#             color_map[treatment.Treatment_ID] = color
-#             if plots.exists():
-#                 avg_yield = sum([plot.Yield for plot in plots]) / len(plots)
-#             else:
-#                 avg_yield = 0  # Handle no plots case
-#             treatment_ids.append(treatment.Treatment_ID)
-#             avg_yields.append(avg_yield)
-#             colors.append(color)
-
-#         plt.figure(figsize=(12, 8))
-#         bars = plt.bar(treatment_ids, avg_yields, color=colors, width=0.3)
-#         plt.xlabel('Treatment ID')
-#         plt.ylabel('Average Yield')
-#         plt.title('Average Yield Values')
-#         plt.xticks(rotation=90)
-
-#         for bar in bars:
-#             yval = bar.get_height()
-#             plt.text(bar.get_x() + bar.get_width()/2, yval + 1, round(yval, 2), ha='center', va='bottom')
-
-#         buf = io.BytesIO()
-#         plt.savefig(buf, format='png')
-#         plt.close()
-#         buf.seek(0)
-#         image_png = buf.getvalue()
-#         buf.close()
-#         graph = base64.b64encode(image_png).decode('utf-8')
-#         return JsonResponse({'graph': graph})
-#     except Exception as e:
-#         return JsonResponse({'error': str(e)})
-
-import io
-import base64
+from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 import matplotlib
-matplotlib.use('Agg')  # Use the 'Agg' backend for rendering plots to files
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import json
+import io
+import base64
 from .models import Treatment, Plot
 
 def generate_individual_yield_graph(request, experiment_id):
-    try:
-        treatments = Treatment.objects.filter(Experiment_ID=experiment_id)
-        treatment_ids = []
-        yields = []
-        colors = []
-        color_map = {}
+    if request.method == 'GET':
+        try:
+            treatments = Treatment.objects.filter(Experiment_ID=experiment_id)
+            treatment_ids = []
+            yields = []
+            colors = []
+            color_map = {}
 
-        # Define a pastel color palette
-        pastel_colors = [
-            '#AEC6CF', '#FFB347', '#B39EB5', '#77DD77', '#FF6961',
-            '#FDFD96', '#CFCFC4', '#B19CD9', '#FFD1DC', '#B0E0E6'
-        ]
+            pastel_colors = [
+                '#AEC6CF', '#FFB347', '#B39EB5', '#77DD77', '#FF6961',
+                '#FDFD96', '#CFCFC4', '#B19CD9', '#FFD1DC', '#B0E0E6'
+            ]
 
-        for i, treatment in enumerate(treatments):
-            plots = Plot.objects.filter(Treatment_ID=treatment.Treatment_ID)
-            for plot in plots:
-                treatment_ids.append(f"{treatment.Treatment_ID}_{plot.Replication_ID}")
-                yields.append(plot.Yield)
+            for i, treatment in enumerate(treatments):
+                plots = Plot.objects.filter(Treatment_ID=treatment.Treatment_ID)
+                for plot in plots:
+                    treatment_ids.append(f"{treatment.Treatment_ID}_{plot.Replication_ID}")
+                    yields.append(plot.Yield)
+                    if treatment.Treatment_ID not in color_map:
+                        color_map[treatment.Treatment_ID] = pastel_colors[i % len(pastel_colors)]
+                    colors.append(color_map[treatment.Treatment_ID])
+            
+            plt.figure(figsize=(10, 8))
+            bars = plt.bar(treatment_ids, yields, color=colors, width=0.5)
+            plt.xlabel('Treatment ID')
+            plt.ylabel('Yield')
+            plt.title('Individual Yield Values')
+            plt.xticks(rotation=90)
+
+            for bar in bars:
+                yval = bar.get_height()
+                plt.text(bar.get_x() + bar.get_width()/2, yval + 0.5, round(yval, 2), ha='center', va='bottom')
+
+            buf = io.BytesIO()
+            plt.savefig(buf, format='png')
+            plt.close()
+            buf.seek(0)
+            image_png = buf.getvalue()
+            buf.close()
+            graph = base64.b64encode(image_png).decode('utf-8')
+            return JsonResponse({'graph': graph})
+        except Exception as e:
+            return JsonResponse({'error': str(e)})
+
+    elif request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            interaction1 = data.get('interaction1', '')
+            interaction2 = data.get('interaction2', '')
+            interaction3 = data.get('interaction3', '')
+            treatment_filter = data.get('treatmentFilter', '')
+
+            treatments = Treatment.objects.filter(
+                Experiment_ID=experiment_id,
+                Interaction_1_Value__icontains=interaction1,
+                Interaction_2_Value__icontains=interaction2,
+                Interaction_3_Value__icontains=interaction3
+            )
+            
+            if treatment_filter:
+                treatments = treatments.filter(Treatment_ID=treatment_filter)
+
+            treatment_ids = []
+            yields = []
+            colors = []
+            color_map = {}
+
+            pastel_colors = [
+                '#AEC6CF', '#FFB347', '#B39EB5', '#77DD77', '#FF6961',
+                '#FDFD96', '#CFCFC4', '#B19CD9', '#FFD1DC', '#B0E0E6'
+            ]
+
+            for i, treatment in enumerate(treatments):
+                plots = Plot.objects.filter(Treatment_ID=treatment.Treatment_ID)
+                for plot in plots:
+                    treatment_ids.append(f"{treatment.Treatment_ID}_{plot.Replication_ID}")
+                    yields.append(plot.Yield)
+                    if treatment.Treatment_ID not in color_map:
+                        color_map[treatment.Treatment_ID] = pastel_colors[i % len(pastel_colors)]
+                    colors.append(color_map[treatment.Treatment_ID])
+            
+            plt.figure(figsize=(10, 8))
+            bars = plt.bar(treatment_ids, yields, color=colors, width=0.5)
+            plt.xlabel('Treatment ID')
+            plt.ylabel('Yield')
+            plt.title('Individual Yield Values')
+            plt.xticks(rotation=90)
+
+            for bar in bars:
+                yval = bar.get_height()
+                plt.text(bar.get_x() + bar.get_width()/2, yval + 0.5, round(yval, 2), ha='center', va='bottom')
+
+            buf = io.BytesIO()
+            plt.savefig(buf, format='png')
+            plt.close()
+            buf.seek(0)
+            image_png = buf.getvalue()
+            buf.close()
+            graph = base64.b64encode(image_png).decode('utf-8')
+            return JsonResponse({'graph': graph})
+        except Exception as e:
+            return JsonResponse({'error': str(e)})
+
+    return JsonResponse({'error': 'Invalid request method'})
+
+def generate_average_yield_graph(request, experiment_id):
+    if request.method == 'GET':
+        try:
+            treatments = Treatment.objects.filter(Experiment_ID=experiment_id)
+            treatment_ids = []
+            avg_yields = []
+            colors = []
+            color_map = {}
+
+            pastel_colors = [
+                '#AEC6CF', '#FFB347', '#B39EB5', '#77DD77', '#FF6961',
+                '#FDFD96', '#CFCFC4', '#B19CD9', '#FFD1DC', '#B0E0E6'
+            ]
+
+            for i, treatment in enumerate(treatments):
+                plots = Plot.objects.filter(Treatment_ID=treatment.Treatment_ID)
+                if plots.exists():
+                    avg_yield = sum([plot.Yield for plot in plots]) / len(plots)
+                else:
+                    avg_yield = 0
+                treatment_ids.append(treatment.Treatment_ID)
+                avg_yields.append(avg_yield)
                 if treatment.Treatment_ID not in color_map:
                     color_map[treatment.Treatment_ID] = pastel_colors[i % len(pastel_colors)]
                 colors.append(color_map[treatment.Treatment_ID])
-        
-        plt.figure(figsize=(10,8))
-        bars = plt.bar(treatment_ids, yields, color=colors, width=0.5)
-        plt.xlabel('Treatment ID')
-        plt.ylabel('Yield')
-        plt.title('Individual Yield Values')
-        plt.xticks(rotation=90)
+            
+            plt.figure(figsize=(6, 6))
+            bars = plt.bar(treatment_ids, avg_yields, color=colors, width=0.3)
+            plt.xlabel('Treatment ID')
+            plt.ylabel('Average Yield')
+            plt.title('Average Yield Values')
+            plt.xticks(rotation=90)
 
-        # Add values on top of the bars
-        for bar in bars:
-            yval = bar.get_height()
-            plt.text(bar.get_x() + bar.get_width()/2, yval + 0.5, round(yval, 2), ha='center', va='bottom')
+            for bar in bars:
+                yval = bar.get_height()
+                plt.text(bar.get_x() + bar.get_width()/2, yval + 0.5, round(yval, 2), ha='center', va='bottom')
 
-        buf = io.BytesIO()
-        plt.savefig(buf, format='png')
-        plt.close()
-        buf.seek(0)
-        image_png = buf.getvalue()
-        buf.close()
-        graph = base64.b64encode(image_png).decode('utf-8')
-        return JsonResponse({'graph': graph})
-    except Exception as e:
-        return JsonResponse({'error': str(e)})
+            buf = io.BytesIO()
+            plt.savefig(buf, format='png')
+            plt.close()
+            buf.seek(0)
+            image_png = buf.getvalue()
+            buf.close()
+            graph = base64.b64encode(image_png).decode('utf-8')
+            return JsonResponse({'graph': graph})
+        except Exception as e:
+            return JsonResponse({'error': str(e)})
 
-def generate_average_yield_graph(request, experiment_id):
-    try:
-        treatments = Treatment.objects.filter(Experiment_ID=experiment_id)
-        treatment_ids = []
-        avg_yields = []
-        colors = []
-        color_map = {}
+    elif request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            interaction1 = data.get('interaction1', '')
+            interaction2 = data.get('interaction2', '')
+            interaction3 = data.get('interaction3', '')
+            treatment_filter = data.get('treatmentFilter', '')
 
-        # Define a pastel color palette
-        pastel_colors = [
-            '#AEC6CF', '#FFB347', '#B39EB5', '#77DD77', '#FF6961',
-            '#FDFD96', '#CFCFC4', '#B19CD9', '#FFD1DC', '#B0E0E6'
-        ]
+            treatments = Treatment.objects.filter(
+                Experiment_ID=experiment_id,
+                Interaction_1_Value__icontains=interaction1,
+                Interaction_2_Value__icontains=interaction2,
+                Interaction_3_Value__icontains=interaction3
+            )
+            
+            if treatment_filter:
+                treatments = treatments.filter(Treatment_ID=treatment_filter)
 
-        for i, treatment in enumerate(treatments):
-            plots = Plot.objects.filter(Treatment_ID=treatment.Treatment_ID)
-            if plots.exists():
-                avg_yield = sum([plot.Yield for plot in plots]) / len(plots)
-            else:
-                avg_yield = 0  # Handle no plots case
-            treatment_ids.append(treatment.Treatment_ID)
-            avg_yields.append(avg_yield)
-            if treatment.Treatment_ID not in color_map:
-                color_map[treatment.Treatment_ID] = pastel_colors[i % len(pastel_colors)]
-            colors.append(color_map[treatment.Treatment_ID])
-        
-        plt.figure(figsize=(6,6))
-        bars = plt.bar(treatment_ids, avg_yields, color=colors, width=0.3)  # Adjust the width here
-        plt.xlabel('Treatment ID')
-        plt.ylabel('Average Yield')
-        plt.title('Average Yield Values')
-        plt.xticks(rotation=90)
+            treatment_ids = []
+            avg_yields = []
+            colors = []
+            color_map = {}
 
-        # Add values on top of the bars
-        for bar in bars:
-            yval = bar.get_height()
-            plt.text(bar.get_x() + bar.get_width()/2, yval + 0.5, round(yval, 2), ha='center', va='bottom')
+            pastel_colors = [
+                '#AEC6CF', '#FFB347', '#B39EB5', '#77DD77', '#FF6961',
+                '#FDFD96', '#CFCFC4', '#B19CD9', '#FFD1DC', '#B0E0E6'
+            ]
 
-        buf = io.BytesIO()
-        plt.savefig(buf, format='png')
-        plt.close()
-        buf.seek(0)
-        image_png = buf.getvalue()
-        buf.close()
-        graph = base64.b64encode(image_png).decode('utf-8')
-        return JsonResponse({'graph': graph})
-    except Exception as e:
-        return JsonResponse({'error': str(e)})
+            for i, treatment in enumerate(treatments):
+                plots = Plot.objects.filter(Treatment_ID=treatment.Treatment_ID)
+                if plots.exists():
+                    avg_yield = sum([plot.Yield for plot in plots]) / len(plots)
+                else:
+                    avg_yield = 0
+                treatment_ids.append(treatment.Treatment_ID)
+                avg_yields.append(avg_yield)
+                if treatment.Treatment_ID not in color_map:
+                    color_map[treatment.Treatment_ID] = pastel_colors[i % len(pastel_colors)]
+                colors.append(color_map[treatment.Treatment_ID])
+            
+            plt.figure(figsize=(6, 6))
+            bars = plt.bar(treatment_ids, avg_yields, color=colors, width=0.3)
+            plt.xlabel('Treatment ID')
+            plt.ylabel('Average Yield')
+            plt.title('Average Yield Values')
+            plt.xticks(rotation=90)
+
+            for bar in bars:
+                yval = bar.get_height()
+                plt.text(bar.get_x() + bar.get_width()/2, yval + 0.5, round(yval, 2), ha='center', va='bottom')
+
+            buf = io.BytesIO()
+            plt.savefig(buf, format='png')
+            plt.close()
+            buf.seek(0)
+            image_png = buf.getvalue()
+            buf.close()
+            graph = base64.b64encode(image_png).decode('utf-8')
+            return JsonResponse({'graph': graph})
+        except Exception as e:
+            return JsonResponse({'error': str(e)})
+
+    return JsonResponse({'error': 'Invalid request method'})
+
